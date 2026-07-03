@@ -9,6 +9,7 @@ interface TtsState {
   setAutoSpeak: (value: boolean) => void;
   speak: (text: string, options?: TtsOptions) => Promise<void>;
   stop: () => void;
+  refreshAvailability: () => Promise<void>;
 }
 
 function createRegistry(): TtsRegistry {
@@ -19,6 +20,16 @@ function createRegistry(): TtsRegistry {
 
 export const useTtsStore = create<TtsState>((set, get) => {
   const registry = createRegistry();
+
+  const refreshAvailability = async (): Promise<void> => {
+    const provider = await registry.getFirstAvailable();
+    set({ isAvailable: provider !== null });
+  };
+
+  // Inicializace dostupnosti při startu (bezpečné i na serveru)
+  if (typeof window !== "undefined") {
+    void refreshAvailability();
+  }
 
   return {
     isAvailable: false,
@@ -35,5 +46,6 @@ export const useTtsStore = create<TtsState>((set, get) => {
     stop: () => {
       get().registry.stop();
     },
+    refreshAvailability,
   };
 });

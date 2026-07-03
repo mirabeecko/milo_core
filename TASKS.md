@@ -2,9 +2,9 @@
 
 ## Aktuální focus
 
-Milestone 1: Core Integrations skeleton (Gmail, Calendar, Drive, Obsidian, TTS) — **dokončen**.
+Milestone 2: Funkční MVP dashboard s mock daty — **dokončen**.
 
-Čeká na Architecture Review před přechodem na další fázi.
+Čeká na Architecture Review před přechodem na reálná data a sync.
 
 ---
 
@@ -16,9 +16,11 @@ Milestone 1: Core Integrations skeleton (Gmail, Calendar, Drive, Obsidian, TTS) 
 - [x] ARCHITECTURE.md
 - [x] ROADMAP.md
 - [x] TASKS.md
+- [x] CHANGELOG.md
 - [x] `docs/reviews/MILESTONE_REVIEW_TEMPLATE.md`
 - [x] `docs/reviews/MILESTONE_0_REVIEW.md`
-- [ ] `docs/reviews/MILESTONE_1_REVIEW.md`
+- [x] `docs/reviews/MILESTONE_1_REVIEW.md`
+- [ ] `docs/reviews/MILESTONE_2_REVIEW.md`
 
 ### Struktura projektu
 
@@ -41,19 +43,25 @@ Milestone 1: Core Integrations skeleton (Gmail, Calendar, Drive, Obsidian, TTS) 
 - [x] `docker-compose.yml` s Postgres, Redis, Ollama volitelně
 - [x] `.env.example`
 
-### Frontend skeleton
+### Frontend
 
 - [x] Inicializovat Next.js s TypeScript
 - [x] Nastavit Tailwind CSS
 - [x] Nastavit shadcn/ui
 - [x] Vytvořit základní layout (sidebar, header, dashboard pages)
 - [x] Nastavit dark mode jako výchozí
-- [x] Přidat základní stránky (Home, Brief, Email, Calendar, Documents, Knowledge, Chat, Settings, ...)
+- [x] Přepracovat Home na command center
+- [x] Vytvořit Today's Brief stránku
+- [x] Vytvořit funkční Chat UI
+- [x] Vytvořit Agents stránku
+- [x] Vytvořit Projects stránku
+- [x] Vytvořit Documents centrum
+- [x] Vytvořit Settings stránku
 - [x] Přidat TTS controls do UI
 - [ ] Nastavit TanStack Query
-- [ ] Nastavit Zustand
+- [x] Nastavit Zustand (TTS store)
 
-### Backend skeleton
+### Backend
 
 - [x] Inicializovat Fastify 5 s TypeScript
 - [x] Nastavit ESLint + Prettier
@@ -89,6 +97,17 @@ Milestone 1: Core Integrations skeleton (Gmail, Calendar, Drive, Obsidian, TTS) 
 - [x] Vytvořit Chief of Staff agenta
 - [x] Napojit briefing na `/api/briefing`
 
+### MVP Dashboard (Milestone 2)
+
+- [x] Vytvořit mock data a TypeScript typy
+- [x] Přepracovat Home na command center
+- [x] Vytvořit Today's Brief stránku s akcemi
+- [x] Vytvořit funkční Chat UI
+- [x] Vytvořit Agents stránku
+- [x] Vytvořit Projects stránku
+- [x] Vytvořit Documents centrum
+- [x] Vytvořit Settings stránku
+
 ### Integrace (Milestone 1 skeleton)
 
 - [x] Gmail (`/api/email`)
@@ -107,13 +126,14 @@ Všechny integrace aktuálně podporují demo fallback při chybějících crede
 - [x] Vytvořit šablonu `docs/reviews/MILESTONE_REVIEW_TEMPLATE.md`
 - [x] Vytvořit proces Architecture Review do dokumentace
 - [x] Milestone 0 Review — APPROVED
-- [ ] Milestone 1 Review — připravit
+- [x] Milestone 1 Review — APPROVED
+- [ ] Milestone 2 Review — připravit
 
 ---
 
-## Další milníky (připravit)
+## Další milníky
 
-### Milestone 2: Real data & sync
+### Milestone 3: Real data & sync
 
 - [ ] Real-time synchronizace Gmail (webhook / polling)
 - [ ] Real-time synchronizace Google Calendar
@@ -122,7 +142,7 @@ Všechny integrace aktuálně podporují demo fallback při chybějících crede
 - [ ] Universal search napříč zdroji
 - [ ] Zdroje u každé odpovědi AI
 
-### Milestone 3: Production readiness
+### Milestone 4: Production readiness
 
 - [ ] Production deployment pipeline
 - [ ] Secrets management

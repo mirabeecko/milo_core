@@ -91,6 +91,22 @@ První verze je zaměřená na MVP s přihlášením, dashboardem, ranním brief
 
 ---
 
+## Aktuální stav
+
+MVP dashboard je funkční s mock daty. Lze ho otevřít a používat každý den:
+
+- **Home** – command center s prioritami, briefing snapshotem, rozhodnutími a aktivitou.
+- **Today's Brief** – generovaný ranní briefing s přehráváním a kopírováním.
+- **Chat** – funkční chat UI s mock odpověďmi MiLO.
+- **Agents** – přehled agentů s logy práce.
+- **Projects** – přehled projektů, priorit a otevřených úkolů.
+- **Documents** – dokumentové centrum s vyhledáváním a filtry.
+- **Settings** – nastavení AI providera, TTS, Obsidian vaultu a budoucích integrací.
+
+Integrace (Gmail, Calendar, Drive, Obsidian) aktuálně používají demo fallback. Reálná OAuth napojení přijdou v další fázi.
+
+---
+
 ## Jak spustit
 
 > Dokud není nastaveno prostředí, projekt běží v režimu vývoje s demo daty.
@@ -107,11 +123,17 @@ cp .env.example .env
 # 3. Nainstaluj závislosti
 pnpm install
 
-# 4. Spusť v Dockeru
-docker compose up --build
+# 4. Lokální vývoj (web + api)
+pnpm dev
 
 # 5. Otevři frontend
 open http://localhost:3000
+```
+
+Nebo v Dockeru:
+
+```bash
+docker compose up --build
 ```
 
 ## CLI
@@ -137,6 +159,7 @@ pnpm milo ask "Jaký je můj dnešní program?" --speak
 - [ARCHITECTURE.md](./ARCHITECTURE.md) – architektura a struktura projektu
 - [ROADMAP.md](./ROADMAP.md) – plán vývoje a milestones
 - [TASKS.md](./TASKS.md) – aktuální úkoly a stav
+- [CHANGELOG.md](./CHANGELOG.md) – historie změn
 
 ---
 
@@ -152,4 +175,4 @@ pnpm milo ask "Jaký je můj dnešní program?" --speak
 
 ## Status
 
-Projekt je ve fázi zakládání – dokumentace a skeleton.
+Projekt je ve fázi funkčního MVP s mock daty. Reálné integrace a sync přijdou v Milestone 2.
