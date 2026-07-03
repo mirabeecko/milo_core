@@ -27,8 +27,4 @@ export async function apiClient<T>(path: string, options?: RequestInit): Promise
   return response.json() as Promise<T>;
 }
 
-const isDevelopment = process.env.NODE_ENV === "development";
-
-export const useMockData = isDevelopment
-  ? process.env.NEXT_PUBLIC_USE_MOCK_DATA !== "false"
-  : process.env.NEXT_PUBLIC_USE_MOCK_DATA === "true";
+export const useMockData = process.env.NEXT_PUBLIC_USE_MOCK_DATA === "true";

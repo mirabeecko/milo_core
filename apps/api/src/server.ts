@@ -11,6 +11,9 @@ import { calendarRoutes } from "./modules/calendar/routes.js";
 import { documentsRoutes } from "./modules/documents/routes.js";
 import { knowledgeRoutes } from "./modules/knowledge/routes.js";
 import { chatRoutes } from "./modules/chat/routes.js";
+import { homeRoutes } from "./modules/home/routes.js";
+import { agentsRoutes } from "./modules/agents/routes.js";
+import { projectsRoutes } from "./modules/projects/routes.js";
 import { closeRedisClient } from "./infrastructure/redis.js";
 
 const app = Fastify({
@@ -37,6 +40,9 @@ async function start(): Promise<void> {
   await app.register(documentsRoutes, { prefix: "/documents" });
   await app.register(knowledgeRoutes, { prefix: "/knowledge" });
   await app.register(chatRoutes, { prefix: "/chat" });
+  await app.register(homeRoutes, { prefix: "/home" });
+  await app.register(agentsRoutes, { prefix: "/agents" });
+  await app.register(projectsRoutes, { prefix: "/projects" });
 
   app.addHook("onClose", async () => {
     await closeRedisClient();

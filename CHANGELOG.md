@@ -63,6 +63,7 @@ Formát loosely inspirován [Keep a Changelog](https://keepachangelog.com/en/1.1
 - `apps/cli/package.json` `dev` script nyní používá `tsc --watch` místo `tsx src/bin.ts`, aby se CLI nespustilo s prázdným příkazem.
 - `AuthService` a `BriefingService` nyní podporují demo režim při chybějících credentials.
 - `DocumentsService` a `KnowledgeService` již neházejí chybu v constructoru při chybějících credentials.
+- Frontend defaultně volá reálné API i v developmentu. Chybějící demo endpointy (`/home`, `/agents`, `/projects`) byly doplněny na backendu.
 - `apps/api/src/server.ts` logger konfigurace upravena na Fastify 5 kompatibilní objekt.
 
 ## [0.1.0] – 2026-07-03

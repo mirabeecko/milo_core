@@ -62,6 +62,7 @@ První napojený zdroj: **Obsidian vault** (lokální indexing a search bez AI e
 - [x] Extrahovat znovupoužitelné UI komponenty (`common`, `priority`, `decision`, `document`, `agent`, `project`)
 - [x] Přidat loading, error a empty stavy na hlavní stránky
 - [x] Přidat globální error boundary (`app/error.tsx`)
+- [x] Přepnout frontend do API režimu v developmentu
 - [ ] Nastavit TanStack Query
 - [x] Nastavit Zustand (TTS store)
 
@@ -78,6 +79,7 @@ První napojený zdroj: **Obsidian vault** (lokální indexing a search bez AI e
 - [ ] Přidat BullMQ setup
 - [x] Přidat Pino logger
 - [x] Přidat rate limiting
+- [x] Vytvořit demo endpointy pro Home, Agents, Projects
 
 ### Autentizace
 
