@@ -13,6 +13,11 @@ export type AgentStatus =
   | "scheduling"
   | "summarizing"
   | "drafting_reply"
+  | "reading_code"
+  | "implementing"
+  | "testing"
+  | "building"
+  | "deploying"
   | "paused"
   | "offline"
   | "error";

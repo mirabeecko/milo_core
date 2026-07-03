@@ -31,6 +31,7 @@ import { LoadingState } from "@/components/common/loading-state";
 import { EmptyState } from "@/components/common/empty-state";
 import { CalendarAgentDetail } from "@/components/agent/calendar-agent-detail";
 import { CommunicationAgentDetail } from "@/components/agent/communication-agent-detail";
+import { DeveloperAgentDetail } from "@/components/agent/developer-agent-detail";
 import {
   getAgent,
   getAgentLogs,
@@ -169,6 +170,8 @@ export default function AgentDetailPage(): JSX.Element {
               <CalendarAgentDetail agent={agent} />
             ) : agent.id === "communication" ? (
               <CommunicationAgentDetail agent={agent} />
+            ) : agent.id === "developer" ? (
+              <DeveloperAgentDetail agent={agent} />
             ) : (
               <>
                 <LiveOverviewCard agent={agent} />
@@ -573,6 +576,16 @@ function statusLabel(status: Agent["state"]["status"] | AgentTask["status"]): st
       return "Shrnuje";
     case "drafting_reply":
       return "Píše odpověď";
+    case "reading_code":
+      return "Čte kód";
+    case "implementing":
+      return "Implementuje";
+    case "testing":
+      return "Testuje";
+    case "building":
+      return "Buildí";
+    case "deploying":
+      return "Deployuje";
     case "idle":
       return "Čeká";
     case "paused":
@@ -602,10 +615,15 @@ function statusColor(status: Agent["state"]["status"] | AgentTask["status"]): st
     case "scheduling":
     case "running":
     case "completed":
+    case "implementing":
+    case "testing":
+    case "building":
+    case "deploying":
       return "border-emerald-500/30 bg-emerald-500/10 text-emerald-500";
     case "thinking":
     case "planning":
     case "analyzing":
+    case "reading_code":
       return "border-amber-500/30 bg-amber-500/10 text-amber-500";
     case "idle":
       return "border-blue-500/30 bg-blue-500/10 text-blue-500";

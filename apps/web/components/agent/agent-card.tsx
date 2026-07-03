@@ -167,10 +167,15 @@ function statusDotColor(status: Agent["state"]["status"]): string {
     case "reviewing":
     case "reporting":
     case "scheduling":
+    case "implementing":
+    case "testing":
+    case "building":
+    case "deploying":
       return "bg-emerald-500";
     case "thinking":
     case "planning":
     case "analyzing":
+    case "reading_code":
       return "bg-amber-500";
     case "idle":
       return "bg-blue-500";
@@ -201,10 +206,15 @@ function statusColor(status: Agent["state"]["status"]): string {
     case "reviewing":
     case "reporting":
     case "scheduling":
+    case "implementing":
+    case "testing":
+    case "building":
+    case "deploying":
       return "border-emerald-500/30 bg-emerald-500/10 text-emerald-500";
     case "thinking":
     case "planning":
     case "analyzing":
+    case "reading_code":
       return "border-amber-500/30 bg-amber-500/10 text-amber-500";
     case "idle":
       return "border-blue-500/30 bg-blue-500/10 text-blue-500";
@@ -256,6 +266,16 @@ function statusLabel(status: Agent["state"]["status"]): string {
       return "Shrnuje";
     case "drafting_reply":
       return "Píše odpověď";
+    case "reading_code":
+      return "Čte kód";
+    case "implementing":
+      return "Implementuje";
+    case "testing":
+      return "Testuje";
+    case "building":
+      return "Buildí";
+    case "deploying":
+      return "Deployuje";
     case "idle":
       return "Čeká";
     case "paused":
