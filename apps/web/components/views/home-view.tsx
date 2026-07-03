@@ -7,7 +7,6 @@ import {
   Calendar,
   CheckCircle2,
   ChevronRight,
-  Clock,
   Command,
   FileText,
   Mail,
@@ -19,27 +18,23 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
-import { formatDateTime, formatRelative } from "@/lib/format";
+import { formatRelative } from "@/lib/format";
 import type { ActivityLogItem, DecisionItem, PriorityItem } from "@/lib/types";
 import { getHomeData, type HomeData } from "@/lib/api/home.api";
 import { PriorityRow } from "@/components/priority/priority-row";
 import { DecisionRow } from "@/components/decision/decision-row";
 import { LoadingState } from "@/components/common/loading-state";
 import { EmptyState } from "@/components/common/empty-state";
+import { LiveClock } from "@/components/widgets/live-clock";
+import { WeatherWidget } from "@/components/widgets/weather-widget";
+import { AiSummaryWidget } from "@/components/widgets/ai-summary-widget";
 import { cn } from "@/lib/utils";
 
 export function HomeView(): JSX.Element {
-  const [now, setNow] = useState<Date | null>(null);
   const [command, setCommand] = useState("");
   const [data, setData] = useState<HomeData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
-
-  useEffect(() => {
-    setNow(new Date());
-    const interval = setInterval(() => setNow(new Date()), 60000);
-    return () => clearInterval(interval);
-  }, []);
 
   useEffect(() => {
     async function load(): Promise<void> {
@@ -84,27 +79,34 @@ export function HomeView(): JSX.Element {
     <div className="mx-auto max-w-7xl space-y-6">
       {/* Welcome block */}
       <section className="relative overflow-hidden rounded-2xl border border-border bg-gradient-to-br from-card to-card/50 p-6 shadow-sm">
-        <div className="relative z-10 flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
-          <div className="space-y-2">
+        <div className="relative z-10 grid gap-6 lg:grid-cols-3">
+          <div className="space-y-2 lg:col-span-2">
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <Clock className="h-4 w-4" />
-              <span>{now ? formatDateTime(now) : "Načítám..."}</span>
+              <Bot className="h-4 w-4" />
+              <span>
+                MiLO je připraveno · {data.snapshot.activeAgents} agenti aktivní ·{" "}
+                {data.decisions.length} čeká na rozhodnutí
+              </span>
             </div>
             <h1 className="text-3xl font-bold tracking-tight">Dobré ráno, uživateli</h1>
             <p className="max-w-xl text-muted-foreground">
-              MiLO je připraveno. Systém běží normálně, {data.snapshot.activeAgents} agenti aktivní,{" "}
-              {data.decisions.length} položky čekají na rozhodnutí.
+              Dnes máš {data.priorities.filter((p) => p.priority === "critical").length} kritické
+              priority a {data.aiSummary.unreadEmails} nové e-maily. Celkem{" "}
+              {data.aiSummary.totalVisits.toLocaleString("cs-CZ")} návštěv na webech za 24 hodin.
             </p>
+            <div className="flex items-center gap-2 pt-2">
+              <Badge variant="secondary" className="gap-1.5">
+                <span className="h-2 w-2 rounded-full bg-emerald-500" />
+                Systém OK
+              </Badge>
+              <Badge variant="outline" className="gap-1.5">
+                <Bot className="h-3 w-3" />
+                {data.snapshot.activeAgents} agenti
+              </Badge>
+            </div>
           </div>
-          <div className="flex items-center gap-2">
-            <Badge variant="secondary" className="gap-1.5">
-              <span className="h-2 w-2 rounded-full bg-emerald-500" />
-              Systém OK
-            </Badge>
-            <Badge variant="outline" className="gap-1.5">
-              <Bot className="h-3 w-3" />
-              {data.snapshot.activeAgents} agenti
-            </Badge>
+          <div className="flex items-start justify-start gap-6 lg:justify-end">
+            <LiveClock />
           </div>
         </div>
 
@@ -152,6 +154,12 @@ export function HomeView(): JSX.Element {
 
       {/* Main grid */}
       <div className="grid gap-6 lg:grid-cols-3">
+        {/* AI summary */}
+        <AiSummaryWidget summary={data.aiSummary} />
+
+        {/* Weather */}
+        <WeatherWidget weather={data.weather} />
+
         {/* Priorities */}
         <Card className="lg:col-span-2">
           <CardHeader className="pb-4">

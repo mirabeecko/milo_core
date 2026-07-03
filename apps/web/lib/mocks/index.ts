@@ -94,6 +94,58 @@ export const activityLog: ActivityLogItem[] = [
   },
 ];
 
+export const weather = {
+  location: "Krupka",
+  condition: "clear" as const,
+  temperature: 24,
+  feelsLike: 26,
+  humidity: 52,
+  windSpeed: 12,
+  forecast: [
+    { time: "14:00", temperature: 25, condition: "clear" as const },
+    { time: "17:00", temperature: 23, condition: "cloudy" as const },
+    { time: "20:00", temperature: 19, condition: "cloudy" as const },
+  ],
+};
+
+export const aiSummary = {
+  unreadEmails: 4,
+  emailSenders: ["Jan Novák", "Město Krupka", "Google Workspace", "Pavel Dvořák"],
+  siteVisits: [
+    {
+      site: "tjkrupka.cz",
+      visits: 312,
+      uniqueVisitors: 198,
+      changePercent: 12,
+      topPage: "/rozvrh",
+    },
+    {
+      site: "sheskates.cz",
+      visits: 187,
+      uniqueVisitors: 143,
+      changePercent: -5,
+      topPage: "/obleceni",
+    },
+    {
+      site: "ninja-tyden.cz",
+      visits: 94,
+      uniqueVisitors: 71,
+      changePercent: 34,
+      topPage: "/prihlaska",
+    },
+    {
+      site: "webdo24.cz",
+      visits: 45,
+      uniqueVisitors: 38,
+      changePercent: 8,
+      topPage: "/sluzby",
+    },
+  ],
+  totalVisits: 638,
+  insight:
+    "Ninja Týden má největší nárůst návštěvnosti (+34 %). TJ Krupka překonává 300 návštěv za den. Ve snech Skates klesá traffic o 5 %.",
+};
+
 export const recommendation: SystemRecommendation = {
   id: "r-1",
   title: "Nejdřív vyřeš kritickou prioritu",

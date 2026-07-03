@@ -558,3 +558,33 @@ export interface SystemRecommendation {
   description: string;
   action?: string;
 }
+
+export interface WeatherData {
+  location: string;
+  condition: "clear" | "cloudy" | "rain" | "snow" | "storm" | "fog";
+  temperature: number;
+  feelsLike: number;
+  humidity: number;
+  windSpeed: number;
+  forecast: {
+    time: string;
+    temperature: number;
+    condition: WeatherData["condition"];
+  }[];
+}
+
+export interface Ga4SiteVisit {
+  site: string;
+  visits: number;
+  uniqueVisitors: number;
+  changePercent: number;
+  topPage?: string;
+}
+
+export interface AiSummary {
+  unreadEmails: number;
+  emailSenders: string[];
+  siteVisits: Ga4SiteVisit[];
+  totalVisits: number;
+  insight: string;
+}

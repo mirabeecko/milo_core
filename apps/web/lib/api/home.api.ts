@@ -7,11 +7,14 @@ import type {
 } from "@/lib/types";
 import {
   activityLog,
+  aiSummary,
   briefingSnapshot,
   decisions,
   recommendation,
   todayPriorities,
+  weather,
 } from "@/lib/mocks";
+import type { AiSummary, WeatherData } from "@/lib/types";
 
 export interface BriefingSnapshot {
   unreadEmails: number;
@@ -27,6 +30,8 @@ export interface HomeData {
   decisions: DecisionItem[];
   activityLog: ActivityLogItem[];
   recommendation: SystemRecommendation | null;
+  weather: WeatherData;
+  aiSummary: AiSummary;
 }
 
 export async function getHomeData(): Promise<HomeData> {
@@ -37,6 +42,8 @@ export async function getHomeData(): Promise<HomeData> {
       decisions,
       activityLog,
       recommendation,
+      weather,
+      aiSummary,
     };
   }
 
