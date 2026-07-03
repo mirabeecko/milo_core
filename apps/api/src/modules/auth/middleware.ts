@@ -1,7 +1,7 @@
-import { FastifyRequest, FastifyReply, HookHandlerDoneFunction } from "fastify";
+import { FastifyRequest, FastifyReply, HookHandlerDoneFunction, RouteGenericInterface } from "fastify";
 import { AuthService } from "./service.js";
 
-export interface AuthenticatedRequest extends FastifyRequest {
+export interface AuthenticatedRequest<T extends RouteGenericInterface = RouteGenericInterface> extends FastifyRequest<T> {
   user?: {
     id: string;
     email: string;

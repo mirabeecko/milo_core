@@ -2,7 +2,9 @@
 
 ## Aktuální focus
 
-Milestone 3: Real data & sync — **začíná**.
+Milestone 2: Agent Operating System — **dokončeno**.
+
+Další fáze: Milestone 3: Real data & sync — **začíná**.
 
 První napojený zdroj: **Obsidian vault** (lokální indexing a search bez AI embeddingů).
 
@@ -104,6 +106,17 @@ První napojený zdroj: **Obsidian vault** (lokální indexing a search bez AI e
 - [x] Vytvořit `@milo/agents` s Agent Runtime
 - [x] Vytvořit Chief of Staff agenta
 - [x] Napojit briefing na `/api/briefing`
+- [x] Sdílené typy pro agenty, úkoly a události
+- [x] Databázové schéma a repository pattern pro AOS
+- [x] Task model, queue a runner
+- [x] Agent entity lifecycle
+- [x] Live work explanation
+- [x] Event bus a Agent Manager
+- [x] 9 skeleton agentů v registry
+- [x] API routes pro agenty, úkoly a události
+- [x] CLI commands pro agenty a úkoly
+- [x] NOC dashboard UI
+- [x] Mock simulace všech agentů
 
 ### MVP Dashboard (Milestone 2)
 
@@ -141,7 +154,8 @@ Ostatní integrace zůstávají v demo/skeleton režimu.
 - [x] Vytvořit proces Architecture Review do dokumentace
 - [x] Milestone 0 Review — APPROVED
 - [x] Milestone 1 Review — APPROVED
-- [ ] Milestone 2 Review — připravit
+- [x] Milestone 2 Review — připravit (AOS dokončeno)
+- [ ] Milestone 3 Review — připravit
 
 ---
 

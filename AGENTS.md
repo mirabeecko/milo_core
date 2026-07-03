@@ -1,0 +1,152 @@
+# MiLO_Core – Agenti
+
+## Filozofie
+
+Agenti v MiLO_Core nejsou chatboti. Jsou to digitální zaměstnanci – samostatné inteligentní entity, které mají vlastní cíl, nástroje, paměť a zodpovědnost.
+
+Každý agent:
+
+- má vlastní system prompt
+- má vlastní nástroje
+- má vlastní paměť
+- má vlastní log
+- má vlastní konfiguraci
+- má vlastní frontu úkolů
+- má vlastní status a health
+- umí vysvětlit svou práci
+
+## Výchozí agenti
+
+### Chief of Staff
+
+- **Role:** koordinátor
+- **Specializace:** daily briefing, prioritizace, delegace
+- **Nástroje:** calendar, gmail, obsidian, task-queue, delegate
+- **Úkol:** každé ráno připravit briefing a koordinovat ostatní agenty
+
+### Developer Agent
+
+- **Role:** senior software engineer
+- **Specializace:** software engineering, code review, architecture
+- **Nástroje:** filesystem, github, shell, code-search
+- **Úkol:** pomáhat s vývojem, refaktoringem a technickými rozhodnutími
+
+### Research Agent
+
+- **Role:** research analytik
+- **Specializace:** information retrieval, analysis, summarization
+- **Nástroje:** obsidian, drive, web-search, pdf-parser
+- **Úkol:** hledat informace, analyzovat dokumenty, připravovat rešerše
+
+### Knowledge Agent
+
+- **Role:** správce znalostní báze
+- **Specializace:** indexing, vector search, knowledge graphs
+- **Nástroje:** obsidian, drive, embeddings, vector-store
+- **Úkol:** indexovat dokumenty a zajišťovat vyhledávání napříč zdroji
+
+### Legal Agent
+
+- **Role:** právní analytik
+- **Specializace:** contract analysis, legal research, compliance
+- **Nástroje:** pdf-parser, obsidian, isds, web-search
+- **Úkol:** analyzovat právní dokumenty, smlouvy a rizika
+
+### Document Agent
+
+- **Role:** zpracovatel dokumentů
+- **Specializace:** document parsing, extraction, generation
+- **Nástroje:** pdf-parser, markdown, obsidian, drive
+- **Úkol:** extrahovat data a generovat přehledné výstupy
+
+### Calendar Agent
+
+- **Role:** správce kalendáře
+- **Specializace:** scheduling, meeting prep, time management
+- **Nástroje:** calendar, gmail, tasks
+- **Úkol:** plánovat schůzky a optimalizovat časový rozvrh
+
+### Communication Agent
+
+- **Role:** komunikační asistent
+- **Specializace:** email triage, drafting, contact management
+- **Nástroje:** gmail, whatsapp, contacts
+- **Úkol:** třídit emaily, připravovat odpovědi, udržovat přehled o komunikaci
+
+### Automation Agent
+
+- **Role:** automatizační inženýr
+- **Specializace:** workflow automation, scripting, integrations
+- **Nástroje:** shell, n8n, home-assistant, github-actions
+- **Úkol:** navrhovat a spouštět opakující se workflow
+
+## Definice agenta
+
+Definice agenta je čistá data – bez business logiky:
+
+```ts
+export const chiefOfStaffDefinition: AgentDefinition = {
+  id: "chief-of-staff",
+  name: "Chief of Staff",
+  description: "...",
+  role: "coordinator",
+  specialization: "daily briefing, prioritization, delegation",
+  priority: "critical",
+  config: {
+    model: "gpt-4o",
+    temperature: 0.3,
+    systemPrompt: "...",
+    knowledge: ["daily-routine", "user-preferences"],
+    tools: ["calendar", "gmail", "obsidian"],
+    permissions: { canRead: [...], canWrite: [...], canExecute: [...] },
+    retryPolicy: { maxRetries: 3, backoffMs: 1000 },
+    timeoutMs: 120000,
+  },
+};
+```
+
+## Životní cyklus
+
+Agenti se registrují v `AgentManager`, který řídí jejich životní cyklus:
+
+```
+register(definition)
+  → initialize()
+  → start()
+  → runTask() / scheduleTask()
+  → pause() / resume()
+  → stop()
+```
+
+## Transparentnost
+
+Každý agent musí umět odpovědět:
+
+1. Co právě dělám?
+2. Proč to dělám?
+3. Jaký je další krok?
+4. Jaké nástroje používám?
+5. Kolik práce zbývá?
+6. Jak dlouho to bude trvat?
+7. Co jsem právě dokončil?
+8. Co potřebuji od uživatele?
+
+Viz `AOS.md` pro detailní popis live work explanation.
+
+## Dashboard
+
+Agent Operating Center v dashboardu zobrazuje:
+
+- stav každého agenta
+- aktuální úkol
+- live explanation
+- frontu úkolů
+- statistiky
+- logy
+
+## Přidání nového agenta
+
+1. Vytvoř definici v `packages/agents/src/registry/<agent>.ts`
+2. Exportuj ji z `packages/agents/src/registry/index.ts`
+3. Přidej ji do `defaultAgentDefinitions`
+4. Spusť simulaci: `pnpm --filter @milo/agents simulate`

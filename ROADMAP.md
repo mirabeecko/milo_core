@@ -39,15 +39,36 @@ Každý milestone je plně funkční a prochází **Architecture Review**. Cíle
 - [x] Google Calendar integrace skeleton (`/api/calendar`)
 - [x] Google Drive integrace skeleton (`/api/documents`)
 - [x] Obsidian integrace skeleton (`/api/knowledge/obsidian`)
-- [ ] **Architecture Review** – integrace, TTS, auth, UX a bezpečnost
+- [x] **Architecture Review** – integrace, TTS, auth, UX a bezpečnost — APPROVED
 
 **Cíl:** Uživatel se přihlásí, vidí premium dashboard a může prohlížet demo data ze všech core zdrojů.
+
+**Stav:** APPROVED.
+
+---
+
+## Milestone 2: Agent Operating System
+
+- [x] Sdílené typy pro agenty, úkoly a události (`@milo/shared`)
+- [x] Databázové schéma a repository pattern (PG + in-memory fallback)
+- [x] Task model, queue a runner
+- [x] Agent entity lifecycle (initialize, start, stop, pause, resume, runTask, cancelTask, scheduleTask, retry, heartbeat, report)
+- [x] Live work explanation
+- [x] Event bus a Agent Manager
+- [x] 9 skeleton agentů v registry
+- [x] API routes: `/agents`, `/tasks`, `/events` včetně SSE streamu
+- [x] CLI commands pro agenty a úkoly
+- [x] NOC dashboard UI (Agent Operating Center) s detailem agenta
+- [x] Mock simulace všech agentů
+- [x] **Architecture Review** – AOS architektura, technický dluh, bezpečnost
+
+**Cíl:** MiLO má produkční framework pro běh digitálních zaměstnanců, který lze otestovat s mock daty.
 
 **Stav:** Implementace hotová, čeká na Architecture Review.
 
 ---
 
-## Milestone 2: Real Data & Background Sync
+## Milestone 3: Real Data & Background Sync
 
 - [ ] Production-ready Supabase Auth (OAuth, magic link, passkeys)
 - [ ] RBAC a oprávnění na úrovni zdrojů
@@ -64,7 +85,7 @@ Každý milestone je plně funkční a prochází **Architecture Review**. Cíle
 
 ---
 
-## Milestone 3: Knowledge Base & RAG
+## Milestone 4: Knowledge Base & RAG
 
 - [ ] Centralizovaná knowledge base v Supabase + pgvector
 - [ ] Embeddings pipeline pro dokumenty, emaily, poznámky
@@ -79,7 +100,7 @@ Každý milestone je plně funkční a prochází **Architecture Review**. Cíle
 
 ---
 
-## Milestone 4: Chat, Activity & MCP Runtime
+## Milestone 5: Chat, Activity & MCP Runtime
 
 - [ ] Chatové rozhraní s Chief of Staff agentem
 - [ ] Streaming odpovědí do UI
@@ -94,7 +115,7 @@ Každý milestone je plně funkční a prochází **Architecture Review**. Cíle
 
 ---
 
-## Milestone 5: Polishing a Release MVP v1.0.0
+## Milestone 6: Polishing a Release MVP v1.0.0
 
 - [ ] Ladění UX a výkonu (Lighthouse 90+, interakce pod 100 ms)
 - [ ] Responzivní layout dokončení

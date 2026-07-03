@@ -1,6 +1,6 @@
-export interface Repository<T> {
-  findById(id: string): Promise<T | null>;
-  create(entity: Omit<T, "id" | "createdAt" | "updatedAt">): Promise<T>;
-  update(id: string, entity: Partial<T>): Promise<T>;
-  delete(id: string): Promise<void>;
-}
+export * from "./agent-repository.js";
+export * from "./task-repository.js";
+export * from "./agent-log-repository.js";
+export * from "./agent-memory-repository.js";
+export * from "./agent-metrics-repository.js";
+export * from "./agent-event-repository.js";

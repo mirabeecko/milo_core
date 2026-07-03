@@ -93,15 +93,15 @@ První verze je zaměřená na MVP s přihlášením, dashboardem, ranním brief
 
 ## Aktuální stav
 
-MVP dashboard je funkční s mock daty. Lze ho otevřít a používat každý den:
+Agent Operating System (AOS) je postaven a testovatelný s mock simulací. Obsahuje produkční framework pro běh digitálních zaměstnanců:
 
-- **Home** – command center s prioritami, briefing snapshotem, rozhodnutími a aktivitou.
-- **Today's Brief** – generovaný ranní briefing s přehráváním a kopírováním.
-- **Chat** – funkční chat UI s mock odpověďmi MiLO.
-- **Agents** – přehled agentů s logy práce.
-- **Projects** – přehled projektů, priorit a otevřených úkolů.
-- **Documents** – dokumentové centrum s vyhledáváním a filtry.
-- **Settings** – nastavení AI providera, TTS, Obsidian vaultu a budoucích integrací.
+- **Agent Framework** (`@milo/agents`) – životní cyklus, fronty, event bus, live explanation.
+- **Agent Manager** – registrace, spouštění, delegace, monitoring, heartbeat.
+- **9 skeleton agentů** – Chief of Staff, Developer, Research, Knowledge, Legal, Document, Calendar, Communication, Automation.
+- **API routes** – `/agents`, `/tasks`, `/events` včetně SSE streamu.
+- **CLI commands** – `milo agent list/start/stop/status/logs`, `milo task list/run/cancel`.
+- **NOC Dashboard** – Agent Operating Center s živými stavy, logy a detaily agenta.
+- **MVP dashboard** – Home, Today's Brief, Chat, Projects, Documents, Settings s mock daty.
 
 Integrace (Gmail, Calendar, Drive, Obsidian) aktuálně používají demo fallback. Reálná OAuth napojení přijdou v další fázi.
 
@@ -157,6 +157,9 @@ pnpm milo ask "Jaký je můj dnešní program?" --speak
 ## Dokumentace
 
 - [ARCHITECTURE.md](./ARCHITECTURE.md) – architektura a struktura projektu
+- [AOS.md](./AOS.md) – Agent Operating System
+- [AGENTS.md](./AGENTS.md) – agenti a jejich role
+- [TASK_MODEL.md](./TASK_MODEL.md) – model úkolů
 - [ROADMAP.md](./ROADMAP.md) – plán vývoje a milestones
 - [TASKS.md](./TASKS.md) – aktuální úkoly a stav
 - [CHANGELOG.md](./CHANGELOG.md) – historie změn

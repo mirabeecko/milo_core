@@ -19,6 +19,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@milo/shared": "workspace:*",
     "@supabase/supabase-js": "^2.44.0"
   },
   "devDependencies": {

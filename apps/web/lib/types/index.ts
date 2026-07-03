@@ -1,6 +1,68 @@
 export type Priority = "critical" | "important" | "low";
 export type Status = "active" | "idle" | "paused" | "error";
-export type AgentStatus = "running" | "idle" | "paused" | "error" | "disabled";
+export type AgentStatus = "idle" | "working" | "waiting" | "paused" | "offline" | "error";
+
+export interface AgentHealth {
+  status: "healthy" | "degraded" | "unhealthy";
+  lastHeartbeat: string;
+  message?: string;
+}
+
+export interface AgentMetrics {
+  totalTasks: number;
+  successfulTasks: number;
+  failedTasks: number;
+  retriedTasks: number;
+  averageDurationMs: number;
+  totalTokens?: number;
+  errorCount: number;
+  lastUpdatedAt: string;
+}
+
+export interface AgentConfig {
+  model: string;
+  temperature: number;
+  maxTokens?: number;
+  systemPrompt: string;
+  knowledge: string[];
+  tools: string[];
+  permissions: {
+    canRead: string[];
+    canWrite: string[];
+    canExecute: string[];
+  };
+  retryPolicy: {
+    maxRetries: number;
+    backoffMs: number;
+  };
+  timeoutMs: number;
+}
+
+export interface LiveWorkExplanation {
+  currentActivity: string;
+  goal: string;
+  reason: string;
+  findings: string;
+  evidence: string[];
+  toolsUsed: string[];
+  nextStep: string;
+  estimatedCompletion: string;
+  risks: string;
+  needsFromUser: string;
+  lastCompletedStep: string;
+  decisionLog: { timestamp: string; thought: string }[];
+  updatedAt: string;
+}
+
+export interface AgentState {
+  status: AgentStatus;
+  activeTaskId?: string;
+  explanation: LiveWorkExplanation;
+  pendingTasks: number;
+  runningTasks: number;
+  completedTasks: number;
+  failedTasks: number;
+}
 export type ProjectStatus = "active" | "on_hold" | "completed" | "archived";
 export type DocumentSource = "obsidian" | "drive" | "gmail" | "upload" | "isds";
 export type DecisionStatus = "pending" | "approved" | "rejected" | "snoozed";
@@ -42,20 +104,27 @@ export interface ActivityLogItem {
 export interface Agent {
   id: string;
   name: string;
-  role: string;
   description: string;
+  role: string;
+  specialization: string;
+  priority: "critical" | "high" | "normal" | "low";
   status: AgentStatus;
-  lastActive: string;
-  currentTask?: string;
-  icon: string;
+  health: AgentHealth;
+  metrics: AgentMetrics;
+  config: AgentConfig;
+  memory: Record<string, unknown>;
+  createdAt: string;
+  updatedAt: string;
+  state: AgentState;
 }
 
 export interface AgentLogEntry {
   id: string;
   agentId: string;
   timestamp: string;
-  level: "info" | "warning" | "error";
+  level: "info" | "warn" | "error" | "debug";
   message: string;
+  metadata?: Record<string, unknown>;
 }
 
 export interface Project {

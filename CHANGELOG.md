@@ -8,6 +8,39 @@ Formát loosely inspirován [Keep a Changelog](https://keepachangelog.com/en/1.1
 
 ### Added
 
+- Agent Operating System (AOS) framework v `@milo/agents`:
+  - Sdílené typy pro agenty, úkoly a události v `@milo/shared`.
+  - Databázové schéma a repository pattern (PG + in-memory fallback) v `@milo/database`.
+  - Task model, queue a runner s progress a logováním.
+  - Agent entity lifecycle: initialize, start, stop, pause, resume, runTask, cancelTask, scheduleTask, retry, heartbeat, report.
+  - Live work explanation – lidsky čitelné vysvětlení práce agenta.
+  - Event bus pro komunikaci mezi agenty.
+  - Agent Manager pro registraci, delegaci, monitoring a heartbeat.
+  - 9 skeleton agentů: Chief of Staff, Developer, Research, Knowledge, Legal, Document, Calendar, Communication, Automation.
+  - Mock simulace všech agentů: `pnpm --filter @milo/agents simulate`.
+- API routes pro AOS:
+  - `GET /agents`, `GET /agents/:id`, `POST /agents/:id/{start,stop,pause,resume}`.
+  - `GET /agents/:id/{logs,metrics,memory,explanation}`.
+  - `GET /tasks`, `POST /tasks`, `POST /tasks/:id/{cancel,retry}`.
+  - `GET /events`, `GET /events/stream` (SSE).
+- CLI commands pro AOS:
+  - `milo agent list/start/stop/status/logs`.
+  - `milo task list/run/cancel`.
+  - `milo brief` a `milo ask` nyní delegují úkol do AgentManager.
+- NOC dashboard UI:
+  - Agent Operating Center s živými stavy, frontou úkolů, statistikami a logy.
+  - Detail agenta s přehledem, vysvětlením práce, nástroji, metrikami a logem.
+- Dokumentace AOS: `AOS.md`, `AGENTS.md`, `TASK_MODEL.md`.
+
+### Changed
+
+- `@milo/agents` byl kompletně přepsán z jednoduchého runtime na produkční Agent Operating System.
+- Stránka Agents nyní načítá reálná data z `/api/agents` a sleduje SSE `/api/events/stream`.
+
+### Fixed
+
+- Konzistence typů mezi frontendem a novým AOS API.
+
 - Napojení lokálního Obsidian vaultu:
   - `ObsidianIndexer` v `@milo/tools` pro skenování, čtení a persistenci indexu .md souborů.
   - Vyhledávání bez AI embeddingů – jednoduchý full-text scoring podle názvu, cesty, obsahu a tagů.

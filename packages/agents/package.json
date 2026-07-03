@@ -16,15 +16,20 @@
     "dev": "tsc --watch",
     "lint": "eslint src",
     "test": "vitest run",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "simulate": "tsx src/simulation.ts"
   },
   "dependencies": {
     "@milo/ai": "workspace:*",
+    "@milo/database": "workspace:*",
+    "@milo/shared": "workspace:*",
     "@milo/tools": "workspace:*",
-    "@milo/shared": "workspace:*"
+    "bullmq": "^5.12.0",
+    "ioredis": "^5.4.0"
   },
   "devDependencies": {
     "@types/node": "^22.0.0",
+    "tsx": "^4.16.0",
     "typescript": "^5.5.0",
     "vitest": "^2.0.0"
   }

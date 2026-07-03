@@ -17,3 +17,7 @@ export interface ApiError {
   message: string;
   details?: Record<string, unknown>;
 }
+
+export * from "./agent.js";
+export * from "./task.js";
+export * from "./agent-event.js";

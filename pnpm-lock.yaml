@@ -50,6 +50,9 @@ importers:
       '@milo/database':
         specifier: workspace:*
         version: link:../../packages/database
+      '@milo/shared':
+        specifier: workspace:*
+        version: link:../../packages/shared
       '@milo/tools':
         specifier: workspace:*
         version: link:../../packages/tools
@@ -102,6 +105,15 @@ importers:
 
   apps/cli:
     dependencies:
+      '@milo/agents':
+        specifier: workspace:*
+        version: link:../../packages/agents
+      '@milo/database':
+        specifier: workspace:*
+        version: link:../../packages/database
+      '@milo/shared':
+        specifier: workspace:*
+        version: link:../../packages/shared
       '@milo/tts':
         specifier: workspace:*
         version: link:../../packages/tts
@@ -230,16 +242,28 @@ importers:
       '@milo/ai':
         specifier: workspace:*
         version: link:../ai
+      '@milo/database':
+        specifier: workspace:*
+        version: link:../database
       '@milo/shared':
         specifier: workspace:*
         version: link:../shared
       '@milo/tools':
         specifier: workspace:*
         version: link:../tools
+      bullmq:
+        specifier: ^5.12.0
+        version: 5.79.2(redis@5.12.1)
+      ioredis:
+        specifier: ^5.4.0
+        version: 5.10.1
     devDependencies:
       '@types/node':
         specifier: ^22.0.0
         version: 22.20.0
+      tsx:
+        specifier: ^4.16.0
+        version: 4.22.5
       typescript:
         specifier: ^5.5.0
         version: 5.9.3
@@ -268,6 +292,9 @@ importers:
 
   packages/database:
     dependencies:
+      '@milo/shared':
+        specifier: workspace:*
+        version: link:../shared
       '@supabase/supabase-js':
         specifier: ^2.44.0
         version: 2.110.0

@@ -101,57 +101,74 @@ export const recommendation: SystemRecommendation = {
   action: "Otevřít prioritu",
 };
 
+function emptyAgentState(status: Agent["state"]["status"]): Agent["state"] {
+  return {
+    status,
+    explanation: {
+      currentActivity: "Čekám na úkol.",
+      goal: "Být připraven přijmout a vykonat úkol.",
+      reason: "Agent je inicializován a čeká na práci.",
+      findings: "Zatím žádné výsledky.",
+      evidence: [],
+      toolsUsed: [],
+      nextStep: "Čekat na přidělení úkolu.",
+      estimatedCompletion: "Neurčito",
+      risks: "Žádné.",
+      needsFromUser: "Nic.",
+      lastCompletedStep: "Inicializace",
+      decisionLog: [],
+      updatedAt: new Date().toISOString(),
+    },
+    pendingTasks: 0,
+    runningTasks: 0,
+    completedTasks: 0,
+    failedTasks: 0,
+  };
+}
+
+function baseAgent(id: string, name: string, role: string, specialization: string): Agent {
+  const now = new Date().toISOString();
+  return {
+    id,
+    name,
+    description: "Agent MiLO.",
+    role,
+    specialization,
+    priority: "normal",
+    status: "idle",
+    health: { status: "healthy", lastHeartbeat: now },
+    metrics: {
+      totalTasks: 0,
+      successfulTasks: 0,
+      failedTasks: 0,
+      retriedTasks: 0,
+      averageDurationMs: 0,
+      errorCount: 0,
+      lastUpdatedAt: now,
+    },
+    config: {
+      model: "gpt-4o",
+      temperature: 0.3,
+      systemPrompt: "Jsi MiLO agent.",
+      knowledge: [],
+      tools: [],
+      permissions: { canRead: [], canWrite: [], canExecute: [] },
+      retryPolicy: { maxRetries: 3, backoffMs: 1000 },
+      timeoutMs: 120000,
+    },
+    memory: {},
+    createdAt: now,
+    updatedAt: now,
+    state: emptyAgentState("idle"),
+  };
+}
+
 export const agents: Agent[] = [
-  {
-    id: "agent-chief",
-    name: "Chief of Staff",
-    role: "Každodenní koordinace",
-    description: "Generuje briefing, sleduje priority a koordinuje ostatní agenty.",
-    status: "running",
-    lastActive: "2026-07-03T07:00:00Z",
-    currentTask: "Generuji ranní briefing",
-    icon: "sunrise",
-  },
-  {
-    id: "agent-legal",
-    name: "Legal Agent",
-    role: "Právní dokumenty",
-    description: "Kontroluje smlouvy, termíny a právní rizika.",
-    status: "idle",
-    lastActive: "2026-07-02T16:20:00Z",
-    currentTask: "Čeká na úkol",
-    icon: "scale",
-  },
-  {
-    id: "agent-research",
-    name: "Research Agent",
-    role: "Rešerše a knowledge",
-    description: "Vyhledává informace napříč dokumenty a znalostní bází.",
-    status: "running",
-    lastActive: "2026-07-03T06:45:00Z",
-    currentTask: "Indexuji Obsidian vault",
-    icon: "search",
-  },
-  {
-    id: "agent-dev",
-    name: "Developer Agent",
-    role: "Vývoj a kód",
-    description: "Pomáhá s vývojem, refaktoringem a review kódu.",
-    status: "paused",
-    lastActive: "2026-07-01T14:00:00Z",
-    currentTask: "Pozastaveno",
-    icon: "code",
-  },
-  {
-    id: "agent-knowledge",
-    name: "Knowledge Agent",
-    role: "Znalostní báze",
-    description: "Organizuje poznámky, tagy a vztahy mezi dokumenty.",
-    status: "idle",
-    lastActive: "2026-07-02T11:30:00Z",
-    currentTask: "Čeká na úkol",
-    icon: "book-open",
-  },
+  { ...baseAgent("agent-chief", "Chief of Staff", "Každodenní koordinace", "briefing"), state: emptyAgentState("working") },
+  baseAgent("agent-legal", "Legal Agent", "Právní dokumenty", "contracts"),
+  { ...baseAgent("agent-research", "Research Agent", "Rešerše a knowledge", "research"), state: emptyAgentState("working") },
+  { ...baseAgent("agent-dev", "Developer Agent", "Vývoj a kód", "code"), state: emptyAgentState("paused") },
+  baseAgent("agent-knowledge", "Knowledge Agent", "Znalostní báze", "knowledge"),
 ];
 
 export const agentLogs: AgentLogEntry[] = [
@@ -173,7 +190,7 @@ export const agentLogs: AgentLogEntry[] = [
     id: "log-3",
     agentId: "agent-legal",
     timestamp: "2026-07-02T16:20:00Z",
-    level: "warning",
+    level: "warn",
     message: "Smlouva TJ Krupka vyžaduje doplnění kontaktních údajů",
   },
 ];

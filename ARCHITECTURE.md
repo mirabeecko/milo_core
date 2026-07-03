@@ -80,18 +80,21 @@ Abstrakce nad LLM providery:
 - `VectorSearchService` – RAG s re-rankingem a citacemi
 - `StreamingService` – streamování odpovědí do UI
 
-### 5. Agent Runtime
+### 5. Agent Operating System (AOS)
 
-Agenti nejsou jen prompty – jsou to spolehlivé runtime moduly:
+Agenti nejsou jen prompty – jsou to spolehlivé runtime moduly. AOS poskytuje produkční framework pro běh digitálních zaměstnanců:
 
-- `Agent` – definice cíle, paměti a nástrojů
-- `ToolRegistry` – bezpečné volání nástrojů s validací
-- `Memory` – krátkodobá a dlouhodobá paměť
-- `Planner` – plánování kroků a reflexe
-- `ExecutionEngine` – spouštění agentů synchronně i asynchronně
-- `AgentLogs` – audit trail všech rozhodnutí
+- `AgentEntity` – samostatná agent entita se životním cyklem
+- `AgentManager` – centrální řízení, registrace, delegace, monitoring
+- `TaskQueue` – fronta úkolů (in-memory / BullMQ)
+- `TaskRunner` – spouštění úkolů s progress a logováním
+- `AgentEventBus` – message bus pro události mezi agenty
+- `LiveWorkExplanation` – lidsky čitelné vysvětlení práce agenta
+- `AgentRegistry` – definice výchozích agentů
 
-Každý agent má vlastní prompt, tools, paměť, logy a nastavení.
+Každý agent má vlastní prompt, tools, paměť, logy, frontu úkolů, status, health a konfiguraci.
+
+Viz [AOS.md](./AOS.md), [AGENTS.md](./AGENTS.md) a [TASK_MODEL.md](./TASK_MODEL.md).
 
 ### 6. Text-to-Speech (TTS)
 

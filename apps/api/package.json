@@ -16,6 +16,7 @@
     "@milo/agents": "workspace:*",
     "@milo/ai": "workspace:*",
     "@milo/database": "workspace:*",
+    "@milo/shared": "workspace:*",
     "@milo/tools": "workspace:*",
     "fastify": "^5.0.0",
     "@fastify/cors": "^10.0.0",
