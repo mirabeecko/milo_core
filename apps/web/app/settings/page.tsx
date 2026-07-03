@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Bot,
   Brain,
@@ -9,6 +9,7 @@ import {
   FolderOpen,
   Mail,
   MessageSquare,
+  RefreshCw,
   Save,
   Volume2,
 } from "lucide-react";
@@ -20,13 +21,60 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { DashboardLayout } from "@/components/layout/dashboard-layout";
 import { useTtsStore } from "@/stores/tts-store";
+import {
+  getObsidianStatus,
+  setObsidianVaultPath,
+  reindexObsidian,
+} from "@/lib/api/knowledge.api";
+import type { ObsidianStatus } from "@/lib/types";
 
 export default function SettingsPage(): JSX.Element {
   const { isAvailable, autoSpeak, setAutoSpeak } = useTtsStore();
   const [aiProvider, setAiProvider] = useState("openai");
   const [aiModel, setAiModel] = useState("gpt-4o");
   const [ttsEnabled, setTtsEnabled] = useState(true);
-  const [obsidianPath, setObsidianPath] = useState("~/Documents/Obsidian/MiLO");
+  const [obsidianPath, setObsidianPath] = useState("");
+  const [obsidianStatus, setObsidianStatus] = useState<ObsidianStatus | null>(null);
+  const [isObsidianLoading, setIsObsidianLoading] = useState(false);
+
+  useEffect(() => {
+    async function loadStatus(): Promise<void> {
+      try {
+        const status = await getObsidianStatus();
+        setObsidianStatus(status);
+        setObsidianPath(status.vaultPath ?? "");
+      } catch (error) {
+        console.error(error);
+      }
+    }
+    void loadStatus();
+  }, []);
+
+  const handleSaveObsidian = async (): Promise<void> => {
+    if (!obsidianPath.trim()) return;
+    setIsObsidianLoading(true);
+    try {
+      const status = await setObsidianVaultPath(obsidianPath.trim());
+      setObsidianStatus(status);
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setIsObsidianLoading(false);
+    }
+  };
+
+  const handleReindexObsidian = async (): Promise<void> => {
+    setIsObsidianLoading(true);
+    try {
+      await reindexObsidian();
+      const status = await getObsidianStatus();
+      setObsidianStatus(status);
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setIsObsidianLoading(false);
+    }
+  };
 
   const integrations = [
     { id: "gmail", name: "Gmail", icon: Mail, enabled: false, soon: true },
@@ -138,9 +186,16 @@ export default function SettingsPage(): JSX.Element {
         {/* Obsidian */}
         <Card>
           <CardHeader>
-            <div className="flex items-center gap-2">
-              <FolderOpen className="h-5 w-5 text-primary" />
-              <CardTitle>Obsidian</CardTitle>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <FolderOpen className="h-5 w-5 text-primary" />
+                <CardTitle>Obsidian</CardTitle>
+              </div>
+              {obsidianStatus && (
+                <Badge variant={obsidianStatus.configured ? "default" : "secondary"} className="text-xs">
+                  {obsidianStatus.configured ? "Připojeno" : "Nepřipojeno"}
+                </Badge>
+              )}
             </div>
             <CardDescription>Cesta k lokálnímu Obsidian vaultu.</CardDescription>
           </CardHeader>
@@ -152,6 +207,38 @@ export default function SettingsPage(): JSX.Element {
                 onChange={(event) => setObsidianPath(event.target.value)}
                 placeholder="~/Documents/Obsidian/MiLO"
               />
+              <p className="text-xs text-muted-foreground">
+                Absolutní cesta k adresáři s .md soubory. Změna se uloží lokálně v data/settings.json.
+              </p>
+            </div>
+            {obsidianStatus && obsidianStatus.configured && (
+              <div className="rounded-lg border border-border bg-card/50 p-3 text-sm">
+                <p className="text-muted-foreground">
+                  <span className="font-medium text-foreground">{obsidianStatus.noteCount}</span> indexovaných poznámek
+                  {obsidianStatus.indexedAt && (
+                    <span> · naposledy {new Date(obsidianStatus.indexedAt).toLocaleString("cs-CZ")}</span>
+                  )}
+                </p>
+              </div>
+            )}
+            <div className="flex gap-2">
+              <Button
+                onClick={() => void handleSaveObsidian()}
+                disabled={isObsidianLoading || !obsidianPath.trim()}
+                className="gap-2"
+              >
+                <Save className="h-4 w-4" />
+                Uložit a indexovat
+              </Button>
+              <Button
+                variant="outline"
+                onClick={() => void handleReindexObsidian()}
+                disabled={isObsidianLoading || !obsidianStatus?.configured}
+                className="gap-2"
+              >
+                <RefreshCw className="h-4 w-4" />
+                Reindexovat
+              </Button>
             </div>
           </CardContent>
         </Card>

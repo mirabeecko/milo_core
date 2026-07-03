@@ -2,9 +2,9 @@
 
 ## Aktuální focus
 
-Milestone 2: Funkční MVP dashboard s mock daty — **dokončen**.
+Milestone 3: Real data & sync — **začíná**.
 
-Čeká na Architecture Review před přechodem na reálná data a sync.
+První napojený zdroj: **Obsidian vault** (lokální indexing a search bez AI embeddingů).
 
 ---
 
@@ -114,14 +114,20 @@ Milestone 2: Funkční MVP dashboard s mock daty — **dokončen**.
 - [x] Vytvořit Documents centrum
 - [x] Vytvořit Settings stránku
 
-### Integrace (Milestone 1 skeleton)
+### Integrace (Milestone 3)
 
-- [x] Gmail (`/api/email`)
-- [x] Google Calendar (`/api/calendar`)
-- [x] Google Drive (`/api/documents`)
-- [x] Obsidian (`/api/knowledge/obsidian`)
+- [ ] Gmail (`/api/email`) – pouze skeleton
+- [ ] Google Calendar (`/api/calendar`) – pouze skeleton
+- [ ] Google Drive (`/api/documents`) – pouze skeleton
+- [x] Obsidian (`/api/knowledge`):
+  - [x] Lokální scan .md souborů v zadaném vault path.
+  - [x] Indexování názvů, cest, obsahu a tagů.
+  - [x] Persistovaný index do `apps/api/data/obsidian-index.json`.
+  - [x] Jednoduché full-text vyhledávání bez embeddingů.
+  - [x] Zobrazení v Knowledge a Documents.
+  - [x] Nastavení vault path z UI.
 
-Všechny integrace aktuálně podporují demo fallback při chybějících credentials.
+Ostatní integrace zůstávají v demo/skeleton režimu.
 
 ### CI
 

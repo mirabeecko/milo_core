@@ -1,42 +1,133 @@
-import { ObsidianClient, type ObsidianNote } from "@milo/tools";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+import { ObsidianIndexer, ObsidianNote } from "@milo/tools";
 import { config } from "../../config/index.js";
+import { getObsidianVaultPath } from "../../config/settings.js";
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const INDEX_FILE = path.resolve(__dirname, "../../../data/obsidian-index.json");
+
+export interface ObsidianStatus {
+  configured: boolean;
+  demo: boolean;
+  vaultPath?: string;
+  noteCount: number;
+  indexedAt?: string;
+}
 
 export class KnowledgeService {
-  private obsidian: ObsidianClient | null = null;
+  private indexer: ObsidianIndexer | null = null;
+  private currentVaultPath: string | undefined;
 
-  constructor() {
-    if (config.OBSIDIAN_VAULT_PATH) {
-      this.obsidian = new ObsidianClient({ vaultPath: config.OBSIDIAN_VAULT_PATH });
-    }
+  async getVaultPath(): Promise<string | undefined> {
+    return config.OBSIDIAN_VAULT_PATH ?? (await getObsidianVaultPath());
   }
 
-  isConfigured(): boolean {
-    return Boolean(config.OBSIDIAN_VAULT_PATH);
+  async isConfigured(): Promise<boolean> {
+    return Boolean(await this.getVaultPath());
   }
 
-  isDemo(): boolean {
-    return config.DEMO_MODE || !this.isConfigured();
+  async isDemo(): Promise<boolean> {
+    return config.DEMO_MODE || !(await this.isConfigured());
   }
 
-  async listObsidianNotes(maxResults = 20): Promise<ObsidianNote[]> {
-    if (this.isDemo()) {
-      return this.generateDemoNotes();
+  async getStatus(): Promise<ObsidianStatus> {
+    const vaultPath = await this.getVaultPath();
+    const indexer = await this.ensureIndexer();
+    const index = indexer?.getIndex();
+
+    return {
+      configured: Boolean(vaultPath),
+      demo: await this.isDemo(),
+      vaultPath,
+      noteCount: indexer?.getNotes().length ?? 0,
+      indexedAt: index?.indexedAt,
+    };
+  }
+
+  async listObsidianNotes(maxResults = 20, query?: string): Promise<ObsidianNote[]> {
+    if (await this.isDemo()) {
+      return this.filterDemoNotes(query);
     }
 
-    if (!this.obsidian) {
-      return this.generateDemoNotes();
+    const indexer = await this.ensureIndexer();
+    if (!indexer) {
+      return this.filterDemoNotes(query);
     }
 
-    try {
-      const notes = await this.obsidian.listNotes({ maxResults });
-      if (notes.length === 0) {
-        return this.generateDemoNotes();
+    const notes = query ? indexer.search(query) : indexer.getNotes();
+    return notes.slice(0, maxResults);
+  }
+
+  async searchObsidian(query: string): Promise<ObsidianNote[]> {
+    if (await this.isDemo()) {
+      return this.filterDemoNotes(query);
+    }
+
+    const indexer = await this.ensureIndexer();
+    if (!indexer) {
+      return this.filterDemoNotes(query);
+    }
+
+    return indexer.search(query);
+  }
+
+  async getObsidianNote(id: string): Promise<ObsidianNote | null> {
+    if (await this.isDemo()) {
+      return this.generateDemoNotes().find((note) => note.id === id) ?? null;
+    }
+
+    const indexer = await this.ensureIndexer();
+    if (!indexer) {
+      return this.generateDemoNotes().find((note) => note.id === id) ?? null;
+    }
+
+    return indexer.getNoteById(id) ?? null;
+  }
+
+  async reindex(): Promise<ObsidianNote[]> {
+    const vaultPath = await this.getVaultPath();
+    if (!vaultPath) {
+      throw new Error("Obsidian vault path is not configured");
+    }
+
+    this.indexer = new ObsidianIndexer(vaultPath);
+    this.currentVaultPath = vaultPath;
+    await this.indexer.buildIndex();
+    await this.indexer.persistIndex(INDEX_FILE);
+    return this.indexer.getNotes();
+  }
+
+  private async ensureIndexer(): Promise<ObsidianIndexer | null> {
+    const vaultPath = await this.getVaultPath();
+    if (!vaultPath) {
+      return null;
+    }
+
+    if (!this.indexer || this.currentVaultPath !== vaultPath) {
+      this.indexer = new ObsidianIndexer(vaultPath);
+      this.currentVaultPath = vaultPath;
+      const loaded = await this.indexer.loadIndex(INDEX_FILE);
+      if (!loaded) {
+        await this.indexer.buildIndex();
+        await this.indexer.persistIndex(INDEX_FILE);
       }
-      return notes;
-    } catch (error) {
-      console.error(error);
-      return this.generateDemoNotes();
     }
+
+    return this.indexer;
+  }
+
+  private filterDemoNotes(query?: string): ObsidianNote[] {
+    const notes = this.generateDemoNotes();
+    if (!query) return notes;
+
+    const lower = query.toLowerCase();
+    return notes.filter(
+      (note) =>
+        note.title.toLowerCase().includes(lower) ||
+        note.content.toLowerCase().includes(lower) ||
+        note.tags.some((tag) => tag.toLowerCase().includes(lower)),
+    );
   }
 
   generateDemoNotes(): ObsidianNote[] {

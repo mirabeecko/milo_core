@@ -8,6 +8,13 @@ Formát loosely inspirován [Keep a Changelog](https://keepachangelog.com/en/1.1
 
 ### Added
 
+- Napojení lokálního Obsidian vaultu:
+  - `ObsidianIndexer` v `@milo/tools` pro skenování, čtení a persistenci indexu .md souborů.
+  - Vyhledávání bez AI embeddingů – jednoduchý full-text scoring podle názvu, cesty, obsahu a tagů.
+  - API endpointy: `GET /knowledge/obsidian`, `GET /knowledge/obsidian/:id`, `GET /knowledge/search`, `POST /knowledge/index`, `GET/POST /knowledge/settings/obsidian`.
+  - Settings UI pro nastavení cesty k vaultu a spuštění reindexu.
+  - Knowledge stránka s vyhledáváním a náhledem poznámky.
+  - Documents stránka nyní zobrazuje i Obsidian poznámky.
 - Centrální frontend API vrstva v `apps/web/lib/api/` (`client`, `types`, doménové služby).
 - `/api/chat` endpoint s `ChatService` a `CommandProcessor` – sdílený pro UI, CLI i budoucí hlas.
 - `app/error.tsx` – globální error boundary.

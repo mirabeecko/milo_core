@@ -11,6 +11,7 @@ import { PageHeader } from "@/components/common/page-header";
 import { LoadingState } from "@/components/common/loading-state";
 import { EmptyState } from "@/components/common/empty-state";
 import { getDocuments } from "@/lib/api/documents.api";
+import { getObsidianNotes, mapObsidianToDocument } from "@/lib/api/knowledge.api";
 import { getSourceLabel } from "@/lib/format";
 import type { Document } from "@/lib/types";
 import { cn } from "@/lib/utils";
@@ -31,8 +32,12 @@ export default function DocumentsPage(): JSX.Element {
       try {
         setIsLoading(true);
         setError(null);
-        const data = await getDocuments();
-        setDocuments(data);
+        const [driveDocs, obsidianNotes] = await Promise.all([
+          getDocuments(),
+          getObsidianNotes(),
+        ]);
+        const obsidianDocs = obsidianNotes.map(mapObsidianToDocument);
+        setDocuments([...obsidianDocs, ...driveDocs]);
       } catch (err) {
         setError(err instanceof Error ? err : new Error("Nepodařilo se načíst dokumenty"));
       } finally {

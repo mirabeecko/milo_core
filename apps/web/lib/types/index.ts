@@ -81,6 +81,23 @@ export interface Document {
   snippet: string;
 }
 
+export interface ObsidianNote {
+  id: string;
+  title: string;
+  path: string;
+  content: string;
+  modifiedAt: string;
+  tags: string[];
+}
+
+export interface ObsidianStatus {
+  configured: boolean;
+  demo: boolean;
+  vaultPath?: string;
+  noteCount: number;
+  indexedAt?: string;
+}
+
 export interface ChatMessage {
   id: string;
   role: "user" | "assistant";

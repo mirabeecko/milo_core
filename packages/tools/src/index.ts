@@ -8,4 +8,5 @@ export * from "./providers/calendar/types.js";
 export * from "./providers/drive/index.js";
 export * from "./providers/drive/types.js";
 export * from "./providers/obsidian/index.js";
+export * from "./providers/obsidian/indexer.js";
 export * from "./providers/obsidian/types.js";
