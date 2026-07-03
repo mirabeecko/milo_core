@@ -1,5 +1,5 @@
 import { FastifyInstance, FastifyPluginOptions } from "fastify";
-import { CalendarAgent } from "@milo/agents";
+import { CalendarAgent, CommunicationAgent } from "@milo/agents";
 import { AuthenticatedRequest, authMiddleware } from "../auth/middleware.js";
 import { getAgentManager } from "./manager.js";
 
@@ -168,6 +168,37 @@ export async function agentsRoutes(
       }
       await entity.syncCalendar();
       return reply.send({ status: "synced", state: entity.getCalendarState() });
+    },
+  );
+
+  app.get<{ Params: { id: string } }>(
+    "/:id/communication/state",
+    { preHandler: authMiddleware },
+    async (request: AuthenticatedRequest<{ Params: { id: string } }>, reply) => {
+      const entity = manager.getAgent(request.params.id);
+      if (!entity) {
+        return reply.status(404).send({ error: "Agent not found" });
+      }
+      if (!(entity instanceof CommunicationAgent)) {
+        return reply.status(400).send({ error: "Agent is not a communication agent" });
+      }
+      return reply.send(entity.getCommunicationState());
+    },
+  );
+
+  app.post<{ Params: { id: string } }>(
+    "/:id/communication/sync",
+    { preHandler: authMiddleware },
+    async (request: AuthenticatedRequest<{ Params: { id: string } }>, reply) => {
+      const entity = manager.getAgent(request.params.id);
+      if (!entity) {
+        return reply.status(404).send({ error: "Agent not found" });
+      }
+      if (!(entity instanceof CommunicationAgent)) {
+        return reply.status(400).send({ error: "Agent is not a communication agent" });
+      }
+      await entity.syncCommunication();
+      return reply.send({ status: "synced", state: entity.getCommunicationState() });
     },
   );
 }

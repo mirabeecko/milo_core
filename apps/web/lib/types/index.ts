@@ -10,8 +10,11 @@ export type AgentStatus =
   | "reviewing"
   | "reporting"
   | "loading_calendar"
+  | "loading_messages"
   | "analyzing"
   | "scheduling"
+  | "summarizing"
+  | "drafting_reply"
   | "paused"
   | "offline"
   | "error";
@@ -274,6 +277,124 @@ export interface CalendarAgentState {
   conflicts: CalendarConflict[];
   suggestions: CalendarSuggestion[];
   upcoming: CalendarEvent[];
+  lastSyncedAt?: string;
+  taskProgress: number;
+}
+
+export type MessageChannel = "gmail" | "whatsapp" | "telegram" | "teams" | "slack" | "isds" | "sms";
+export type MessagePriority = "critical" | "important" | "normal" | "low" | "spam";
+export type MessageStatus = "unread" | "read" | "replied" | "archived" | "snoozed";
+
+export interface MessageAttachment {
+  id: string;
+  name: string;
+  type: string;
+  size?: number;
+  url?: string;
+}
+
+export interface ContactRef {
+  id: string;
+  name: string;
+  email?: string;
+  phone?: string;
+  avatarUrl?: string;
+}
+
+export interface CommContact {
+  id: string;
+  name: string;
+  email?: string;
+  phone?: string;
+  avatarUrl?: string;
+  role?: string;
+  company?: string;
+  projects: string[];
+  lastContactAt?: string;
+  openTasks: number;
+  recentTopics: string[];
+  openCommitments: string[];
+  recommendedTone: "formal" | "friendly" | "legal" | "business" | "casual";
+  escalationRisk: "high" | "medium" | "low";
+  totalMessages: number;
+  averageResponseTimeHours?: number;
+}
+
+export interface CommMessage {
+  id: string;
+  channel: MessageChannel;
+  sender: ContactRef;
+  recipients: ContactRef[];
+  subject: string;
+  body: string;
+  summary?: string;
+  priority: MessagePriority;
+  status: MessageStatus;
+  sentAt: string;
+  receivedAt: string;
+  threadId?: string;
+  attachments: MessageAttachment[];
+  extractedTasks: string[];
+  extractedDates: string[];
+  extractedAmounts: string[];
+  tags: string[];
+  isSpam: boolean;
+  needsReply: boolean;
+  replyDueAt?: string;
+}
+
+export interface CommThread {
+  id: string;
+  subject: string;
+  channel: MessageChannel;
+  participants: ContactRef[];
+  messages: CommMessage[];
+  lastMessageAt: string;
+  priority: MessagePriority;
+  summary?: string;
+  needsReply: boolean;
+  replyDueAt?: string;
+}
+
+export interface MessageSummary {
+  summary: string;
+  keyPoints: string[];
+  requests: string[];
+  deadlines: string[];
+  tasks: string[];
+  contacts: string[];
+  amounts: string[];
+  suggestedNextSteps: string[];
+  sentiment: "positive" | "neutral" | "negative" | "urgent";
+}
+
+export interface DraftReply {
+  id: string;
+  messageId: string;
+  tone: "short" | "formal" | "friendly" | "legal" | "business";
+  content: string;
+  generatedAt: string;
+}
+
+export interface CommunicationStats {
+  newMessages: number;
+  unreadMessages: number;
+  waitingForReply: number;
+  drafts: number;
+  spam: number;
+  repliedToday: number;
+  averageResponseTimeHours?: number;
+  aiSuggestionsGenerated: number;
+}
+
+export interface CommunicationAgentState {
+  messages: CommMessage[];
+  threads: CommThread[];
+  contacts: CommContact[];
+  waitingForReply: CommMessage[];
+  drafts: DraftReply[];
+  stats: CommunicationStats;
+  summaries: Record<string, MessageSummary>;
   lastSyncedAt?: string;
   taskProgress: number;
 }

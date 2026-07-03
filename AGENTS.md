@@ -75,10 +75,14 @@ Každý agent:
 
 ### Communication Agent
 
-- **Role:** komunikační asistent
-- **Specializace:** email triage, drafting, contact management
-- **Nástroje:** gmail, whatsapp, contacts
-- **Úkol:** třídit emaily, připravovat odpovědi, udržovat přehled o komunikaci
+- **Role:** osobní komunikační manažer a sekretář
+- **Specializace:** email triage, AI shrnutí, návrhy odpovědí, relationship intelligence, contact management
+- **Nástroje:** Communication Service, AI Summary, Draft Generator, Task Extractor, Contact Resolver, Spam Filter
+- **Úkol:** řídit příchozí i odchozí komunikaci, minimalizovat čas strávený emaily, předávat přehled Chief of Staff
+- **Stavy:** `idle → loading_messages → analyzing → summarizing → drafting_reply → reviewing → reporting`
+- **Provideri:** Mock Gmail, Mock WhatsApp (skeleton pro Gmail, WhatsApp, ISDS)
+- **Live explanation:** vysvětluje analýzu zpráv, priority, AI shrnutí a připravované koncepty
+- **Dashboard:** inbox, priority, čekající odpovědi, AI koncepty, relationship intelligence, statistiky
 
 ### Automation Agent
 

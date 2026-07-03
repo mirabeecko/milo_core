@@ -30,6 +30,7 @@ import { PageHeader } from "@/components/common/page-header";
 import { LoadingState } from "@/components/common/loading-state";
 import { EmptyState } from "@/components/common/empty-state";
 import { CalendarAgentDetail } from "@/components/agent/calendar-agent-detail";
+import { CommunicationAgentDetail } from "@/components/agent/communication-agent-detail";
 import {
   getAgent,
   getAgentLogs,
@@ -166,6 +167,8 @@ export default function AgentDetailPage(): JSX.Element {
           <div className="space-y-6 lg:col-span-2">
             {agent.id === "calendar" ? (
               <CalendarAgentDetail agent={agent} />
+            ) : agent.id === "communication" ? (
+              <CommunicationAgentDetail agent={agent} />
             ) : (
               <>
                 <LiveOverviewCard agent={agent} />
@@ -560,10 +563,16 @@ function statusLabel(status: Agent["state"]["status"] | AgentTask["status"]): st
       return "Reportuje";
     case "loading_calendar":
       return "Načítá kalendář";
+    case "loading_messages":
+      return "Načítá zprávy";
     case "analyzing":
       return "Analyzuje";
     case "scheduling":
       return "Plánuje";
+    case "summarizing":
+      return "Shrnuje";
+    case "drafting_reply":
+      return "Píše odpověď";
     case "idle":
       return "Čeká";
     case "paused":
@@ -604,7 +613,12 @@ function statusColor(status: Agent["state"]["status"] | AgentTask["status"]): st
     case "pending":
       return "border-cyan-500/30 bg-cyan-500/10 text-cyan-500";
     case "loading_calendar":
+    case "loading_messages":
       return "border-purple-500/30 bg-purple-500/10 text-purple-500";
+    case "summarizing":
+      return "border-cyan-500/30 bg-cyan-500/10 text-cyan-500";
+    case "drafting_reply":
+      return "border-indigo-500/30 bg-indigo-500/10 text-indigo-500";
     case "paused":
       return "border-slate-500/30 bg-slate-500/10 text-slate-500";
     case "offline":

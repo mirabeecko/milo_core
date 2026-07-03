@@ -8,8 +8,11 @@ export type AgentStatus =
   | "reviewing"
   | "reporting"
   | "loading_calendar"
+  | "loading_messages"
   | "analyzing"
   | "scheduling"
+  | "summarizing"
+  | "drafting_reply"
   | "paused"
   | "offline"
   | "error";

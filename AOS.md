@@ -171,6 +171,50 @@ Implementace:
 - Zobrazuje dnešní přehled, produktivní skóre a nadcházející události.
 - API endpointy: `GET /agents/:id/calendar/state`, `POST /agents/:id/calendar/sync`.
 
+## Communication Service
+
+Centrální abstrakce pro komunikaci napříč kanály:
+
+```ts
+interface CommunicationProvider {
+  readonly name: string;
+  readonly channel: MessageChannel;
+  readonly isConfigured: boolean;
+  connect(): Promise<void>;
+  disconnect(): Promise<void>;
+  fetchMessages(limit?: number): Promise<Message[]>;
+  sendMessage(message): Promise<Message>;
+  markAsRead(id): Promise<void>;
+  archive(id): Promise<void>;
+}
+```
+
+Implementace:
+
+- `MockGmailProvider` a `MockWhatsAppProvider` pro vývoj a testování.
+- Skeletony pro Gmail, WhatsApp, ISDS a další kanály.
+
+`DefaultCommunicationService` poskytuje:
+
+- synchronizaci zpráv ze všech kanálů
+- priorizaci a spam filtraci
+- AI shrnutí zpráv a konverzací
+- extrakci úkolů, termínů a částek
+- generování konceptů odpovědí v různých tónech
+- Relationship Intelligence – kontext u každého kontaktu (projekty, otevřené závazky, doporučený tón, eskalační riziko)
+- statistiky komunikace
+
+## Communication Agent
+
+`CommunicationAgent` je třetí produkční agent:
+
+- Synchronizuje komunikaci přes `CommunicationService`.
+- Postupně prochází stavy `loading_messages → analyzing → summarizing → drafting_reply → reviewing → reporting`.
+- Připravuje AI shrnutí, koncepty odpovědí a přehled čekajících odpovědí.
+- Udržuje Relationship Intelligence pro každý kontakt.
+- Předává přehled Chief of Staff pro briefing.
+- API endpointy: `GET /agents/:id/communication/state`, `POST /agents/:id/communication/sync`.
+
 ## Chief of Staff – první produkční agent
 
 `ChiefOfStaffAgent` je první plně funkční agent s živou simulací:

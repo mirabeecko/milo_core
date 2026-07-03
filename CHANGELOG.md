@@ -8,6 +8,14 @@ Formát loosely inspirován [Keep a Changelog](https://keepachangelog.com/en/1.1
 
 ### Added
 
+- Communication Agent (`CommunicationAgent`) – produkční inteligentní komunikační manažer:
+  - `CommunicationProvider` interface s `MockGmailProvider`, `MockWhatsAppProvider` a skeletony pro budoucí kanály.
+  - `DefaultCommunicationService` pro synchronizaci, priorizaci, spam filtraci, AI shrnutí, extrakci úkolů/termínů/částek a generování konceptů odpovědí.
+  - Relationship Intelligence – kontext u každého kontaktu: projekty, otevřené závazky, doporučený tón, eskalační riziko.
+  - Živá simulace stavů `loading_messages → analyzing → summarizing → drafting_reply → reviewing → reporting`.
+  - Nové agent stavy: `loading_messages`, `summarizing`, `drafting_reply`.
+  - API endpointy `GET /agents/:id/communication/state` a `POST /agents/:id/communication/sync`.
+  - Web UI: specializovaný detail Communication Agenta s Inbox, čekajícími odpověďmi, AI koncepty, Relationship Intelligence a statistikami.
 - Calendar Agent (`CalendarAgent`) – produkční inteligentní manažer času:
   - `CalendarProvider` interface s `MockCalendarProvider` a `GoogleCalendarProvider` skeletonem.
   - `DefaultCalendarService` pro synchronizaci, analýzu dne, detekci kolizí, hledání volných slotů a smart doporučení.
