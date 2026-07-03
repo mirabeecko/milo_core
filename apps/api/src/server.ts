@@ -10,6 +10,7 @@ import { briefingRoutes } from "./modules/briefing/routes.js";
 import { emailRoutes } from "./modules/email/routes.js";
 import { calendarRoutes } from "./modules/calendar/routes.js";
 import { documentsRoutes } from "./modules/documents/routes.js";
+import { knowledgeRoutes } from "./modules/knowledge/routes.js";
 import { closeRedisClient } from "./infrastructure/redis.js";
 
 const logger = pino({
@@ -36,6 +37,7 @@ async function start(): Promise<void> {
   await app.register(emailRoutes, { prefix: "/email" });
   await app.register(calendarRoutes, { prefix: "/calendar" });
   await app.register(documentsRoutes, { prefix: "/documents" });
+  await app.register(knowledgeRoutes, { prefix: "/knowledge" });
 
   app.addHook("onClose", async () => {
     await closeRedisClient();

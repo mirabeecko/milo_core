@@ -14,6 +14,7 @@ const envSchema = z.object({
   GOOGLE_CLIENT_ID: z.string().optional(),
   GOOGLE_CLIENT_SECRET: z.string().optional(),
   GOOGLE_REDIRECT_URI: z.string().url().optional(),
+  OBSIDIAN_VAULT_PATH: z.string().optional(),
 });
 
 const parsed = envSchema.safeParse(process.env);
