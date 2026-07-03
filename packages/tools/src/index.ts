@@ -5,3 +5,5 @@ export * from "./providers/gmail/index.js";
 export * from "./providers/gmail/types.js";
 export * from "./providers/calendar/index.js";
 export * from "./providers/calendar/types.js";
+export * from "./providers/drive/index.js";
+export * from "./providers/drive/types.js";
