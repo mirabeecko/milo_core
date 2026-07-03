@@ -16,6 +16,7 @@ import type {
   TaskRepository,
 } from "@milo/database";
 import { AgentEntityImpl, DEFAULT_RUNTIME_CONFIG } from "./agent.js";
+import { createDefaultToolRegistry, type ToolRegistry } from "@milo/tools";
 import type { AgentEntityDeps } from "./agent.js";
 import { InMemoryAgentEventBus } from "./event-bus.js";
 import { InMemoryTaskQueue } from "./task-queue.js";
@@ -59,8 +60,11 @@ export class AgentManager {
   private heartbeatInterval?: ReturnType<typeof setInterval>;
   private deadlineInterval?: ReturnType<typeof setInterval>;
 
+  private toolRegistry: ToolRegistry;
+
   constructor(private deps: AgentManagerDeps) {
     this.eventBus = deps.eventBus ?? new InMemoryAgentEventBus();
+    this.toolRegistry = createDefaultToolRegistry();
     this.queue = deps.queue ?? new InMemoryTaskQueue();
     this.scheduler = new AgentScheduler();
     this.backgroundRunner = new BackgroundRunner();
@@ -98,6 +102,7 @@ export class AgentManager {
       },
       scheduler: this.scheduler,
       backgroundRunner: this.backgroundRunner,
+      toolRegistry: this.toolRegistry,
       config: this.runtimeConfig,
     };
     const entity = factory ? factory(definition, entityDeps) : new AgentEntityImpl(definition, entityDeps);
@@ -310,6 +315,19 @@ export class AgentManager {
 
   subscribe(handler: (event: AgentFrameworkEvent) => void | Promise<void>): () => void {
     return this.eventBus.subscribe(handler);
+  }
+
+  getToolRegistry(): ToolRegistry {
+    return this.toolRegistry;
+  }
+
+  async executeTool<TInput, TOutput>(agentId: string, toolId: string, input: TInput): Promise<TOutput> {
+    const agent = this.requireAgent(agentId);
+    const allowed = agent.agent.config.tools.some((t) => toolId === t || toolId.startsWith(`${t}:`));
+    if (!allowed) {
+      throw new Error(`Agent ${agentId} does not have permission to use tool ${toolId}`);
+    }
+    return agent.executeTool<TInput, TOutput>(toolId, input);
   }
 
   async close(): Promise<void> {

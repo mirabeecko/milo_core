@@ -151,3 +151,12 @@ export interface DeveloperService {
   runLint(projectPath: string): Promise<LintResult>;
   getGitInfo(projectPath: string): Promise<GitInfo>;
 }
+
+export interface ToolExecutor {
+  <TInput, TOutput>(toolId: string, input: TInput): Promise<TOutput>;
+}
+
+export interface DeveloperServiceConfig {
+  projectPath: string;
+  executeTool: ToolExecutor;
+}

@@ -17,7 +17,7 @@ import { tasksRoutes } from "./modules/tasks/routes.js";
 import { eventsRoutes } from "./modules/events/routes.js";
 import { projectsRoutes } from "./modules/projects/routes.js";
 import { closeRedisClient } from "./infrastructure/redis.js";
-import { closeAgentManager } from "./modules/agents/manager.js";
+import { closeAgentManager, startAgentManager } from "./modules/agents/manager.js";
 
 const app = Fastify({
   logger: {
@@ -57,6 +57,8 @@ async function start(): Promise<void> {
   try {
     await app.listen({ port: config.API_PORT, host: config.API_HOST });
     app.log.info(`MiLO API running on http://${config.API_HOST}:${config.API_PORT}`);
+    await startAgentManager();
+    app.log.info("Agent manager started");
   } catch (error) {
     app.log.error(error);
     process.exit(1);

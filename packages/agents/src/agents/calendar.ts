@@ -243,11 +243,11 @@ export class CalendarAgent extends AgentEntityImpl {
 
   async initialize(): Promise<void> {
     await super.initialize();
-    await this.calendarService.sync();
   }
 
   async start(): Promise<void> {
     await super.start();
+    await this.calendarService.sync();
     this.startSimulation();
   }
 

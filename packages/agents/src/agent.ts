@@ -1,3 +1,4 @@
+import type { ToolRegistry } from "@milo/tools";
 import type {
   Agent,
   AgentDefinition,
@@ -24,6 +25,7 @@ import type { BackgroundRunner } from "./runtime/background-runner.js";
 export interface AgentEntityDeps {
   eventBus: AgentEventBus;
   taskRunner: TaskRunner;
+  toolRegistry: ToolRegistry;
   log: (entry: Omit<AgentLogEntry, "id">) => Promise<AgentLogEntry>;
   memory: {
     upsert: (agentId: string, key: string, value: unknown) => Promise<AgentMemoryEntry>;
@@ -287,6 +289,15 @@ export class AgentEntityImpl implements AgentEntity {
     this.agent.health.lastHeartbeat = now;
     await this.deps.metrics.create({ agentId: this.id, timestamp: now, metrics: this.agent.metrics });
     await this.emit("agent:heartbeat", { status: this.status });
+  }
+
+  async executeTool<TInput, TOutput>(toolId: string, input: TInput): Promise<TOutput> {
+    return this.deps.toolRegistry.execute<TInput, TOutput>(toolId, input, {
+      userId: "system",
+      traceId: `agent-${this.id}`,
+      agentId: this.id,
+      projectPath: "/Users/mb/dev/MiLO_Core",
+    });
   }
 
   async report(): Promise<Record<string, unknown>> {

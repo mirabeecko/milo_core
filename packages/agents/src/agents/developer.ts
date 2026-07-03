@@ -29,7 +29,7 @@ export class DeveloperAgent extends AgentEntityImpl {
   private simulationInterval?: ReturnType<typeof setInterval>;
   private runningTick?: Promise<void>;
   private currentStepIndex = 0;
-  private developerService = new DefaultDeveloperService("/Users/mb/dev/MiLO_Core");
+  private developerService = new DefaultDeveloperService("/Users/mb/dev/MiLO_Core", this.executeTool.bind(this));
   private state: DeveloperAgentState & {
     activeTask?: AgentTask;
     taskHistory: AgentTask[];
@@ -226,11 +226,11 @@ export class DeveloperAgent extends AgentEntityImpl {
 
   async initialize(): Promise<void> {
     await super.initialize();
-    await this.syncDeveloperState();
   }
 
   async start(): Promise<void> {
     await super.start();
+    await this.syncDeveloperState();
     this.startSimulation();
   }
 

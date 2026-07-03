@@ -1,22 +1,19 @@
-import { exec } from "node:child_process";
-import { promisify } from "node:util";
-import type { BuildResult, BuildRunner, LintResult, TestResult } from "./types.js";
-
-const execAsync = promisify(exec);
+import type { BuildResult, BuildRunner, LintResult, TestResult, ToolExecutor } from "./types.js";
 
 export class DefaultBuildRunner implements BuildRunner {
+  constructor(private executeTool: ToolExecutor) {}
   async runLint(projectPath: string): Promise<LintResult> {
-    return runCommand(projectPath, "pnpm -r lint", "lint");
+    return runCommand(this.executeTool, projectPath, "pnpm -r lint", "lint");
   }
 
   async runBuild(projectPath: string): Promise<BuildResult> {
-    return runCommand(projectPath, "pnpm -r build", "build");
+    return runCommand(this.executeTool, projectPath, "pnpm -r build", "build");
   }
 
   async runTests(projectPath: string): Promise<TestResult> {
     const start = Date.now();
     try {
-      const { stdout, stderr } = await execAsync("pnpm -r test", { cwd: projectPath, timeout: 300_000 });
+      const { stdout, stderr } = await this.executeTool<{ command: string; cwd?: string; timeoutMs?: number }, { stdout: string; stderr: string; exitCode: number }>("shell:execute", { command: "pnpm -r test", cwd: projectPath, timeoutMs: 300_000 });
       const output = `${stdout}\n${stderr}`;
       const passed = (output.match(/Tests\s+(\d+)\s+passed/)?.[1] ?? "0");
       const failed = (output.match(/Tests\s+(\d+)\s+failed/)?.[1] ?? "0");
@@ -47,13 +44,14 @@ export class DefaultBuildRunner implements BuildRunner {
 }
 
 async function runCommand(
+  executeTool: ToolExecutor,
   projectPath: string,
   command: string,
   type: "lint" | "build",
 ): Promise<LintResult | BuildResult> {
   const start = Date.now();
   try {
-    const { stdout, stderr } = await execAsync(command, { cwd: projectPath, timeout: 300_000 });
+    const { stdout, stderr } = await executeTool<{ command: string; cwd?: string; timeoutMs?: number }, { stdout: string; stderr: string; exitCode: number }>("shell:execute", { command, cwd: projectPath, timeoutMs: 300_000 });
     const output = `${stdout}\n${stderr}`;
     const warnings: string[] = [];
     const errors: string[] = [];

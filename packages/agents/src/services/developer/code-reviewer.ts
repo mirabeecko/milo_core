@@ -1,6 +1,5 @@
-import { readFile, readdir } from "node:fs/promises";
-import { join, extname } from "node:path";
-import type { ArchitectureScore, CodeReviewFinding, CodeReviewer, IssueCategory, IssueSeverity } from "./types.js";
+import { extname } from "node:path";
+import type { ArchitectureScore, CodeReviewFinding, CodeReviewer, IssueCategory, IssueSeverity, ToolExecutor } from "./types.js";
 
 const IGNORED_DIRS = new Set([
   "node_modules",
@@ -18,13 +17,14 @@ const IGNORED_DIRS = new Set([
 const TS_JS_EXTS = new Set([".ts", ".tsx", ".js", ".jsx"]);
 
 export class DefaultCodeReviewer implements CodeReviewer {
+  constructor(private executeTool: ToolExecutor) {}
   async review(projectPath: string): Promise<CodeReviewFinding[]> {
     const findings: CodeReviewFinding[] = [];
     const files: string[] = [];
     await this.walk(projectPath, files);
 
     for (const file of files) {
-      const content = await readFile(file, "utf-8");
+      const { content } = await this.executeTool<{ filePath: string }, { path: string; content: string }>("filesystem:read", { filePath: file });
       const lines = content.split("\n");
 
       for (let i = 0; i < lines.length; i += 1) {
@@ -83,13 +83,14 @@ export class DefaultCodeReviewer implements CodeReviewer {
   }
 
   private async walk(dir: string, files: string[]): Promise<void> {
-    const entries = await readdir(dir, { withFileTypes: true });
+    const entries = await this.executeTool<{ dirPath: string; recursive?: boolean }, { path: string; isDirectory: boolean; size: number; modifiedAt: Date }[]>("filesystem:list", { dirPath: dir });
     for (const entry of entries) {
-      const fullPath = join(dir, entry.name);
-      if (entry.isDirectory()) {
-        if (IGNORED_DIRS.has(entry.name)) continue;
+      const fullPath = entry.path;
+      const name = fullPath.split("/").pop() ?? "";
+      if (entry.isDirectory) {
+        if (IGNORED_DIRS.has(name) || name.startsWith(".")) continue;
         await this.walk(fullPath, files);
-      } else if (entry.isFile() && TS_JS_EXTS.has(extname(entry.name).toLowerCase())) {
+      } else if (TS_JS_EXTS.has(extname(fullPath).toLowerCase())) {
         files.push(fullPath);
       }
     }

@@ -18,16 +18,22 @@ import type {
   ProjectIssue,
   ProjectStats,
   TestResult,
+  ToolExecutor,
 } from "./types.js";
 
 export class DefaultDeveloperService implements DeveloperService {
-  private analyzer = new DefaultProjectAnalyzer();
-  private reviewer = new DefaultCodeReviewer();
-  private runner = new DefaultBuildRunner();
-  private git = new DefaultGitReader();
+  private analyzer: DefaultProjectAnalyzer;
+  private reviewer: DefaultCodeReviewer;
+  private runner: DefaultBuildRunner;
+  private git: DefaultGitReader;
   private state: DeveloperAgentState;
 
-  constructor(projectPath: string) {
+  constructor(projectPath: string, executeTool?: ToolExecutor) {
+    const toolExecutor = executeTool ?? (() => { throw new Error("Tool executor not provided"); });
+    this.analyzer = new DefaultProjectAnalyzer(toolExecutor);
+    this.reviewer = new DefaultCodeReviewer(toolExecutor);
+    this.runner = new DefaultBuildRunner(toolExecutor);
+    this.git = new DefaultGitReader(toolExecutor);
     this.state = {
       projectPath,
       issues: [],

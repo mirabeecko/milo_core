@@ -1,6 +1,5 @@
-import { readdir, readFile } from "node:fs/promises";
 import { join, relative, extname } from "node:path";
-import type { ProjectAnalyzer, ProjectIssue, ProjectStats } from "./types.js";
+import type { ProjectAnalyzer, ProjectIssue, ProjectStats, ToolExecutor } from "./types.js";
 
 const IGNORED_DIRS = new Set([
   "node_modules",
@@ -35,6 +34,7 @@ const CODE_EXTENSIONS = new Set([
 ]);
 
 export class DefaultProjectAnalyzer implements ProjectAnalyzer {
+  constructor(private executeTool: ToolExecutor) {}
   async analyze(projectPath: string): Promise<ProjectStats> {
     const files: string[] = [];
     await this.walk(projectPath, projectPath, files);
@@ -46,7 +46,7 @@ export class DefaultProjectAnalyzer implements ProjectAnalyzer {
     const languages: Record<string, number> = {};
 
     for (const file of files) {
-      const content = await readFile(file, "utf-8");
+      const { content } = await this.executeTool<{ filePath: string }, { path: string; content: string }>("filesystem:read", { filePath: file });
       const lines = content.split("\n");
       const ext = extname(file).toLowerCase();
       const language = languageName(ext);
@@ -73,7 +73,7 @@ export class DefaultProjectAnalyzer implements ProjectAnalyzer {
       commentLines,
       blankLines,
       languages,
-      packages: await detectPackages(projectPath),
+      packages: await detectPackages(projectPath, this.executeTool),
     };
   }
 
@@ -116,21 +116,22 @@ export class DefaultProjectAnalyzer implements ProjectAnalyzer {
       });
     }
 
-    const duplicateIssues = await findDuplicateComponents(projectPath);
+    const duplicateIssues = await findDuplicateComponents(projectPath, this.executeTool);
     issues.push(...duplicateIssues);
 
     return issues;
   }
 
   private async walk(root: string, dir: string, files: string[]): Promise<void> {
-    const entries = await readdir(dir, { withFileTypes: true });
+    const entries = await this.executeTool<{ dirPath: string; recursive?: boolean }, { path: string; isDirectory: boolean; size: number; modifiedAt: Date }[]>("filesystem:list", { dirPath: dir });
     for (const entry of entries) {
-      const fullPath = join(dir, entry.name);
-      if (entry.isDirectory()) {
-        if (IGNORED_DIRS.has(entry.name)) continue;
+      const fullPath = entry.path;
+      const name = extname(fullPath) ? fullPath.split("/").pop() ?? "" : "";
+      if (entry.isDirectory) {
+        if (IGNORED_DIRS.has(name) || name.startsWith(".")) continue;
         await this.walk(root, fullPath, files);
-      } else if (entry.isFile()) {
-        const ext = extname(entry.name).toLowerCase();
+      } else {
+        const ext = extname(fullPath).toLowerCase();
         if (CODE_EXTENSIONS.has(ext)) {
           files.push(fullPath);
         }
@@ -139,22 +140,23 @@ export class DefaultProjectAnalyzer implements ProjectAnalyzer {
   }
 }
 
-async function findDuplicateComponents(projectPath: string): Promise<ProjectIssue[]> {
+async function findDuplicateComponents(projectPath: string, executeTool: ToolExecutor): Promise<ProjectIssue[]> {
   const issues: ProjectIssue[] = [];
   const componentNames = new Map<string, string[]>();
 
   async function scan(dir: string): Promise<void> {
-    const entries = await readdir(dir, { withFileTypes: true }).catch(() => []);
+    const entries = await executeTool<{ dirPath: string; recursive?: boolean }, { path: string; isDirectory: boolean; size: number; modifiedAt: Date }[]>("filesystem:list", { dirPath: dir }).catch(() => []);
     for (const entry of entries) {
-      const fullPath = join(dir, entry.name);
-      if (entry.isDirectory() && !IGNORED_DIRS.has(entry.name)) {
+      const fullPath = entry.path;
+      const name = fullPath.split("/").pop() ?? "";
+      if (entry.isDirectory && !IGNORED_DIRS.has(name) && !name.startsWith(".")) {
         await scan(fullPath);
-      } else if (entry.isFile() && (entry.name.endsWith(".tsx") || entry.name.endsWith(".ts"))) {
-        const name = entry.name.replace(/\.(tsx|ts)$/, "");
-        if (name === "page" || name === "layout" || name === "index" || name === "types") continue;
-        const paths = componentNames.get(name) ?? [];
+      } else if (!entry.isDirectory && (name.endsWith(".tsx") || name.endsWith(".ts"))) {
+        const componentName = name.replace(/\.(tsx|ts)$/, "");
+        if (componentName === "page" || componentName === "layout" || componentName === "index" || componentName === "types") continue;
+        const paths = componentNames.get(componentName) ?? [];
         paths.push(relative(projectPath, fullPath));
-        componentNames.set(name, paths);
+        componentNames.set(componentName, paths);
       }
     }
   }
@@ -177,10 +179,11 @@ async function findDuplicateComponents(projectPath: string): Promise<ProjectIssu
   return issues;
 }
 
-async function detectPackages(projectPath: string): Promise<string[]> {
+async function detectPackages(projectPath: string, executeTool: ToolExecutor): Promise<string[]> {
   const packages: string[] = [];
   try {
-    const pkg = JSON.parse(await readFile(join(projectPath, "package.json"), "utf-8")) as {
+    const { content: pkgContent } = await executeTool<{ filePath: string }, { path: string; content: string }>("filesystem:read", { filePath: join(projectPath, "package.json") });
+    const pkg = JSON.parse(pkgContent) as {
       dependencies?: Record<string, string>;
       devDependencies?: Record<string, string>;
     };

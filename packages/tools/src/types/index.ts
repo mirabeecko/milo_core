@@ -5,6 +5,9 @@ export const toolParameterSchema = z.record(z.unknown());
 export interface ToolContext {
   userId: string;
   traceId: string;
+  agentId?: string;
+  vaultPath?: string;
+  projectPath?: string;
 }
 
 export interface Tool<TInput = unknown, TOutput = unknown> {

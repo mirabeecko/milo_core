@@ -262,11 +262,11 @@ export class CommunicationAgent extends AgentEntityImpl {
 
   async initialize(): Promise<void> {
     await super.initialize();
-    await this.syncCommunication();
   }
 
   async start(): Promise<void> {
     await super.start();
+    await this.syncCommunication();
     this.startSimulation();
   }
 

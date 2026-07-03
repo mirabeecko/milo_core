@@ -107,6 +107,7 @@ export interface AgentEntity {
   cancelTask(taskId: string): Promise<void>;
   scheduleTask(task: AgentTask, when: string | number): Promise<void>;
   retry(taskId: string): Promise<void>;
+  executeTool<TInput, TOutput>(toolId: string, input: TInput): Promise<TOutput>;
   heartbeat(): Promise<void>;
   report(): Promise<Record<string, unknown>>;
   explain(): LiveWorkExplanation;

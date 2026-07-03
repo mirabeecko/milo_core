@@ -9,6 +9,7 @@ import {
 import { AgentManager, registerDefaultAgents } from "@milo/agents";
 
 let manager: AgentManager | null = null;
+let startPromise: Promise<void> | null = null;
 
 export async function getAgentManager(): Promise<AgentManager> {
   if (!manager) {
@@ -23,15 +24,24 @@ export async function getAgentManager(): Promise<AgentManager> {
       },
     });
     await registerDefaultAgents(manager);
-    await manager.startAll();
-    manager.startHeartbeat();
   }
   return manager;
+}
+
+export async function startAgentManager(): Promise<void> {
+  const m = await getAgentManager();
+  if (!startPromise) {
+    startPromise = m.startAll().then(() => {
+      m.startHeartbeat();
+    });
+  }
+  return startPromise;
 }
 
 export async function closeAgentManager(): Promise<void> {
   if (manager) {
     await manager.close();
     manager = null;
+    startPromise = null;
   }
 }

@@ -1,10 +1,7 @@
-import { exec } from "node:child_process";
-import { promisify } from "node:util";
-import type { GitCommit, GitInfo, GitReader } from "./types.js";
-
-const execAsync = promisify(exec);
+import type { GitCommit, GitInfo, GitReader, ToolExecutor } from "./types.js";
 
 export class DefaultGitReader implements GitReader {
+  constructor(private executeTool: ToolExecutor) {}
   async getInfo(projectPath: string): Promise<GitInfo> {
     const branch = await this.exec(projectPath, "git branch --show-current");
     const commitCount = Number(await this.exec(projectPath, "git rev-list --count HEAD").catch(() => "0"));
@@ -54,7 +51,7 @@ export class DefaultGitReader implements GitReader {
   }
 
   private async exec(projectPath: string, command: string): Promise<string> {
-    const { stdout } = await execAsync(command, { cwd: projectPath });
+    const { stdout } = await this.executeTool<{ command: string; cwd?: string; timeoutMs?: number }, { stdout: string; stderr: string; exitCode: number }>("shell:execute", { command, cwd: projectPath });
     return stdout.trim();
   }
 }

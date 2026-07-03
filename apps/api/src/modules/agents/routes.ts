@@ -232,4 +232,19 @@ export async function agentsRoutes(
       return reply.send({ status: "synced", state: entity.getDeveloperState() });
     },
   );
+
+  app.post<{ Params: { id: string }; Body: { toolId: string; input?: Record<string, unknown> } }>(
+    "/:id/tools/execute",
+    { preHandler: authMiddleware },
+    async (request: AuthenticatedRequest<{ Params: { id: string }; Body: { toolId: string; input?: Record<string, unknown> } }>, reply) => {
+      try {
+        const { toolId, input = {} } = request.body;
+        const result = await manager.executeTool(request.params.id, toolId, input);
+        return reply.send({ toolId, result });
+      } catch (error) {
+        const message = error instanceof Error ? error.message : String(error);
+        return reply.status(400).send({ error: message });
+      }
+    },
+  );
 }
