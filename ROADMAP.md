@@ -19,10 +19,12 @@ Každý milestone je plně funkční a prochází **Architecture Review**. Cíle
 - [ ] Nastavit BullMQ pro background jobs
 - [ ] Nastavit základní observability (Pino logging, Sentry, OpenTelemetry stubs)
 - [ ] Nastavit CI/CD pipeline (build, lint, typecheck, test)
-- [ ] Vytvořit design system a základní komponenty
-- [ ] **Architecture Review** – schválit foundation, Docker, CI, bezpečnost a premium stack
+- [x] Vytvořit design system a základní komponenty
+- [x] **Architecture Review** – schválit foundation, Docker, CI, bezpečnost a premium stack
 
 **Cíl:** Repo je připravené pro premium vývoj. Aplikace se spustí lokálně i v Dockeru s Redis a job queue.
+
+**Stav:** APPROVED – viz [MILESTONE_0_REVIEW.md](./docs/reviews/MILESTONE_0_REVIEW.md)
 
 ---
 

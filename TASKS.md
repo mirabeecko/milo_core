@@ -94,7 +94,7 @@ Milestone 0: Premium Foundation
 
 - [x] Vytvořit šablonu `docs/reviews/MILESTONE_REVIEW_TEMPLATE.md`
 - [x] Vytvořit proces Architecture Review do dokumentace
-- [ ] Po Milestone 0 vytvořit první review dokument
+- [x] Po Milestone 0 vytvořit první review dokument
 
 ---
 
