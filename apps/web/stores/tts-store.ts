@@ -26,11 +26,6 @@ export const useTtsStore = create<TtsState>((set, get) => {
     set({ isAvailable: provider !== null });
   };
 
-  // Inicializace dostupnosti při startu (bezpečné i na serveru)
-  if (typeof window !== "undefined") {
-    void refreshAvailability();
-  }
-
   return {
     isAvailable: false,
     autoSpeak: false,

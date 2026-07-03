@@ -10,6 +10,7 @@ import { emailRoutes } from "./modules/email/routes.js";
 import { calendarRoutes } from "./modules/calendar/routes.js";
 import { documentsRoutes } from "./modules/documents/routes.js";
 import { knowledgeRoutes } from "./modules/knowledge/routes.js";
+import { chatRoutes } from "./modules/chat/routes.js";
 import { closeRedisClient } from "./infrastructure/redis.js";
 
 const app = Fastify({
@@ -35,6 +36,7 @@ async function start(): Promise<void> {
   await app.register(calendarRoutes, { prefix: "/calendar" });
   await app.register(documentsRoutes, { prefix: "/documents" });
   await app.register(knowledgeRoutes, { prefix: "/knowledge" });
+  await app.register(chatRoutes, { prefix: "/chat" });
 
   app.addHook("onClose", async () => {
     await closeRedisClient();

@@ -299,18 +299,4 @@ export const documents: Document[] = [
   },
 ];
 
-export const chatSuggestions = [
-  "Co dnes musím řešit?",
-  "Najdi dokumenty ke kauze TJ Krupka.",
-  "Připrav mi priority dne.",
-  "Co udělali agenti?",
-];
 
-export const initialChatMessages = [
-  {
-    id: "msg-0",
-    role: "assistant" as const,
-    content: "Dobré ráno. Jsem MiLO. Co pro tebe mohu udělat?",
-    timestamp: "2026-07-03T07:00:00Z",
-  },
-];

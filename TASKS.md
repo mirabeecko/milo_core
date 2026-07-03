@@ -20,7 +20,7 @@ Milestone 2: Funkční MVP dashboard s mock daty — **dokončen**.
 - [x] `docs/reviews/MILESTONE_REVIEW_TEMPLATE.md`
 - [x] `docs/reviews/MILESTONE_0_REVIEW.md`
 - [x] `docs/reviews/MILESTONE_1_REVIEW.md`
-- [ ] `docs/reviews/MILESTONE_2_REVIEW.md`
+- [x] `docs/reviews/MILESTONE_2_REVIEW.md`
 
 ### Struktura projektu
 
@@ -58,6 +58,10 @@ Milestone 2: Funkční MVP dashboard s mock daty — **dokončen**.
 - [x] Vytvořit Documents centrum
 - [x] Vytvořit Settings stránku
 - [x] Přidat TTS controls do UI
+- [x] Vytvořit centrální API vrstvu v `apps/web/lib/api/`
+- [x] Extrahovat znovupoužitelné UI komponenty (`common`, `priority`, `decision`, `document`, `agent`, `project`)
+- [x] Přidat loading, error a empty stavy na hlavní stránky
+- [x] Přidat globální error boundary (`app/error.tsx`)
 - [ ] Nastavit TanStack Query
 - [x] Nastavit Zustand (TTS store)
 
@@ -69,6 +73,8 @@ Milestone 2: Funkční MVP dashboard s mock daty — **dokončen**.
 - [x] Přidat health check endpoint
 - [x] Nastavit testovací framework (Vitest)
 - [x] Přidat Redis připojení
+- [x] Sjednotit demo / reálná data strategii napříč integračními službami
+- [x] Vytvořit `/api/chat` endpoint a command processor
 - [ ] Přidat BullMQ setup
 - [x] Přidat Pino logger
 - [x] Přidat rate limiting

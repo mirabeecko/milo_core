@@ -11,19 +11,13 @@ export async function documentsRoutes(
   app: FastifyInstance,
   _options: FastifyPluginOptions,
 ): Promise<void> {
-  let documentsService: DocumentsService | null = null;
-
-  try {
-    documentsService = new DocumentsService();
-  } catch {
-    app.log.warn("Google OAuth not configured, documents service running in demo mode");
-  }
+  const documentsService = new DocumentsService();
 
   app.get(
     "/auth-url",
     { preHandler: authMiddleware },
     async (request: AuthenticatedRequest, reply) => {
-      if (!documentsService) {
+      if (!documentsService.isConfigured()) {
         return reply.status(503).send({ error: "Google OAuth is not configured" });
       }
 
@@ -42,7 +36,7 @@ export async function documentsRoutes(
         return reply.status(400).send({ error: "Invalid input", details: parsed.error.format() });
       }
 
-      if (!documentsService) {
+      if (!documentsService.isConfigured()) {
         return reply.status(503).send({ error: "Google OAuth is not configured" });
       }
 
@@ -60,17 +54,17 @@ export async function documentsRoutes(
     "/",
     { preHandler: authMiddleware },
     async (request: AuthenticatedRequest, reply) => {
-      if (!documentsService) {
-        return reply.send({ files: new DocumentsService().generateDemoFiles() });
-      }
-
       try {
-        const demoAccessToken = "";
-        if (!demoAccessToken) {
-          return reply.send({ files: documentsService.generateDemoFiles() });
+        if (documentsService.isDemo()) {
+          return reply.send({ files: documentsService.generateDemoFiles(), demo: true });
         }
 
-        const files = await documentsService.listFiles(demoAccessToken);
+        const accessToken = "";
+        if (!accessToken) {
+          return reply.status(400).send({ error: "Missing access token" });
+        }
+
+        const files = await documentsService.listFiles(accessToken);
         return reply.send({ files });
       } catch (error) {
         request.log.error(error);

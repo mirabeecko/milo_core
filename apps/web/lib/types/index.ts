@@ -86,6 +86,8 @@ export interface ChatMessage {
   role: "user" | "assistant";
   content: string;
   timestamp: string;
+  sources?: string[];
+  suggestedActions?: string[];
 }
 
 export interface AiSettings {

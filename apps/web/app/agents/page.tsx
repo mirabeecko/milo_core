@@ -1,50 +1,80 @@
 "use client";
 
-import { useState } from "react";
-import {
-  BookOpen,
-  Bot,
-  Code,
-  Play,
-  Scale,
-  Search,
-  Sunrise,
-  Terminal,
-} from "lucide-react";
+import { useEffect, useState } from "react";
+import { Play, Terminal } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { DashboardLayout } from "@/components/layout/dashboard-layout";
-import { agents, agentLogs } from "@/lib/mocks";
-import { formatRelative, getStatusColor, getStatusLabel } from "@/lib/format";
+import { AgentCard } from "@/components/agent/agent-card";
+import { PageHeader } from "@/components/common/page-header";
+import { LoadingState } from "@/components/common/loading-state";
+import { EmptyState } from "@/components/common/empty-state";
+import { getAgents, getAgentLogs } from "@/lib/api/agents.api";
+import { formatRelative } from "@/lib/format";
 import type { Agent, AgentLogEntry } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
-const iconMap: Record<string, React.ElementType> = {
-  sunrise: Sunrise,
-  scale: Scale,
-  search: Search,
-  code: Code,
-  "book-open": BookOpen,
-  bot: Bot,
-};
-
 export default function AgentsPage(): JSX.Element {
+  const [agents, setAgents] = useState<Agent[]>([]);
+  const [logs, setLogs] = useState<AgentLogEntry[]>([]);
   const [selectedAgent, setSelectedAgent] = useState<Agent | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<Error | null>(null);
+
+  useEffect(() => {
+    async function load(): Promise<void> {
+      try {
+        setIsLoading(true);
+        setError(null);
+        const [agentsData, logsData] = await Promise.all([getAgents(), getAgentLogs()]);
+        setAgents(agentsData);
+        setLogs(logsData);
+      } catch (err) {
+        setError(err instanceof Error ? err : new Error("Nepodařilo se načíst agenty"));
+      } finally {
+        setIsLoading(false);
+      }
+    }
+    void load();
+  }, []);
+
+  const filteredLogs = selectedAgent
+    ? logs.filter((log) => log.agentId === selectedAgent.id).slice(0, 10)
+    : logs.slice(0, 10);
+
+  if (isLoading) {
+    return (
+      <DashboardLayout>
+        <div className="mx-auto max-w-6xl">
+          <LoadingState rows={4} />
+        </div>
+      </DashboardLayout>
+    );
+  }
+
+  if (error) {
+    return (
+      <DashboardLayout>
+        <div className="mx-auto max-w-6xl">
+          <EmptyState
+            variant="error"
+            title="Nepodařilo se načíst agenty"
+            description={error.message}
+          />
+        </div>
+      </DashboardLayout>
+    );
+  }
 
   return (
     <DashboardLayout>
       <div className="mx-auto max-w-6xl space-y-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <h2 className="text-3xl font-bold tracking-tight">Agents</h2>
-            <p className="text-muted-foreground">Moduly MiLO, každý se svým úkolem a pamětí.</p>
-          </div>
+        <PageHeader title="Agents" description="Moduly MiLO, každý se svým úkolem a pamětí.">
           <Button className="gap-2">
             <Play className="h-4 w-4" />
             Spustit vše
           </Button>
-        </div>
+        </PageHeader>
 
         <div className="grid gap-6 lg:grid-cols-3">
           <div className="space-y-4 lg:col-span-2">
@@ -67,12 +97,10 @@ export default function AgentsPage(): JSX.Element {
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-3">
-                {getFilteredLogs(selectedAgent?.id).length === 0 ? (
+                {filteredLogs.length === 0 ? (
                   <p className="text-sm text-muted-foreground">Žádné logy k zobrazení.</p>
                 ) : (
-                  getFilteredLogs(selectedAgent?.id).map((log) => (
-                    <LogRow key={log.id} log={log} />
-                  ))
+                  filteredLogs.map((log) => <LogRow key={log.id} log={log} />)
                 )}
               </CardContent>
             </Card>
@@ -80,56 +108,6 @@ export default function AgentsPage(): JSX.Element {
         </div>
       </div>
     </DashboardLayout>
-  );
-}
-
-function AgentCard({
-  agent,
-  isSelected,
-  onClick,
-}: {
-  agent: Agent;
-  isSelected: boolean;
-  onClick: () => void;
-}): JSX.Element {
-  const Icon = iconMap[agent.icon] ?? Bot;
-
-  return (
-    <Card
-      className={cn(
-        "cursor-pointer transition-colors hover:border-primary/50",
-        isSelected && "border-primary ring-1 ring-primary",
-      )}
-      onClick={onClick}
-    >
-      <CardContent className="p-5">
-        <div className="flex items-start gap-4">
-          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
-            <Icon className="h-6 w-6" />
-          </div>
-          <div className="min-w-0 flex-1">
-            <div className="flex flex-wrap items-center gap-2">
-              <h3 className="text-lg font-semibold">{agent.name}</h3>
-              <Badge variant="outline" className={cn("text-xs", getStatusColor(agent.status))}>
-                {getStatusLabel(agent.status)}
-              </Badge>
-            </div>
-            <p className="text-sm text-muted-foreground">{agent.role}</p>
-            <p className="mt-2 text-sm">{agent.description}</p>
-            <div className="mt-3 flex flex-wrap items-center gap-4 text-xs text-muted-foreground">
-              <span className="flex items-center gap-1">
-                <Terminal className="h-3.5 w-3.5" />
-                {agent.currentTask}
-              </span>
-              <span>Poslední aktivita: {formatRelative(agent.lastActive)}</span>
-            </div>
-          </div>
-          <Button variant="outline" size="sm" className="shrink-0">
-            Detail
-          </Button>
-        </div>
-      </CardContent>
-    </Card>
   );
 }
 
@@ -147,12 +125,10 @@ function LogRow({ log }: { log: AgentLogEntry }): JSX.Element {
         />
         <span className="font-medium">{log.message}</span>
       </div>
-      <p className="mt-1 text-xs text-muted-foreground">{formatRelative(log.timestamp)}</p>
+      <p className="mt-1 flex items-center gap-1 text-xs text-muted-foreground">
+        <Terminal className="h-3 w-3" />
+        {formatRelative(log.timestamp)}
+      </p>
     </div>
   );
-}
-
-function getFilteredLogs(agentId?: string): AgentLogEntry[] {
-  if (!agentId) return agentLogs.slice(0, 10);
-  return agentLogs.filter((log) => log.agentId === agentId).slice(0, 10);
 }

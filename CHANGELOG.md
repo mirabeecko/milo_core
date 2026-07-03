@@ -8,6 +8,13 @@ Formát loosely inspirován [Keep a Changelog](https://keepachangelog.com/en/1.1
 
 ### Added
 
+- Centrální frontend API vrstva v `apps/web/lib/api/` (`client`, `types`, doménové služby).
+- `/api/chat` endpoint s `ChatService` a `CommandProcessor` – sdílený pro UI, CLI i budoucí hlas.
+- `app/error.tsx` – globální error boundary.
+- Znovupoužitelné UI komponenty v `components/common/` a doménových složkách.
+- Loading, error a empty stavy na všech hlavních stránkách.
+- Demo režim pro `DocumentsService` a `KnowledgeService` s jednotným rozhraním.
+- `AuthProvider` nyní spravuje a persistuje `accessToken` pro API volání.
 - Funkční MVP dashboard s mock daty.
 - Přepracovaná Home stránka jako command center:
   - uvítací blok s datem, stavem systému a hlavním doporučením,
@@ -36,6 +43,11 @@ Formát loosely inspirován [Keep a Changelog](https://keepachangelog.com/en/1.1
 
 ### Changed
 
+- Všechny stránky nyní načítají data přes API vrstvu místo přímého importu mock dat.
+- Mock data byla přesunuta z page komponent do `lib/mocks/` a API služeb.
+- `EmailService` a `CalendarService` přešly na konzistentní `isConfigured` / `isDemo` / `generateDemoData` pattern.
+- `DocumentsService` a `KnowledgeService` přešly na konzistentní demo pattern bez házení chyb v constructoru.
+- `TtsStore` – inicializace dostupnosti byla přesunuta z definice store do `TtsControls` efektu.
 - Aktualizován `README.md` o popis MVP a aktuální stav.
 - Aktualizován `TASKS.md` – Milestone 2 dokončen.
 
@@ -43,6 +55,7 @@ Formát loosely inspirován [Keep a Changelog](https://keepachangelog.com/en/1.1
 
 - `apps/cli/package.json` `dev` script nyní používá `tsc --watch` místo `tsx src/bin.ts`, aby se CLI nespustilo s prázdným příkazem.
 - `AuthService` a `BriefingService` nyní podporují demo režim při chybějících credentials.
+- `DocumentsService` a `KnowledgeService` již neházejí chybu v constructoru při chybějících credentials.
 - `apps/api/src/server.ts` logger konfigurace upravena na Fastify 5 kompatibilní objekt.
 
 ## [0.1.0] – 2026-07-03

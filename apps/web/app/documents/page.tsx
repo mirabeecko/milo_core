@@ -1,14 +1,17 @@
 "use client";
 
-import { useMemo, useState } from "react";
-import { FileText, FolderKanban, Search } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { FileText, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
 import { DashboardLayout } from "@/components/layout/dashboard-layout";
-import { documents } from "@/lib/mocks";
-import { formatRelative, getSourceColor, getSourceLabel } from "@/lib/format";
+import { DocumentRow } from "@/components/document/document-row";
+import { PageHeader } from "@/components/common/page-header";
+import { LoadingState } from "@/components/common/loading-state";
+import { EmptyState } from "@/components/common/empty-state";
+import { getDocuments } from "@/lib/api/documents.api";
+import { getSourceLabel } from "@/lib/format";
 import type { Document } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
@@ -16,9 +19,28 @@ const allSources = ["vše", "obsidian", "drive", "gmail", "upload", "isds"] as c
 const allProjects = ["vše", "TJ Krupka", "MiLO_Core", "Komárka", "Ninja Týden", "Obchodní příležitosti"];
 
 export default function DocumentsPage(): JSX.Element {
+  const [documents, setDocuments] = useState<Document[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<Error | null>(null);
   const [query, setQuery] = useState("");
   const [sourceFilter, setSourceFilter] = useState<string>("vše");
   const [projectFilter, setProjectFilter] = useState<string>("vše");
+
+  useEffect(() => {
+    async function load(): Promise<void> {
+      try {
+        setIsLoading(true);
+        setError(null);
+        const data = await getDocuments();
+        setDocuments(data);
+      } catch (err) {
+        setError(err instanceof Error ? err : new Error("Nepodařilo se načíst dokumenty"));
+      } finally {
+        setIsLoading(false);
+      }
+    }
+    void load();
+  }, []);
 
   const filtered = useMemo(() => {
     return documents.filter((doc) => {
@@ -33,21 +55,44 @@ export default function DocumentsPage(): JSX.Element {
 
       return matchesQuery && matchesSource && matchesProject;
     });
-  }, [query, sourceFilter, projectFilter]);
+  }, [query, sourceFilter, projectFilter, documents]);
+
+  if (isLoading) {
+    return (
+      <DashboardLayout>
+        <div className="mx-auto max-w-6xl">
+          <LoadingState rows={4} />
+        </div>
+      </DashboardLayout>
+    );
+  }
+
+  if (error) {
+    return (
+      <DashboardLayout>
+        <div className="mx-auto max-w-6xl">
+          <EmptyState
+            variant="error"
+            title="Nepodařilo se načíst dokumenty"
+            description={error.message}
+          />
+        </div>
+      </DashboardLayout>
+    );
+  }
 
   return (
     <DashboardLayout>
       <div className="mx-auto max-w-6xl space-y-6">
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <h2 className="text-3xl font-bold tracking-tight">Documents</h2>
-            <p className="text-muted-foreground">Centrální přehled dokumentů ze všech zdrojů.</p>
-          </div>
+        <PageHeader
+          title="Documents"
+          description="Centrální přehled dokumentů ze všech zdrojů."
+        >
           <Button variant="outline" className="gap-2">
             <FileText className="h-4 w-4" />
             Nahrát dokument
           </Button>
-        </div>
+        </PageHeader>
 
         <Card>
           <CardContent className="space-y-4 p-5">
@@ -90,9 +135,10 @@ export default function DocumentsPage(): JSX.Element {
 
         <div className="space-y-3">
           {filtered.length === 0 ? (
-            <div className="rounded-xl border border-dashed border-border bg-card/50 p-12 text-center">
-              <p className="text-muted-foreground">Žádné dokumenty neodpovídají filtru.</p>
-            </div>
+            <EmptyState
+              title="Žádné dokumenty"
+              description="Žádné dokumenty neodpovídají zadanému filtru."
+            />
           ) : (
             filtered.map((doc) => <DocumentRow key={doc.id} document={doc} />)
           )}
@@ -123,43 +169,5 @@ function FilterBadge({
     >
       {label}
     </button>
-  );
-}
-
-function DocumentRow({ document: doc }: { document: Document }): JSX.Element {
-  return (
-    <div className="flex items-start gap-4 rounded-xl border border-border bg-card p-4 shadow-sm transition-colors hover:border-primary/30">
-      <div className="mt-1 rounded-lg bg-primary/10 p-2 text-primary">
-        <FileText className="h-5 w-5" />
-      </div>
-      <div className="min-w-0 flex-1">
-        <div className="flex flex-wrap items-center gap-2">
-          <h3 className="font-semibold">{doc.title}</h3>
-          <Badge variant="outline" className={cn("text-xs", getSourceColor(doc.source))}>
-            {getSourceLabel(doc.source)}
-          </Badge>
-          <Badge variant="outline" className="text-xs">
-            {doc.type}
-          </Badge>
-        </div>
-        <p className="mt-1 text-sm text-muted-foreground">{doc.snippet}</p>
-        <div className="mt-2 flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
-          {doc.project && (
-            <span className="flex items-center gap-1">
-              <FolderKanban className="h-3.5 w-3.5" />
-              {doc.project}
-            </span>
-          )}
-          <span>{formatRelative(doc.date)}</span>
-          <div className="flex flex-wrap gap-1">
-            {doc.tags.map((tag) => (
-              <span key={tag} className="rounded-full bg-muted px-2 py-0.5">
-                {tag}
-              </span>
-            ))}
-          </div>
-        </div>
-      </div>
-    </div>
   );
 }

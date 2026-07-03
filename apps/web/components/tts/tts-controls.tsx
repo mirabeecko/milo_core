@@ -8,11 +8,12 @@ import { useTtsStore } from "@/stores/tts-store";
 
 export function TtsControls(): JSX.Element | null {
   const [mounted, setMounted] = useState(false);
-  const { isAvailable, autoSpeak, setAutoSpeak, stop } = useTtsStore();
+  const { isAvailable, autoSpeak, setAutoSpeak, stop, refreshAvailability } = useTtsStore();
 
   useEffect(() => {
     setMounted(true);
-  }, []);
+    void refreshAvailability();
+  }, [refreshAvailability]);
 
   if (!mounted) {
     return null;

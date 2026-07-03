@@ -19,33 +19,42 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
-import {
-  formatDateTime,
-  formatRelative,
-  getPriorityColor,
-  getPriorityLabel,
-  getStatusColor,
-  getStatusLabel,
-} from "@/lib/format";
-import {
-  activityLog,
-  briefingSnapshot,
-  decisions,
-  recommendation,
-  todayPriorities,
-} from "@/lib/mocks";
+import { formatDateTime, formatRelative } from "@/lib/format";
 import type { ActivityLogItem, DecisionItem, PriorityItem } from "@/lib/types";
-import { TtsPlayButton } from "@/components/tts/tts-play-button";
+import { getHomeData, type HomeData } from "@/lib/api/home.api";
+import { PriorityRow } from "@/components/priority/priority-row";
+import { DecisionRow } from "@/components/decision/decision-row";
+import { LoadingState } from "@/components/common/loading-state";
+import { EmptyState } from "@/components/common/empty-state";
 import { cn } from "@/lib/utils";
 
 export function HomeView(): JSX.Element {
   const [now, setNow] = useState<Date | null>(null);
   const [command, setCommand] = useState("");
+  const [data, setData] = useState<HomeData | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<Error | null>(null);
 
   useEffect(() => {
     setNow(new Date());
     const interval = setInterval(() => setNow(new Date()), 60000);
     return () => clearInterval(interval);
+  }, []);
+
+  useEffect(() => {
+    async function load(): Promise<void> {
+      try {
+        setIsLoading(true);
+        setError(null);
+        const homeData = await getHomeData();
+        setData(homeData);
+      } catch (err) {
+        setError(err instanceof Error ? err : new Error("Nepodařilo se načíst dashboard"));
+      } finally {
+        setIsLoading(false);
+      }
+    }
+    void load();
   }, []);
 
   const handleCommandSubmit = (event: React.FormEvent): void => {
@@ -54,8 +63,22 @@ export function HomeView(): JSX.Element {
     window.location.href = `/chat?prompt=${encodeURIComponent(command)}`;
   };
 
-  const completedPriorities = todayPriorities.filter((p) => p.done).length;
-  const progress = (completedPriorities / todayPriorities.length) * 100;
+  if (isLoading) {
+    return <LoadingState rows={6} />;
+  }
+
+  if (error || !data) {
+    return (
+      <EmptyState
+        variant="error"
+        title="Nepodařilo se načíst dashboard"
+        description={error?.message ?? "Zkuste obnovit stránku."}
+      />
+    );
+  }
+
+  const completedPriorities = data.priorities.filter((p) => p.done).length;
+  const progress = (completedPriorities / data.priorities.length) * 100;
 
   return (
     <div className="mx-auto max-w-7xl space-y-6">
@@ -69,8 +92,8 @@ export function HomeView(): JSX.Element {
             </div>
             <h1 className="text-3xl font-bold tracking-tight">Dobré ráno, uživateli</h1>
             <p className="max-w-xl text-muted-foreground">
-              MiLO je připraveno. Systém běží normálně, 3 agenti aktivní, 2 položky čekají na
-              rozhodnutí.
+              MiLO je připraveno. Systém běží normálně, {data.snapshot.activeAgents} agenti aktivní,{" "}
+              {data.decisions.length} položky čekají na rozhodnutí.
             </p>
           </div>
           <div className="flex items-center gap-2">
@@ -79,25 +102,26 @@ export function HomeView(): JSX.Element {
               Systém OK
             </Badge>
             <Badge variant="outline" className="gap-1.5">
-              <Bot className="h-3 w-3" />3 agenti
+              <Bot className="h-3 w-3" />
+              {data.snapshot.activeAgents} agenti
             </Badge>
           </div>
         </div>
 
-        {recommendation && (
+        {data.recommendation && (
           <div className="relative z-10 mt-6 flex flex-col gap-4 rounded-xl border border-primary/20 bg-primary/5 p-4 md:flex-row md:items-center md:justify-between">
             <div className="flex items-start gap-3">
               <div className="rounded-lg bg-primary/10 p-2 text-primary">
                 <Sparkles className="h-5 w-5" />
               </div>
               <div>
-                <h3 className="font-semibold">{recommendation.title}</h3>
-                <p className="text-sm text-muted-foreground">{recommendation.description}</p>
+                <h3 className="font-semibold">{data.recommendation.title}</h3>
+                <p className="text-sm text-muted-foreground">{data.recommendation.description}</p>
               </div>
             </div>
-            {recommendation.action && (
+            {data.recommendation.action && (
               <Button size="sm" className="gap-2 shrink-0">
-                {recommendation.action}
+                {data.recommendation.action}
                 <ChevronRight className="h-4 w-4" />
               </Button>
             )}
@@ -136,13 +160,15 @@ export function HomeView(): JSX.Element {
                 <CardTitle>Dnešní 3 priority</CardTitle>
                 <CardDescription>Nejdůležitější úkoly na dnešek</CardDescription>
               </div>
-              <Badge variant="outline">{completedPriorities}/{todayPriorities.length} hotovo</Badge>
+              <Badge variant="outline">
+                {completedPriorities}/{data.priorities.length} hotovo
+              </Badge>
             </div>
           </CardHeader>
           <CardContent className="space-y-4">
             <Progress value={progress} />
             <div className="space-y-3">
-              {todayPriorities.map((priority) => (
+              {data.priorities.map((priority) => (
                 <PriorityRow key={priority.id} priority={priority} />
               ))}
             </div>
@@ -156,27 +182,23 @@ export function HomeView(): JSX.Element {
             <CardDescription>Přehled ze všech zdrojů</CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
-            <SnapshotItem
-              icon={Mail}
-              label="Nové e-maily"
-              value={briefingSnapshot.unreadEmails}
-            />
+            <SnapshotItem icon={Mail} label="Nové e-maily" value={data.snapshot.unreadEmails} />
             <SnapshotItem
               icon={Calendar}
               label="Schůzky dnes"
-              value={briefingSnapshot.upcomingMeetings}
+              value={data.snapshot.upcomingMeetings}
             />
             <SnapshotItem
               icon={FileText}
               label="Nové dokumenty"
-              value={briefingSnapshot.newDocuments}
+              value={data.snapshot.newDocuments}
             />
             <SnapshotItem
               icon={CheckCircle2}
               label="Otevřené úkoly"
-              value={briefingSnapshot.openTasks}
+              value={data.snapshot.openTasks}
             />
-            <SnapshotItem icon={Bot} label="Aktivní agenti" value={briefingSnapshot.activeAgents} />
+            <SnapshotItem icon={Bot} label="Aktivní agenti" value={data.snapshot.activeAgents} />
             <Button variant="outline" className="mt-2 w-full gap-2" asChild>
               <a href="/brief">
                 Zobrazit briefing
@@ -198,10 +220,10 @@ export function HomeView(): JSX.Element {
             </div>
           </CardHeader>
           <CardContent className="space-y-3">
-            {decisions.length === 0 ? (
+            {data.decisions.length === 0 ? (
               <p className="text-sm text-muted-foreground">Žádná rozhodnutí nečekají.</p>
             ) : (
-              decisions.map((decision) => <DecisionRow key={decision.id} decision={decision} />)
+              data.decisions.map((decision) => <DecisionRow key={decision.id} decision={decision} />)
             )}
           </CardContent>
         </Card>
@@ -213,36 +235,11 @@ export function HomeView(): JSX.Element {
             <CardDescription>Log posledních akcí systému</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            {activityLog.map((item) => (
+            {data.activityLog.map((item) => (
               <ActivityItem key={item.id} item={item} />
             ))}
           </CardContent>
         </Card>
-      </div>
-    </div>
-  );
-}
-
-function PriorityRow({ priority }: { priority: PriorityItem }): JSX.Element {
-  return (
-    <div className="group flex items-start gap-3 rounded-lg border border-border bg-card/50 p-3 transition-colors hover:bg-card">
-      <div
-        className={cn(
-          "mt-0.5 h-2.5 w-2.5 rounded-full border",
-          priority.priority === "critical" && "bg-rose-500 border-rose-500",
-          priority.priority === "important" && "bg-amber-500 border-amber-500",
-          priority.priority === "low" && "bg-emerald-500 border-emerald-500",
-        )}
-      />
-      <div className="min-w-0 flex-1">
-        <p className="font-medium leading-tight">{priority.title}</p>
-        <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-          <Badge variant="outline" className={cn("text-xs", getPriorityColor(priority.priority))}>
-            {getPriorityLabel(priority.priority)}
-          </Badge>
-          {priority.project && <span>{priority.project}</span>}
-          {priority.due && <span>· {priority.due}</span>}
-        </div>
       </div>
     </div>
   );
@@ -270,34 +267,6 @@ function SnapshotItem({
   );
 }
 
-function DecisionRow({ decision }: { decision: DecisionItem }): JSX.Element {
-  return (
-    <div className="flex flex-col gap-3 rounded-lg border border-border bg-card/50 p-4 sm:flex-row sm:items-center sm:justify-between">
-      <div className="min-w-0">
-        <div className="flex items-center gap-2">
-          <p className="font-medium">{decision.title}</p>
-          <Badge variant="outline" className={cn("text-xs", getStatusColor(decision.status))}>
-            {getStatusLabel(decision.status)}
-          </Badge>
-        </div>
-        <p className="mt-1 text-sm text-muted-foreground">{decision.description}</p>
-        <p className="mt-1 text-xs text-muted-foreground">
-          {decision.source} · {formatRelative(decision.date)}
-        </p>
-      </div>
-      <div className="flex shrink-0 gap-2">
-        <Button size="sm" variant="outline">
-          Odložit
-        </Button>
-        <Button size="sm" className="gap-1">
-          <Zap className="h-3.5 w-3.5" />
-          Rozhodnout
-        </Button>
-      </div>
-    </div>
-  );
-}
-
 function ActivityItem({ item }: { item: ActivityLogItem }): JSX.Element {
   const icons = {
     agent: Bot,
@@ -320,4 +289,3 @@ function ActivityItem({ item }: { item: ActivityLogItem }): JSX.Element {
     </div>
   );
 }
-

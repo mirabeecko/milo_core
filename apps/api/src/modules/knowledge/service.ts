@@ -10,7 +10,19 @@ export class KnowledgeService {
     }
   }
 
+  isConfigured(): boolean {
+    return Boolean(config.OBSIDIAN_VAULT_PATH);
+  }
+
+  isDemo(): boolean {
+    return config.DEMO_MODE || !this.isConfigured();
+  }
+
   async listObsidianNotes(maxResults = 20): Promise<ObsidianNote[]> {
+    if (this.isDemo()) {
+      return this.generateDemoNotes();
+    }
+
     if (!this.obsidian) {
       return this.generateDemoNotes();
     }

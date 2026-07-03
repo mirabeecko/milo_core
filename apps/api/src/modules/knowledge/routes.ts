@@ -14,7 +14,7 @@ export async function knowledgeRoutes(
     async (_request: AuthenticatedRequest, reply) => {
       try {
         const notes = await knowledgeService.listObsidianNotes();
-        return reply.send({ notes });
+        return reply.send({ notes, demo: knowledgeService.isDemo() });
       } catch (error) {
         app.log.error(error);
         return reply.status(500).send({ error: "Failed to fetch Obsidian notes" });

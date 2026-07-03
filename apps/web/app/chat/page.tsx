@@ -9,7 +9,8 @@ import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { DashboardLayout } from "@/components/layout/dashboard-layout";
 import { useTtsStore } from "@/stores/tts-store";
-import { chatSuggestions, initialChatMessages } from "@/lib/mocks";
+import { sendMessage } from "@/lib/api/chat.api";
+import { chatSuggestions, initialChatMessages } from "@/lib/mocks/chat";
 import { formatRelative } from "@/lib/format";
 import type { ChatMessage } from "@/lib/types";
 import { cn } from "@/lib/utils";
@@ -40,6 +41,7 @@ function ChatContent(): JSX.Element {
   const [messages, setMessages] = useState<ChatMessage[]>(initialChatMessages);
   const [input, setInput] = useState(initialPrompt ?? "");
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const { speak } = useTtsStore();
 
@@ -58,6 +60,8 @@ function ChatContent(): JSX.Element {
     const messageText = (text ?? input).trim();
     if (!messageText || isLoading) return;
 
+    setError(null);
+
     const userMessage: ChatMessage = {
       id: `msg-${Date.now()}`,
       role: "user",
@@ -69,19 +73,14 @@ function ChatContent(): JSX.Element {
     setInput("");
     setIsLoading(true);
 
-    // Simulace latence a generování odpovědi
-    await new Promise((resolve) => setTimeout(resolve, 1200));
-
-    const reply = generateMockReply(messageText);
-    const assistantMessage: ChatMessage = {
-      id: `msg-${Date.now() + 1}`,
-      role: "assistant",
-      content: reply,
-      timestamp: new Date().toISOString(),
-    };
-
-    setMessages((prev) => [...prev, assistantMessage]);
-    setIsLoading(false);
+    try {
+      const reply = await sendMessage({ message: messageText });
+      setMessages((prev) => [...prev, reply]);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Odpověď se nepodařila odeslat.");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleSubmit = (event: React.FormEvent): void => {
@@ -135,6 +134,11 @@ function ChatContent(): JSX.Element {
                   <MessageBubble key={message.id} message={message} />
                 ))}
                 {isLoading && <LoadingBubble />}
+                {error && (
+                  <div className="rounded-lg border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive">
+                    {error}
+                  </div>
+                )}
                 <div ref={scrollRef} />
               </>
             )}
@@ -155,7 +159,7 @@ function ChatContent(): JSX.Element {
               </Button>
             </form>
             <p className="mt-2 text-center text-xs text-muted-foreground">
-              MiLO zatím používá mock odpovědi. Backend API bude napojeno v další fázi.
+              MiLO zatím používá demo režim. Backend API zpracovává zprávy lokálně.
             </p>
           </div>
         </Card>
@@ -169,12 +173,7 @@ function MessageBubble({ message }: { message: ChatMessage }): JSX.Element {
   const { speak } = useTtsStore();
 
   return (
-    <div
-      className={cn(
-        "flex w-full gap-3",
-        isAssistant ? "justify-start" : "justify-end",
-      )}
-    >
+    <div className={cn("flex w-full gap-3", isAssistant ? "justify-start" : "justify-end")}>
       {isAssistant && (
         <div className="mt-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
           <Bot className="h-4 w-4" />
@@ -235,47 +234,4 @@ function LoadingBubble(): JSX.Element {
       </div>
     </div>
   );
-}
-
-function generateMockReply(input: string): string {
-  const lower = input.toLowerCase();
-
-  if (lower.includes("priorit") || lower.includes("co dnes")) {
-    return `Dnes máš 3 hlavní priority:
-
-1. **Kritická**: Dokončit návrh smlouvy pro TJ Krupka (do 12:00)
-2. **Důležitá**: Projít feedback k MiLO_Core dashboardu
-3. **Může počkat**: Připravit nabídku pro Komárku
-
-Doporučuji začít kritickou prioritou, protože má nejbližší deadline.`;
-  }
-
-  if (lower.includes("dokument") || lower.includes("tj krupka")) {
-    return `Našel jsem 3 dokumenty související s TJ Krupka:
-
-- Smlouva TJ Krupka 2026 (Obsidian)
-- ISDS: Doručenka 123456
-- Ninja Týden rozpočet (Google Drive)
-
-Chceš, abych otevřel konkrétní dokument nebo připravil shrnutí?`;
-  }
-
-  if (lower.includes("agent") || lower.includes("co udělali")) {
-    return `Aktuální stav agentů:
-
-- **Chief of Staff**: vygeneroval ranní briefing v 7:00
-- **Research Agent**: indexoval 127 poznámek z Obsidianu
-- **Legal Agent**: čeká na úkol
-- **Developer Agent**: pozastaveno
-- **Knowledge Agent**: čeká na úkol
-
-2 položky čekají na tvé rozhodnutí.`;
-  }
-
-  return `Rozumím. Zatím pracuji s mock daty, ale struktura chatu je připravená na napojení reálného LLM.
-
-Můžeš se zeptat například:
-- Co dnes musím řešit?
-- Najdi dokumenty ke kauze TJ Krupka.
-- Co udělali agenti?`;
 }
