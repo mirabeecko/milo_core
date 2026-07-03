@@ -189,7 +189,16 @@ export class AgentManager {
 
     const queued = this.priorityQueue.dequeue();
     if (queued) {
-      void entity.runTask(queued.task);
+      entity.runTask(queued.task).catch(async (error) => {
+        const message = error instanceof Error ? error.message : String(error);
+        await this.deps.repositories.tasks.update(queued.task.id, { status: "failed" }).catch(() => undefined);
+        await this.eventBus.publish({
+          type: "agent:task:failed",
+          agentId: entity.id,
+          timestamp: new Date().toISOString(),
+          payload: { taskId: queued.task.id, error: message },
+        }).catch(() => undefined);
+      });
     }
     return full;
   }
@@ -350,7 +359,10 @@ export class AgentManager {
 
   private selectAgentForTask(task: AgentTask): AgentEntity | undefined {
     if (task.ownerType === "agent" && this.agents.has(task.ownerId)) {
-      return this.agents.get(task.ownerId);
+      const entity = this.agents.get(task.ownerId);
+      if (entity && entity.agent.status !== "offline" && entity.agent.status !== "error") {
+        return entity;
+      }
     }
 
     const candidates = this.listAgents().filter((a) => a.agent.status !== "offline" && a.agent.status !== "error");

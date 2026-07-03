@@ -1,4 +1,4 @@
-import { FastifyRequest, FastifyReply, HookHandlerDoneFunction, RouteGenericInterface } from "fastify";
+import { FastifyRequest, FastifyReply, RouteGenericInterface } from "fastify";
 import { AuthService } from "./service.js";
 
 export interface AuthenticatedRequest<T extends RouteGenericInterface = RouteGenericInterface> extends FastifyRequest<T> {
@@ -15,15 +15,20 @@ const authService = new AuthService();
 export async function authMiddleware(
   request: AuthenticatedRequest,
   reply: FastifyReply,
-  done: HookHandlerDoneFunction,
 ): Promise<void> {
   const authHeader = request.headers.authorization;
+  const queryToken = (request.query as { token?: string } | undefined)?.token;
 
-  if (!authHeader?.startsWith("Bearer ")) {
-    return reply.status(401).send({ error: "Unauthorized" });
+  let accessToken: string | undefined;
+  if (authHeader?.startsWith("Bearer ")) {
+    accessToken = authHeader.slice(7);
+  } else if (queryToken) {
+    accessToken = queryToken;
   }
 
-  const accessToken = authHeader.slice(7);
+  if (!accessToken) {
+    return reply.status(401).send({ error: "Unauthorized" });
+  }
 
   try {
     const user = await authService.getUser(accessToken);
@@ -33,7 +38,6 @@ export async function authMiddleware(
     }
 
     request.user = user;
-    done();
   } catch (error) {
     request.log.error(error);
     return reply.status(401).send({ error: "Unauthorized" });

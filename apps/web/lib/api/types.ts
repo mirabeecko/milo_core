@@ -14,7 +14,7 @@ export class ApiError extends Error {
     public readonly status: number,
     public readonly body: string,
   ) {
-    super(`API error ${status}`);
+    super(body ? `API error ${status}: ${body}` : `API error ${status}`);
     this.name = "ApiError";
   }
 }

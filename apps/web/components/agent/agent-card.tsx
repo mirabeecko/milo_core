@@ -1,6 +1,7 @@
 import Link from "next/link";
 import {
   Bot,
+  Loader2,
   Pause,
   Play,
   RotateCcw,
@@ -17,6 +18,7 @@ import { cn } from "@/lib/utils";
 interface AgentCardProps {
   agent: Agent;
   isSelected?: boolean;
+  actionLoading?: string | null;
   onClick?: () => void;
   onStart?: () => void;
   onStop?: () => void;
@@ -28,6 +30,7 @@ interface AgentCardProps {
 export function AgentCard({
   agent,
   isSelected,
+  actionLoading,
   onClick,
   onStart,
   onStop,
@@ -118,34 +121,16 @@ export function AgentCard({
           </div>
         )}
 
-        <div className="flex flex-wrap gap-2">
-          {state.status === "offline" || state.status === "error" ? (
-            <Button variant="outline" size="sm" className="h-8 gap-1" onClick={(e) => { e.stopPropagation(); onStart?.(); }}>
-              <Play className="h-3.5 w-3.5" /> Start
-            </Button>
-          ) : (
-            <Button variant="outline" size="sm" className="h-8 gap-1" onClick={(e) => { e.stopPropagation(); onStop?.(); }}>
-              <Square className="h-3.5 w-3.5" /> Stop
-            </Button>
-          )}
-          {state.status === "paused" ? (
-            <Button variant="outline" size="sm" className="h-8 gap-1" onClick={(e) => { e.stopPropagation(); onResume?.(); }}>
-              <Play className="h-3.5 w-3.5" /> Resume
-            </Button>
-          ) : (
-            <Button variant="outline" size="sm" className="h-8 gap-1" onClick={(e) => { e.stopPropagation(); onPause?.(); }}>
-              <Pause className="h-3.5 w-3.5" /> Pause
-            </Button>
-          )}
-          <Button variant="outline" size="sm" className="h-8 gap-1" onClick={(e) => { e.stopPropagation(); onRestart?.(); }}>
-            <RotateCcw className="h-3.5 w-3.5" /> Restart
-          </Button>
-          <Button variant="outline" size="sm" className="h-8 gap-1" asChild>
-            <Link href={`/agents/${agent.id}`} onClick={(e) => e.stopPropagation()}>
-              <Settings2 className="h-3.5 w-3.5" /> Detail
-            </Link>
-          </Button>
-        </div>
+        <AgentActionButtons
+          status={state.status}
+          actionLoading={actionLoading}
+          onStart={(e) => { e.stopPropagation(); onStart?.(); }}
+          onStop={(e) => { e.stopPropagation(); onStop?.(); }}
+          onPause={(e) => { e.stopPropagation(); onPause?.(); }}
+          onResume={(e) => { e.stopPropagation(); onResume?.(); }}
+          onRestart={(e) => { e.stopPropagation(); onRestart?.(); }}
+          agentId={agent.id}
+        />
       </CardContent>
     </Card>
   );
@@ -268,6 +253,129 @@ function HealthIndicator({ health }: { health: Agent["health"]["status"] }): JSX
       <span className="text-xs text-muted-foreground hidden sm:inline">{labels[health]}</span>
     </div>
   );
+}
+
+interface AgentActionButtonsProps {
+  status: Agent["state"]["status"];
+  actionLoading?: string | null;
+  onStart: (e: React.MouseEvent<HTMLButtonElement>) => void;
+  onStop: (e: React.MouseEvent<HTMLButtonElement>) => void;
+  onPause: (e: React.MouseEvent<HTMLButtonElement>) => void;
+  onResume: (e: React.MouseEvent<HTMLButtonElement>) => void;
+  onRestart: (e: React.MouseEvent<HTMLButtonElement>) => void;
+  agentId: string;
+}
+
+function AgentActionButtons({
+  status,
+  actionLoading,
+  onStart,
+  onStop,
+  onPause,
+  onResume,
+  onRestart,
+  agentId,
+}: AgentActionButtonsProps): JSX.Element {
+  const canStart = status === "offline" || status === "error";
+  const canStop = status !== "offline" && status !== "error" && status !== "stopping";
+  const canPause = status === "idle" || isOperationalStatus(status);
+  const canResume = status === "paused";
+
+  return (
+    <div className="flex flex-wrap gap-2">
+      <ActionButton
+        visible={canStart}
+        loading={actionLoading === "start"}
+        onClick={onStart}
+        icon={<Play className="h-3.5 w-3.5" />}
+        label="Start"
+      />
+      <ActionButton
+        visible={canStop}
+        loading={actionLoading === "stop"}
+        onClick={onStop}
+        icon={<Square className="h-3.5 w-3.5" />}
+        label="Stop"
+      />
+      <ActionButton
+        visible={canResume}
+        loading={actionLoading === "resume"}
+        onClick={onResume}
+        icon={<Play className="h-3.5 w-3.5" />}
+        label="Resume"
+      />
+      <ActionButton
+        visible={canPause}
+        loading={actionLoading === "pause"}
+        onClick={onPause}
+        icon={<Pause className="h-3.5 w-3.5" />}
+        label="Pause"
+      />
+      <ActionButton
+        visible
+        loading={actionLoading === "restart"}
+        onClick={onRestart}
+        icon={<RotateCcw className="h-3.5 w-3.5" />}
+        label="Restart"
+      />
+      <Button variant="outline" size="sm" className="h-8 gap-1" asChild>
+        <Link href={`/agents/${agentId}`} onClick={(e) => e.stopPropagation()}>
+          <Settings2 className="h-3.5 w-3.5" /> Detail
+        </Link>
+      </Button>
+    </div>
+  );
+}
+
+function ActionButton({
+  visible,
+  loading,
+  onClick,
+  icon,
+  label,
+}: {
+  visible: boolean;
+  loading: boolean;
+  onClick: (e: React.MouseEvent<HTMLButtonElement>) => void;
+  icon: React.ReactNode;
+  label: string;
+}): JSX.Element | null {
+  if (!visible) return null;
+  return (
+    <Button
+      variant="outline"
+      size="sm"
+      className="h-8 gap-1"
+      onClick={onClick}
+      disabled={loading}
+    >
+      {loading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : icon}
+      {label}
+    </Button>
+  );
+}
+
+function isOperationalStatus(status: Agent["state"]["status"]): boolean {
+  return [
+    "thinking",
+    "planning",
+    "delegating",
+    "working",
+    "waiting",
+    "reviewing",
+    "reporting",
+    "loading_calendar",
+    "loading_messages",
+    "analyzing",
+    "scheduling",
+    "summarizing",
+    "drafting_reply",
+    "reading_code",
+    "implementing",
+    "testing",
+    "building",
+    "deploying",
+  ].includes(status);
 }
 
 function statusLabel(status: Agent["state"]["status"]): string {

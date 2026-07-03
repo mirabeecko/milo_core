@@ -235,15 +235,15 @@ export class DeveloperAgent extends AgentEntityImpl {
   }
 
   async stop(): Promise<void> {
+    this.stopped = true;
     this.stopSimulation();
-    if (this.runningTick) {
-      await this.runningTick.catch(() => undefined);
-    }
+    this.runningTick?.catch(() => undefined);
     await super.stop();
   }
 
   async pause(): Promise<void> {
     this.stopSimulation();
+    this.runningTick?.catch(() => undefined);
     await super.pause();
   }
 
@@ -256,14 +256,32 @@ export class DeveloperAgent extends AgentEntityImpl {
     return this.state.taskProgress;
   }
 
+  getTaskHistory(): AgentTask[] {
+    return this.state.taskHistory;
+  }
+
+  getPendingQueue(): AgentTask[] {
+    return this.state.pendingQueue;
+  }
+
   getDeveloperState(): DeveloperAgentState {
     return this.state;
   }
 
   async syncDeveloperState(): Promise<void> {
-    await this.developerService.sync(this.state.projectPath);
-    const synced = this.developerService.getState();
-    this.state = { ...this.state, ...synced };
+    try {
+      await this.developerService.sync(this.state.projectPath);
+      const synced = this.developerService.getState();
+      this.state = { ...this.state, ...synced };
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      await this.log("error", `Developer sync failed: ${message}`);
+      this.setExplanation({
+        ...this.explanation,
+        currentActivity: "Synchronizace projektu selhala, pokračuji s dostupnými daty.",
+        findings: `Nepodařilo se synchronizovat stav projektu: ${message}`,
+      });
+    }
   }
 
   async runBuild(): Promise<void> {
@@ -320,10 +338,16 @@ export class DeveloperAgent extends AgentEntityImpl {
     if (this.currentStepIndex === 0) {
       await this.syncDeveloperState();
     } else if (this.currentStepIndex === 3) {
-      await this.runLint();
-      await this.runBuild();
+      try {
+        await this.runLint();
+        await this.runBuild();
+      } catch (error) {
+        const message = error instanceof Error ? error.message : String(error);
+        await this.log("error", `Build/lint step failed: ${message}`);
+      }
     }
 
+    if (this.stopped || AgentStateMachine.isTerminal(this.status) || !AgentStateMachine.isOperational(this.status)) return;
     await this.applyStep(step, activeTask);
     this.currentStepIndex += 1;
   }

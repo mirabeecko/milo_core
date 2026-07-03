@@ -29,8 +29,13 @@ export async function tasksRoutes(
     "/",
     { preHandler: authMiddleware },
     async (request: AuthenticatedRequest<{ Body: Omit<AgentTask, "id" | "createdAt"> }>, reply) => {
-      const task = await manager.delegate(request.body);
-      return reply.status(201).send(task);
+      try {
+        const task = await manager.delegate(request.body);
+        return reply.status(201).send(task);
+      } catch (error) {
+        const message = error instanceof Error ? error.message : String(error);
+        return reply.status(409).send({ error: message });
+      }
     },
   );
 

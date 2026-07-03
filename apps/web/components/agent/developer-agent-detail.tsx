@@ -50,6 +50,10 @@ export function DeveloperAgentDetail({ agent }: DeveloperAgentDetailProps): JSX.
     void load();
   }, [load]);
 
+  useEffect(() => {
+    void load();
+  }, [agent.state.lastActivityAt, load]);
+
   async function handleSync(): Promise<void> {
     const result = await syncAgentDeveloper(agent.id);
     setState(result.state);

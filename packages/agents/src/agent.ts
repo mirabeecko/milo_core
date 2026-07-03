@@ -143,6 +143,11 @@ export class AgentEntityImpl implements AgentEntity {
   }
 
   async stop(): Promise<void> {
+    if (this.status === "offline") {
+      this.stopped = true;
+      await this.log("info", `Agent ${this.agent.name} already offline`);
+      return;
+    }
     this.stopped = true;
     if (this.activeTaskId) {
       await this.cancelTask(this.activeTaskId);
@@ -153,6 +158,10 @@ export class AgentEntityImpl implements AgentEntity {
   }
 
   async pause(): Promise<void> {
+    if (this.status === "paused") {
+      await this.log("info", `Agent ${this.agent.name} already paused`);
+      return;
+    }
     if (!AgentStateMachine.isOperational(this.status) && this.status !== "idle") {
       throw new Error(`Cannot pause agent ${this.id} from status ${this.status}`);
     }
@@ -162,7 +171,8 @@ export class AgentEntityImpl implements AgentEntity {
 
   async resume(): Promise<void> {
     if (this.status !== "paused") {
-      throw new Error(`Cannot resume agent ${this.id} from status ${this.status}`);
+      await this.log("info", `Agent ${this.agent.name} is not paused (status: ${this.status})`);
+      return;
     }
     const nextStatus = this.activeTaskId ? "working" : "idle";
     await this.transitionTo(nextStatus);

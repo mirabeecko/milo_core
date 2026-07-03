@@ -46,6 +46,23 @@ Formát loosely inspirován [Keep a Changelog](https://keepachangelog.com/en/1.1
 
 ### Fixed
 
+- Agent runtime – tlačítka Start/Pause/Resume/Stop/Restart a detail agenta nyní skutečně fungují:
+  - SSE `/events/stream` podporuje autentizaci tokenem z query parametru.
+  - API akce `start/stop/pause/resume` vracejí odpověď správně přes `return reply.send()` a nezpůsobují `FST_ERR_REP_ALREADY_SENT`.
+  - Auth middleware je opravený – async preHandler již nevolá `done()`, což zabraňuje dvojímu zpracování requestu.
+  - API akce `start/stop/pause/resume` jsou chráněny try/catch a vracejí konkrétní chybové zprávy.
+  - Agent metody `stop`, `pause`, `resume` jsou idempotentní a neházejí při opakovaném volání.
+  - Developer Agent neukončí celý server při selhání syncu nebo čtení souboru – chyby se zachytí a zalogují.
+  - `DefaultProjectAnalyzer` přeskakuje soubory a adresáře, které nelze přečíst, místo aby shodil analýzu.
+  - Developer Agent `stop`/`pause` přeruší běžící tick bez čekání na jeho dokončení a defensive kontrola v `simulateTick` zabraňuje `Invalid state transition`.
+  - `AgentManager.delegate` již neshodí server při selhání `runTask` – chyba se zachytí, úkol se označí jako `failed` a publikuje se událost.
+  - `AgentManager.selectAgentForTask` nevybírá offline/error agenty ani při explicitním `ownerId`.
+  - `POST /tasks` má try/catch a vrací konkrétní chybovou zprávu místo pádu serveru.
+  - Web UI: v detailu agenta je nový formulář „Nový úkol pro {agent}“ pro vytváření úkolů přímo z aplikace.
+  - API `/home` nyní vrací i `weather` a `aiSummary`, takže home dashboard a brief stránka nespadnou na `undefined`.
+  - Detailní agent komponenty se obnovují při příchozích SSE událostech.
+  - UI přidáno: loading stavy, toast notifikace, error boundaries a konkrétní error messages místo obecné chyby.
+  - Testy pro agent API volání (`agents.api.test.ts`) a AgentCard tlačítka (`agent-card.test.tsx`).
 - Konsistence typů mezi `@milo/shared`, `@milo/agents` a frontendem po rozšíření stavů a runtime stavu.
 
 - Agent Operating System (AOS) framework v `@milo/agents`:

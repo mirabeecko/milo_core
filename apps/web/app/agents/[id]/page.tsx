@@ -18,13 +18,17 @@ import {
   History,
   ClipboardList,
   Sparkles,
+  Loader2,
 } from "lucide-react";
+import { toast } from "sonner";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { DashboardLayout } from "@/components/layout/dashboard-layout";
 import { PageHeader } from "@/components/common/page-header";
 import { LoadingState } from "@/components/common/loading-state";
@@ -43,9 +47,12 @@ import {
   resumeAgent,
   restartAgent,
 } from "@/lib/api/agents.api";
-import type { Agent, AgentLogEntry, AgentTask } from "@/lib/types";
+import { getAccessToken } from "@/lib/api/client";
+import { createTask } from "@/lib/api/tasks.api";
+import type { Agent, AgentLogEntry, AgentTask, TaskPriority } from "@/lib/types";
 import { formatDuration, formatRelative } from "@/lib/format";
 import { cn } from "@/lib/utils";
+import { ApiError } from "@/lib/api/types";
 
 export default function AgentDetailPage(): JSX.Element {
   const { id } = useParams<{ id: string }>();
@@ -55,6 +62,7 @@ export default function AgentDetailPage(): JSX.Element {
   const [queue, setQueue] = useState<AgentTask[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
+  const [actionLoading, setActionLoading] = useState<string | null>(null);
 
   const load = useCallback(async (): Promise<void> => {
     try {
@@ -82,7 +90,9 @@ export default function AgentDetailPage(): JSX.Element {
   }, [load]);
 
   useEffect(() => {
-    const eventSource = new EventSource("/api/events/stream");
+    const token = getAccessToken();
+    const url = token ? `/api/events/stream?token=${encodeURIComponent(token)}` : "/api/events/stream";
+    const eventSource = new EventSource(url);
     eventSource.onmessage = (event) => {
       try {
         const data = JSON.parse(event.data) as { agentId?: string };
@@ -93,16 +103,28 @@ export default function AgentDetailPage(): JSX.Element {
         // ignore
       }
     };
+    eventSource.onerror = (err) => {
+      console.error("EventSource error:", err);
+    };
     return () => eventSource.close();
   }, [id, load]);
 
   async function handleAction(action: "start" | "stop" | "pause" | "resume" | "restart"): Promise<void> {
-    if (action === "start") await startAgent(id);
-    if (action === "stop") await stopAgent(id);
-    if (action === "pause") await pauseAgent(id);
-    if (action === "resume") await resumeAgent(id);
-    if (action === "restart") await restartAgent(id);
-    await load();
+    setActionLoading(action);
+    try {
+      if (action === "start") await startAgent(id);
+      if (action === "stop") await stopAgent(id);
+      if (action === "pause") await pauseAgent(id);
+      if (action === "resume") await resumeAgent(id);
+      if (action === "restart") await restartAgent(id);
+      toast.success(`${agent?.name ?? id}: ${actionLabel(action)} proběhl úspěšně`);
+      await load();
+    } catch (err) {
+      const message = err instanceof ApiError ? err.message : err instanceof Error ? err.message : "Neznámá chyba";
+      toast.error(`${agent?.name ?? id}: ${actionLabel(action)} selhl`, { description: message });
+    } finally {
+      setActionLoading(null);
+    }
   }
 
   if (isLoading) {
@@ -142,30 +164,60 @@ export default function AgentDetailPage(): JSX.Element {
             </Link>
           </Button>
           {agent.state.status === "offline" || agent.state.status === "error" ? (
-            <Button className="gap-2" onClick={() => void handleAction("start")}>
-              <Play className="h-4 w-4" /> Start
+            <Button
+              className="gap-2"
+              onClick={() => void handleAction("start")}
+              disabled={Boolean(actionLoading)}
+            >
+              {actionLoading === "start" ? <Loader2 className="h-4 w-4 animate-spin" /> : <Play className="h-4 w-4" />}
+              Start
             </Button>
           ) : (
-            <Button variant="destructive" className="gap-2" onClick={() => void handleAction("stop")}>
-              <Square className="h-4 w-4" /> Stop
+            <Button
+              variant="destructive"
+              className="gap-2"
+              onClick={() => void handleAction("stop")}
+              disabled={Boolean(actionLoading)}
+            >
+              {actionLoading === "stop" ? <Loader2 className="h-4 w-4 animate-spin" /> : <Square className="h-4 w-4" />}
+              Stop
             </Button>
           )}
           {agent.state.status === "paused" ? (
-            <Button variant="outline" className="gap-2" onClick={() => void handleAction("resume")}>
-              <Play className="h-4 w-4" /> Resume
+            <Button
+              variant="outline"
+              className="gap-2"
+              onClick={() => void handleAction("resume")}
+              disabled={Boolean(actionLoading)}
+            >
+              {actionLoading === "resume" ? <Loader2 className="h-4 w-4 animate-spin" /> : <Play className="h-4 w-4" />}
+              Resume
             </Button>
           ) : (
-            <Button variant="outline" className="gap-2" onClick={() => void handleAction("pause")}>
-              <Pause className="h-4 w-4" /> Pause
+            <Button
+              variant="outline"
+              className="gap-2"
+              onClick={() => void handleAction("pause")}
+              disabled={!canPauseAgent(agent.state.status) || Boolean(actionLoading)}
+            >
+              {actionLoading === "pause" ? <Loader2 className="h-4 w-4 animate-spin" /> : <Pause className="h-4 w-4" />}
+              Pause
             </Button>
           )}
-          <Button variant="outline" className="gap-2" onClick={() => void handleAction("restart")}>
-            <RotateCcw className="h-4 w-4" /> Restart
+          <Button
+            variant="outline"
+            className="gap-2"
+            onClick={() => void handleAction("restart")}
+            disabled={Boolean(actionLoading)}
+          >
+            {actionLoading === "restart" ? <Loader2 className="h-4 w-4 animate-spin" /> : <RotateCcw className="h-4 w-4" />}
+            Restart
           </Button>
         </PageHeader>
 
         <div className="grid gap-6 lg:grid-cols-3">
           <div className="space-y-6 lg:col-span-2">
+            <CreateTaskCard agentId={agent.id} agentName={agent.name} onCreated={load} />
             {agent.id === "calendar" ? (
               <CalendarAgentDetail agent={agent} />
             ) : agent.id === "communication" ? (
@@ -535,6 +587,150 @@ function LogsCard({ logs }: { logs: AgentLogEntry[] }): JSX.Element {
       </CardContent>
     </Card>
   );
+}
+
+function CreateTaskCard({
+  agentId,
+  agentName,
+  onCreated,
+}: {
+  agentId: string;
+  agentName: string;
+  onCreated: () => void | Promise<void>;
+}): JSX.Element {
+  const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
+  const [priority, setPriority] = useState<TaskPriority>("normal");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  async function handleSubmit(event: React.FormEvent): Promise<void> {
+    event.preventDefault();
+    if (!title.trim()) {
+      toast.error("Zadej název úkolu");
+      return;
+    }
+    setIsSubmitting(true);
+    try {
+      await createTask({
+        title: title.trim(),
+        description: description.trim() || undefined,
+        priority,
+        ownerId: agentId,
+        ownerType: "agent",
+      });
+      toast.success(`Úkol přidán agentovi ${agentName}`);
+      setTitle("");
+      setDescription("");
+      setPriority("normal");
+      await onCreated();
+    } catch (err) {
+      const message = err instanceof ApiError ? err.message : err instanceof Error ? err.message : "Nepodařilo se vytvořit úkol";
+      toast.error("Vytvoření úkolu selhalo", { description: message });
+    } finally {
+      setIsSubmitting(false);
+    }
+  }
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <ClipboardList className="h-4 w-4" />
+          Nový úkol pro {agentName}
+        </CardTitle>
+        <CardDescription>Vytvoř úkol a přidej ho do fronty agenta.</CardDescription>
+      </CardHeader>
+      <CardContent>
+        <form onSubmit={(e) => void handleSubmit(e)} className="space-y-4">
+          <div className="space-y-2">
+            <label htmlFor="task-title" className="text-sm font-medium">
+              Název
+            </label>
+            <Input
+              id="task-title"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              placeholder="např. Připravit týdenní briefing"
+              disabled={isSubmitting}
+            />
+          </div>
+          <div className="space-y-2">
+            <label htmlFor="task-description" className="text-sm font-medium">
+              Popis
+            </label>
+            <Textarea
+              id="task-description"
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              placeholder="Podrobnosti úkolu..."
+              disabled={isSubmitting}
+            />
+          </div>
+          <div className="space-y-2">
+            <label htmlFor="task-priority" className="text-sm font-medium">
+              Priorita
+            </label>
+            <select
+              id="task-priority"
+              value={priority}
+              onChange={(e) => setPriority(e.target.value as TaskPriority)}
+              disabled={isSubmitting}
+              className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              <option value="critical">Kritická</option>
+              <option value="high">Vysoká</option>
+              <option value="normal">Normální</option>
+              <option value="low">Nízká</option>
+            </select>
+          </div>
+          <Button type="submit" disabled={isSubmitting || !title.trim()} className="gap-2">
+            {isSubmitting && <Loader2 className="h-4 w-4 animate-spin" />}
+            Vytvořit úkol
+          </Button>
+        </form>
+      </CardContent>
+    </Card>
+  );
+}
+
+function actionLabel(action: string): string {
+  switch (action) {
+    case "start":
+      return "Start";
+    case "stop":
+      return "Stop";
+    case "pause":
+      return "Pause";
+    case "resume":
+      return "Resume";
+    case "restart":
+      return "Restart";
+    default:
+      return action;
+  }
+}
+
+function canPauseAgent(status: Agent["state"]["status"]): boolean {
+  return status === "idle" || [
+    "thinking",
+    "planning",
+    "delegating",
+    "working",
+    "waiting",
+    "reviewing",
+    "reporting",
+    "loading_calendar",
+    "loading_messages",
+    "analyzing",
+    "scheduling",
+    "summarizing",
+    "drafting_reply",
+    "reading_code",
+    "implementing",
+    "testing",
+    "building",
+    "deploying",
+  ].includes(status);
 }
 
 function ExplanationRow({ label, value }: { label: string; value?: string }): JSX.Element | null {

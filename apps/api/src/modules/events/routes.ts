@@ -27,6 +27,7 @@ export async function eventsRoutes(
     "/stream",
     { preHandler: authMiddleware },
     async (request: AuthenticatedRequest, reply) => {
+      reply.hijack();
       reply.raw.writeHead(200, {
         "Content-Type": "text/event-stream",
         "Cache-Control": "no-cache",
@@ -43,17 +44,17 @@ export async function eventsRoutes(
         send(event as unknown as Record<string, unknown>);
       });
 
-      request.raw.on("close", () => {
-        unsubscribe();
-      });
-
       const keepAlive = setInterval(() => {
         reply.raw.write(":\n\n");
       }, 15000);
 
-      request.raw.on("close", () => {
+      const cleanup = (): void => {
+        unsubscribe();
         clearInterval(keepAlive);
-      });
+      };
+
+      request.raw.on("close", cleanup);
+      request.raw.on("error", cleanup);
     },
   );
 }

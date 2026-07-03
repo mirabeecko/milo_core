@@ -46,6 +46,10 @@ export function CommunicationAgentDetail({ agent }: CommunicationAgentDetailProp
     void load();
   }, [load]);
 
+  useEffect(() => {
+    void load();
+  }, [agent.state.lastActivityAt, load]);
+
   async function handleSync(): Promise<void> {
     const result = await syncAgentCommunication(agent.id);
     setState(result.state);

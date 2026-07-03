@@ -230,9 +230,7 @@ export class ChiefOfStaffAgent extends AgentEntityImpl {
 
   async stop(): Promise<void> {
     this.stopSimulation();
-    if (this.runningTick) {
-      await this.runningTick.catch(() => undefined);
-    }
+    this.runningTick?.catch(() => undefined);
     await super.stop();
   }
 

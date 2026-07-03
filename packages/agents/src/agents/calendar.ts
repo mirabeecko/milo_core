@@ -253,9 +253,7 @@ export class CalendarAgent extends AgentEntityImpl {
 
   async stop(): Promise<void> {
     this.stopSimulation();
-    if (this.runningTick) {
-      await this.runningTick.catch(() => undefined);
-    }
+    this.runningTick?.catch(() => undefined);
     await super.stop();
   }
 
@@ -271,6 +269,14 @@ export class CalendarAgent extends AgentEntityImpl {
 
   getTaskProgress(): number {
     return this.state.taskProgress;
+  }
+
+  getTaskHistory(): AgentTask[] {
+    return this.state.taskHistory;
+  }
+
+  getPendingQueue(): AgentTask[] {
+    return this.state.pendingQueue;
   }
 
   getCalendarState(): CalendarAgentState {

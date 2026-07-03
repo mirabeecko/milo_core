@@ -37,8 +37,13 @@ export async function agentsRoutes(
     "/:id/start",
     { preHandler: authMiddleware },
     async (request: AuthenticatedRequest<{ Params: { id: string } }>, reply) => {
-      await manager.start(request.params.id);
-      return reply.send({ status: "started" });
+      try {
+        await manager.start(request.params.id);
+        return reply.send({ status: "started" });
+      } catch (error) {
+        const message = error instanceof Error ? error.message : String(error);
+        return reply.status(409).send({ error: message });
+      }
     },
   );
 
@@ -46,8 +51,13 @@ export async function agentsRoutes(
     "/:id/stop",
     { preHandler: authMiddleware },
     async (request: AuthenticatedRequest<{ Params: { id: string } }>, reply) => {
-      await manager.stop(request.params.id);
-      return reply.send({ status: "stopped" });
+      try {
+        await manager.stop(request.params.id);
+        return reply.send({ status: "stopped" });
+      } catch (error) {
+        const message = error instanceof Error ? error.message : String(error);
+        return reply.status(409).send({ error: message });
+      }
     },
   );
 
@@ -55,8 +65,13 @@ export async function agentsRoutes(
     "/:id/pause",
     { preHandler: authMiddleware },
     async (request: AuthenticatedRequest<{ Params: { id: string } }>, reply) => {
-      await manager.pause(request.params.id);
-      return reply.send({ status: "paused" });
+      try {
+        await manager.pause(request.params.id);
+        return reply.send({ status: "paused" });
+      } catch (error) {
+        const message = error instanceof Error ? error.message : String(error);
+        return reply.status(409).send({ error: message });
+      }
     },
   );
 
@@ -64,8 +79,13 @@ export async function agentsRoutes(
     "/:id/resume",
     { preHandler: authMiddleware },
     async (request: AuthenticatedRequest<{ Params: { id: string } }>, reply) => {
-      await manager.resume(request.params.id);
-      return reply.send({ status: "resumed" });
+      try {
+        await manager.resume(request.params.id);
+        return reply.send({ status: "resumed" });
+      } catch (error) {
+        const message = error instanceof Error ? error.message : String(error);
+        return reply.status(409).send({ error: message });
+      }
     },
   );
 
@@ -73,8 +93,13 @@ export async function agentsRoutes(
     "/:id/restart",
     { preHandler: authMiddleware },
     async (request: AuthenticatedRequest<{ Params: { id: string } }>, reply) => {
-      await manager.restart(request.params.id);
-      return reply.send({ status: "restarted" });
+      try {
+        await manager.restart(request.params.id);
+        return reply.send({ status: "restarted" });
+      } catch (error) {
+        const message = error instanceof Error ? error.message : String(error);
+        return reply.status(409).send({ error: message });
+      }
     },
   );
 

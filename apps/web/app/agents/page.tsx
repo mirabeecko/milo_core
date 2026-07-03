@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { Activity, Play, RefreshCw } from "lucide-react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { DashboardLayout } from "@/components/layout/dashboard-layout";
@@ -18,9 +19,11 @@ import {
   restartAgent,
   getAgentLogs,
 } from "@/lib/api/agents.api";
+import { getAccessToken } from "@/lib/api/client";
 import { formatRelative } from "@/lib/format";
 import type { Agent, AgentLogEntry } from "@/lib/types";
 import { cn } from "@/lib/utils";
+import { ApiError } from "@/lib/api/types";
 
 export default function AgentsPage(): JSX.Element {
   const [agents, setAgents] = useState<Agent[]>([]);
@@ -28,6 +31,7 @@ export default function AgentsPage(): JSX.Element {
   const [selectedAgent, setSelectedAgent] = useState<Agent | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
+  const [actionLoading, setActionLoading] = useState<Record<string, string | null>>({});
 
   const load = useCallback(async (): Promise<void> => {
     try {
@@ -65,7 +69,9 @@ export default function AgentsPage(): JSX.Element {
   }, [selectedAgentId, loadLogs]);
 
   useEffect(() => {
-    const eventSource = new EventSource("/api/events/stream");
+    const token = getAccessToken();
+    const url = token ? `/api/events/stream?token=${encodeURIComponent(token)}` : "/api/events/stream";
+    const eventSource = new EventSource(url);
     eventSource.onmessage = (event) => {
       try {
         const data = JSON.parse(event.data) as { agentId?: string; type?: string };
@@ -79,16 +85,49 @@ export default function AgentsPage(): JSX.Element {
         // ignore malformed events
       }
     };
+    eventSource.onerror = (err) => {
+      console.error("EventSource error:", err);
+    };
     return () => eventSource.close();
   }, [load, loadLogs, selectedAgent?.id]);
 
   async function handleAction(action: "start" | "stop" | "pause" | "resume" | "restart", id: string): Promise<void> {
-    if (action === "start") await startAgent(id);
-    if (action === "stop") await stopAgent(id);
-    if (action === "pause") await pauseAgent(id);
-    if (action === "resume") await resumeAgent(id);
-    if (action === "restart") await restartAgent(id);
-    await load();
+    const agent = agents.find((a) => a.id === id);
+    const actionKey = `${id}:${action}`;
+    setActionLoading((prev) => ({ ...prev, [actionKey]: action }));
+    try {
+      if (action === "start") await startAgent(id);
+      if (action === "stop") await stopAgent(id);
+      if (action === "pause") await pauseAgent(id);
+      if (action === "resume") await resumeAgent(id);
+      if (action === "restart") await restartAgent(id);
+      toast.success(`${agent?.name ?? id}: ${actionLabel(action)} proběhl úspěšně`);
+      await load();
+    } catch (err) {
+      const message = err instanceof ApiError ? err.message : err instanceof Error ? err.message : "Neznámá chyba";
+      toast.error(`${agent?.name ?? id}: ${actionLabel(action)} selhl`, { description: message });
+    } finally {
+      setActionLoading((prev) => ({ ...prev, [actionKey]: null }));
+    }
+  }
+
+  async function handleStartAll(): Promise<void> {
+    setActionLoading((prev) => ({ ...prev, ["__all__:start"]: "start" }));
+    try {
+      const offlineAgents = agents.filter((a) => a.state.status === "offline" || a.state.status === "error");
+      if (offlineAgents.length === 0) {
+        toast.info("Všichni agenti již běží");
+        return;
+      }
+      await Promise.all(offlineAgents.map((a) => startAgent(a.id)));
+      toast.success("Všichni offline agenti byli spuštěni");
+      await load();
+    } catch (err) {
+      const message = err instanceof ApiError ? err.message : err instanceof Error ? err.message : "Neznámá chyba";
+      toast.error("Spuštění všech agentů selhalo", { description: message });
+    } finally {
+      setActionLoading((prev) => ({ ...prev, ["__all__:start"]: null }));
+    }
   }
 
   if (isLoading) {
@@ -119,7 +158,11 @@ export default function AgentsPage(): JSX.Element {
     <DashboardLayout>
       <div className="mx-auto max-w-7xl space-y-6">
         <PageHeader title="Agent Operating Center" description="Živé řídicí centrum digitálních zaměstnanců.">
-          <Button className="gap-2" onClick={() => void handleAction("start", "chief-of-staff")}>
+          <Button
+            className="gap-2"
+            onClick={() => void handleStartAll()}
+            disabled={Boolean(actionLoading["__all__:start"])}
+          >
             <Play className="h-4 w-4" />
             Spustit vše
           </Button>
@@ -136,6 +179,7 @@ export default function AgentsPage(): JSX.Element {
                 key={agent.id}
                 agent={agent}
                 isSelected={selectedAgent?.id === agent.id}
+                actionLoading={actionLoading[`${agent.id}:${getActiveAction(agent.id, actionLoading)}`] ?? null}
                 onClick={() => setSelectedAgent(agent)}
                 onStart={() => void handleAction("start", agent.id)}
                 onStop={() => void handleAction("stop", agent.id)}
@@ -171,6 +215,30 @@ export default function AgentsPage(): JSX.Element {
       </div>
     </DashboardLayout>
   );
+}
+
+function actionLabel(action: string): string {
+  switch (action) {
+    case "start":
+      return "Start";
+    case "stop":
+      return "Stop";
+    case "pause":
+      return "Pause";
+    case "resume":
+      return "Resume";
+    case "restart":
+      return "Restart";
+    default:
+      return action;
+  }
+}
+
+function getActiveAction(agentId: string, actionLoading: Record<string, string | null>): string | null {
+  for (const key of ["start", "stop", "pause", "resume", "restart"]) {
+    if (actionLoading[`${agentId}:${key}`]) return key;
+  }
+  return null;
 }
 
 function ExplanationCard({ agent }: { agent: Agent }): JSX.Element {

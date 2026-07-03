@@ -46,23 +46,27 @@ export class DefaultProjectAnalyzer implements ProjectAnalyzer {
     const languages: Record<string, number> = {};
 
     for (const file of files) {
-      const { content } = await this.executeTool<{ filePath: string }, { path: string; content: string }>("filesystem:read", { filePath: file });
-      const lines = content.split("\n");
-      const ext = extname(file).toLowerCase();
-      const language = languageName(ext);
+      try {
+        const { content } = await this.executeTool<{ filePath: string }, { path: string; content: string }>("filesystem:read", { filePath: file });
+        const lines = content.split("\n");
+        const ext = extname(file).toLowerCase();
+        const language = languageName(ext);
 
-      totalLines += lines.length;
-      languages[language] = (languages[language] ?? 0) + lines.length;
+        totalLines += lines.length;
+        languages[language] = (languages[language] ?? 0) + lines.length;
 
-      for (const line of lines) {
-        const trimmed = line.trim();
-        if (trimmed.length === 0) {
-          blankLines += 1;
-        } else if (isComment(trimmed, ext)) {
-          commentLines += 1;
-        } else {
-          codeLines += 1;
+        for (const line of lines) {
+          const trimmed = line.trim();
+          if (trimmed.length === 0) {
+            blankLines += 1;
+          } else if (isComment(trimmed, ext)) {
+            commentLines += 1;
+          } else {
+            codeLines += 1;
+          }
         }
+      } catch {
+        // File may have been deleted or become unreadable between listing and reading; skip it.
       }
     }
 
@@ -123,7 +127,13 @@ export class DefaultProjectAnalyzer implements ProjectAnalyzer {
   }
 
   private async walk(root: string, dir: string, files: string[]): Promise<void> {
-    const entries = await this.executeTool<{ dirPath: string; recursive?: boolean }, { path: string; isDirectory: boolean; size: number; modifiedAt: Date }[]>("filesystem:list", { dirPath: dir });
+    let entries: { path: string; isDirectory: boolean; size: number; modifiedAt: Date }[];
+    try {
+      entries = await this.executeTool<{ dirPath: string; recursive?: boolean }, { path: string; isDirectory: boolean; size: number; modifiedAt: Date }[]>("filesystem:list", { dirPath: dir });
+    } catch {
+      // Directory may be unreadable or may have been removed; skip it.
+      return;
+    }
     for (const entry of entries) {
       const fullPath = entry.path;
       const name = extname(fullPath) ? fullPath.split("/").pop() ?? "" : "";
