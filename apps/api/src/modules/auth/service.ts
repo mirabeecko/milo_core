@@ -14,14 +14,24 @@ export interface AuthTokens {
   expiresAt: number;
 }
 
+const DEMO_USER: AuthUser = {
+  id: "demo-user",
+  email: "demo@milo.local",
+  name: "Demo User",
+  avatarUrl: null,
+};
+
 export class AuthService {
-  private supabase: SupabaseClient;
+  private supabase: SupabaseClient | null = null;
+  private isDemo: boolean;
 
   constructor() {
     if (!config.SUPABASE_URL || !config.SUPABASE_SERVICE_ROLE_KEY) {
-      throw new Error("Supabase credentials are not configured");
+      this.isDemo = true;
+      return;
     }
 
+    this.isDemo = false;
     this.supabase = createDatabaseClient({
       url: config.SUPABASE_URL,
       serviceRoleKey: config.SUPABASE_SERVICE_ROLE_KEY,
@@ -29,6 +39,21 @@ export class AuthService {
   }
 
   async signInWithPassword(email: string, password: string): Promise<{ user: AuthUser; tokens: AuthTokens }> {
+    if (this.isDemo) {
+      return {
+        user: DEMO_USER,
+        tokens: {
+          accessToken: "demo-token",
+          refreshToken: "demo-refresh-token",
+          expiresAt: 0,
+        },
+      };
+    }
+
+    if (!this.supabase) {
+      throw new Error("Authentication failed");
+    }
+
     const { data, error } = await this.supabase.auth.signInWithPassword({ email, password });
 
     if (error || !data.user || !data.session) {
@@ -42,6 +67,14 @@ export class AuthService {
   }
 
   async getUser(accessToken: string): Promise<AuthUser | null> {
+    if (this.isDemo && accessToken === "demo-token") {
+      return DEMO_USER;
+    }
+
+    if (!this.supabase) {
+      return null;
+    }
+
     const { data, error } = await this.supabase.auth.getUser(accessToken);
 
     if (error || !data.user) {
@@ -52,6 +85,18 @@ export class AuthService {
   }
 
   async refreshSession(refreshToken: string): Promise<AuthTokens> {
+    if (this.isDemo) {
+      return {
+        accessToken: "demo-token",
+        refreshToken: "demo-refresh-token",
+        expiresAt: 0,
+      };
+    }
+
+    if (!this.supabase) {
+      throw new Error("Session refresh failed");
+    }
+
     const { data, error } = await this.supabase.auth.refreshSession({ refresh_token: refreshToken });
 
     if (error || !data.session) {
@@ -62,6 +107,14 @@ export class AuthService {
   }
 
   async signOut(accessToken: string): Promise<void> {
+    if (this.isDemo) {
+      return;
+    }
+
+    if (!this.supabase) {
+      return;
+    }
+
     // Supabase neumožňuje odhlášení pomocí service role key přímo přes access token.
     // V produkci bychom použili admin API nebo správu sessions v databázi.
     await this.supabase.auth.admin.signOut(accessToken);
