@@ -8,7 +8,7 @@
   },
   "scripts": {
     "build": "tsc",
-    "dev": "tsx src/bin.ts",
+    "dev": "tsc --watch",
     "lint": "eslint src",
     "test": "vitest run",
     "typecheck": "tsc --noEmit"
