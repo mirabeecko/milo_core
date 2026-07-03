@@ -18,3 +18,4 @@ export * from "./agents/developer.js";
 export * from "./services/calendar/index.js";
 export * from "./services/communication/index.js";
 export * from "./services/developer/index.js";
+export * from "./memory/index.js";

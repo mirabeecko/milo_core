@@ -1,4 +1,5 @@
 import type { ToolRegistry } from "@milo/tools";
+import type { AgentMemory } from "./memory/index.js";
 import type {
   Agent,
   AgentDefinition,
@@ -27,6 +28,7 @@ export interface AgentEntityDeps {
   taskRunner: TaskRunner;
   toolRegistry: ToolRegistry;
   log: (entry: Omit<AgentLogEntry, "id">) => Promise<AgentLogEntry>;
+  agentMemory: AgentMemory;
   memory: {
     upsert: (agentId: string, key: string, value: unknown) => Promise<AgentMemoryEntry>;
     findByKey: (agentId: string, key: string) => Promise<AgentMemoryEntry | null>;
@@ -53,6 +55,7 @@ export class AgentEntityImpl implements AgentEntity {
   protected status: AgentStatus = "offline";
   protected activeTaskId?: string;
   protected explanation: LiveWorkExplanation;
+  protected agentMemory: AgentMemory;
   protected pendingTasks = 0;
   protected runningTasks = 0;
   protected completedTasks = 0;
@@ -77,6 +80,7 @@ export class AgentEntityImpl implements AgentEntity {
       updatedAt: now,
     };
     this.explanation = emptyExplanation();
+    this.agentMemory = deps.agentMemory;
   }
 
   get id(): string {
@@ -117,6 +121,10 @@ export class AgentEntityImpl implements AgentEntity {
 
   explain(): LiveWorkExplanation {
     return this.explanation;
+  }
+
+  getMemory(): AgentMemory {
+    return this.agentMemory;
   }
 
   async initialize(): Promise<void> {

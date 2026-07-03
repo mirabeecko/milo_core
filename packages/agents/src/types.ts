@@ -1,3 +1,4 @@
+import type { AgentMemory } from "./memory/index.js";
 import type {
   Agent,
   AgentDefinition,
@@ -111,6 +112,7 @@ export interface AgentEntity {
   heartbeat(): Promise<void>;
   report(): Promise<Record<string, unknown>>;
   explain(): LiveWorkExplanation;
+  getMemory(): AgentMemory;
   getTaskHistory(): AgentTask[];
   getPendingQueue(): AgentTask[];
 }

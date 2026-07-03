@@ -17,6 +17,7 @@ import type {
 } from "@milo/database";
 import { AgentEntityImpl, DEFAULT_RUNTIME_CONFIG } from "./agent.js";
 import { createDefaultToolRegistry, type ToolRegistry } from "@milo/tools";
+import { AgentMemoryImpl, RepositoryMemoryStorage } from "./memory/index.js";
 import type { AgentEntityDeps } from "./agent.js";
 import { InMemoryAgentEventBus } from "./event-bus.js";
 import { InMemoryTaskQueue } from "./task-queue.js";
@@ -103,6 +104,7 @@ export class AgentManager {
       scheduler: this.scheduler,
       backgroundRunner: this.backgroundRunner,
       toolRegistry: this.toolRegistry,
+      agentMemory: new AgentMemoryImpl(definition.id, new RepositoryMemoryStorage(this.deps.repositories.memory)),
       config: this.runtimeConfig,
     };
     const entity = factory ? factory(definition, entityDeps) : new AgentEntityImpl(definition, entityDeps);
