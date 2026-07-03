@@ -2,7 +2,6 @@ import Fastify from "fastify";
 import cors from "@fastify/cors";
 import helmet from "@fastify/helmet";
 import rateLimit from "@fastify/rate-limit";
-import pino from "pino";
 import { config } from "./config/index.js";
 import { healthRoutes } from "./modules/health/routes.js";
 import { authRoutes } from "./modules/auth/routes.js";
@@ -13,12 +12,10 @@ import { documentsRoutes } from "./modules/documents/routes.js";
 import { knowledgeRoutes } from "./modules/knowledge/routes.js";
 import { closeRedisClient } from "./infrastructure/redis.js";
 
-const logger = pino({
-  level: config.LOG_LEVEL,
-});
-
 const app = Fastify({
-  logger,
+  logger: {
+    level: config.LOG_LEVEL,
+  },
 });
 
 async function start(): Promise<void> {
