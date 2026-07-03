@@ -6,14 +6,19 @@ import { config } from "../../config/index.js";
 
 export class BriefingService {
   private runtime: AgentRuntime;
-  private provider: OpenAiProvider;
+  private provider: OpenAiProvider | null = null;
   private tools: ToolRegistry;
+  private isDemo: boolean;
 
   constructor() {
     if (!config.OPENAI_API_KEY) {
-      throw new Error("OPENAI_API_KEY is not configured");
+      this.isDemo = true;
+      this.tools = new ToolRegistry();
+      this.runtime = new AgentRuntime();
+      return;
     }
 
+    this.isDemo = false;
     this.provider = new OpenAiProvider({
       apiKey: config.OPENAI_API_KEY,
       baseURL: config.OPENAI_BASE_URL,
@@ -24,6 +29,10 @@ export class BriefingService {
   }
 
   async generateBriefing(userId: string): Promise<string> {
+    if (this.isDemo || !this.provider) {
+      return this.generateDemoBriefing();
+    }
+
     const agent = createChiefOfStaffAgent(this.provider, this.tools);
 
     const today = new Date().toLocaleDateString("cs-CZ", {
