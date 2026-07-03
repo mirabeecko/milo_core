@@ -6,3 +6,4 @@ export * from "./agent.js";
 export * from "./agent-manager.js";
 export * from "./registry/index.js";
 export * from "./simulation.js";
+export * from "./agents/chief-of-staff.js";

@@ -37,6 +37,7 @@ Každý agent implementuje jednotné rozhraní:
 - `stop()` – přechod do stavu `offline`
 - `pause()` – pozastavení
 - `resume()` – obnovení
+- `restart()` – restart agenta (stop + start)
 - `runTask(task)` – spuštění úkolu
 - `cancelTask(taskId)` – zrušení úkolu
 - `scheduleTask(task, when)` – naplánování úkolu
@@ -44,12 +45,19 @@ Každý agent implementuje jednotné rozhraní:
 - `heartbeat()` – health check a metriky
 - `report()` – report stavu
 - `explain()` – lidsky čitelné vysvětlení práce
+- `getTaskHistory()` – historie dokončených úkolů
+- `getPendingQueue()` – fronta čekajících úkolů
 
 ## Stavy agenta
 
 - `idle` – čeká na úkol
+- `thinking` – analyzuje a přemýšlí o úkolu
+- `planning` – plánuje postup a vybírá nástroje
+- `delegating` – deleguje dílčí práci nebo načítá data
 - `working` – pracuje na úkolu
 - `waiting` – čeká na vstup / jiného agenta
+- `reviewing` – kontroluje kvalitu výsledku
+- `reporting` – předává výsledek uživateli
 - `paused` – pozastaveno uživatelem
 - `offline` – vypnuto
 - `error` – chyba
@@ -104,6 +112,8 @@ Každý agent průběžně vytváří lidsky čitelné vysvětlení:
 - ⚠ Rizika
 - 🙋 Co potřebuji od uživatele
 - ✅ Poslední dokončený krok
+- ⭐ Míra jistoty (confidence)
+- 🔀 Alternativní postup
 - 📜 Rozhodovací log
 
 ## Registry agentů
@@ -119,6 +129,18 @@ Výchozí agenti:
 - Calendar Agent
 - Communication Agent
 - Automation Agent
+
+## Chief of Staff – první produkční agent
+
+`ChiefOfStaffAgent` je první plně funkční agent s živou simulací:
+
+- Každých 3–8 sekund mění stav mezi `thinking → planning → delegating → working → reviewing → reporting`.
+- Postupně zvyšuje `taskProgress` od 10 % do 100 %.
+- Generuje konkrétní lidsky čitelné vysvětlení práce včetně důkazů, nástrojů, rizik a rozhodovacího logu.
+- Po dokončení úkolu ho uloží do historie a automaticky začne další.
+- Lze ovládat z dashboardu, detailu agenta, API i CLI: `start`, `stop`, `pause`, `resume`, `restart`.
+
+Simulace umožňuje otestovat celý AOS ještě před napojením na reálné služby.
 
 ## Simulace
 

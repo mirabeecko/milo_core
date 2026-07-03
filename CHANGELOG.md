@@ -8,6 +8,31 @@ Formát loosely inspirován [Keep a Changelog](https://keepachangelog.com/en/1.1
 
 ### Added
 
+- Chief of Staff agent (`ChiefOfStaffAgent`) – první plně funkční produkční agent:
+  - Živá simulace stavů `thinking → planning → delegating → working → reviewing → reporting`.
+  - Postupné zvyšování `taskProgress` a generování konkrétního lidsky čitelného vysvětlení.
+  - Automatický přechod na další úkol po dokončení s ukládáním do historie.
+  - Rozhraní `AgentEntity` rozšířeno o `restart()`, `getTaskHistory()` a `getPendingQueue()`.
+  - API endpointy `POST /agents/:id/restart`, `GET /agents/:id/tasks/history`, `GET /agents/:id/tasks/queue`.
+  - Web UI: funkční tlačítka Start/Stop/Pause/Resume/Restart v AgentCard i detailu agenta.
+- Nové stavy agenta: `thinking`, `planning`, `delegating`, `reviewing`, `reporting`.
+- `LiveWorkExplanation` rozšířen o `confidence` (míra jistoty) a `alternativeApproach` (alternativní postup).
+- `AgentRuntimeState` rozšířen o `taskProgress`, `runningTimeMs` a `lastActivityAt`.
+- Nová shadcn/ui komponenta `Tabs` pro detail agenta.
+
+### Changed
+
+- Detail agenta přepracován podle produkční specifikace:
+  - Live Overview s kompletním vysvětlením práce.
+  - Aktivní úkol s progress barem a běžícím časem.
+  - Fronta úkolů, historie úkolů a nastavení v tabs.
+  - Statistiky, live log a rozhodovací log.
+- AgentCard aktualizován pro nové stavy, zobrazuje task progress, running time a tlačítka Restart / Detail.
+
+### Fixed
+
+- Konsistence typů mezi `@milo/shared`, `@milo/agents` a frontendem po rozšíření stavů a runtime stavu.
+
 - Agent Operating System (AOS) framework v `@milo/agents`:
   - Sdílené typy pro agenty, úkoly a události v `@milo/shared`.
   - Databázové schéma a repository pattern (PG + in-memory fallback) v `@milo/database`.

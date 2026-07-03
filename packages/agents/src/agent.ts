@@ -32,18 +32,20 @@ export interface AgentEntityDeps {
 
 export class AgentEntityImpl implements AgentEntity {
   readonly agent: Agent;
-  private status: AgentStatus = "idle";
-  private activeTaskId?: string;
-  private explanation: LiveWorkExplanation;
-  private pendingTasks = 0;
-  private runningTasks = 0;
-  private completedTasks = 0;
-  private failedTasks = 0;
-  private stopped = false;
+  protected status: AgentStatus = "idle";
+  protected activeTaskId?: string;
+  protected explanation: LiveWorkExplanation;
+  protected pendingTasks = 0;
+  protected runningTasks = 0;
+  protected completedTasks = 0;
+  protected failedTasks = 0;
+  protected stopped = false;
+  protected startedAt?: string;
+  protected lastActivityAt?: string;
 
   constructor(
     definition: AgentDefinition,
-    private deps: AgentEntityDeps,
+    protected deps: AgentEntityDeps,
   ) {
     const now = new Date().toISOString();
     this.agent = {
@@ -66,12 +68,32 @@ export class AgentEntityImpl implements AgentEntity {
     return {
       status: this.status,
       activeTaskId: this.activeTaskId,
+      taskProgress: this.getTaskProgress(),
       explanation: this.explanation,
       pendingTasks: this.pendingTasks,
       runningTasks: this.runningTasks,
       completedTasks: this.completedTasks,
       failedTasks: this.failedTasks,
+      runningTimeMs: this.getRunningTimeMs(),
+      lastActivityAt: this.lastActivityAt,
     };
+  }
+
+  getRunningTimeMs(): number {
+    if (!this.startedAt) return 0;
+    return Date.now() - new Date(this.startedAt).getTime();
+  }
+
+  getTaskProgress(): number {
+    return 0;
+  }
+
+  getTaskHistory(): AgentTask[] {
+    return [];
+  }
+
+  getPendingQueue(): AgentTask[] {
+    return [];
   }
 
   explain(): LiveWorkExplanation {
@@ -85,6 +107,8 @@ export class AgentEntityImpl implements AgentEntity {
 
   async start(): Promise<void> {
     this.stopped = false;
+    this.startedAt = new Date().toISOString();
+    this.lastActivityAt = this.startedAt;
     this.status = "idle";
     await this.updateAgentStatus("idle");
     await this.log("info", `Agent ${this.agent.name} started`);
@@ -107,6 +131,12 @@ export class AgentEntityImpl implements AgentEntity {
     this.status = this.activeTaskId ? "working" : "idle";
     await this.updateAgentStatus(this.status);
     await this.log("info", `Agent ${this.agent.name} resumed`);
+  }
+
+  async restart(): Promise<void> {
+    await this.stop();
+    await this.start();
+    await this.log("info", `Agent ${this.agent.name} restarted`);
   }
 
   async runTask(task: AgentTask): Promise<void> {
@@ -198,23 +228,25 @@ export class AgentEntityImpl implements AgentEntity {
     };
   }
 
-  private setExplanation(partial: Partial<LiveWorkExplanation>): void {
+  protected setExplanation(partial: Partial<LiveWorkExplanation>): void {
     this.explanation = {
       ...this.explanation,
       ...partial,
       updatedAt: new Date().toISOString(),
     };
+    this.lastActivityAt = this.explanation.updatedAt;
     void this.emit("agent:explanation", { explanation: this.explanation });
   }
 
-  private async updateAgentStatus(status: AgentStatus): Promise<void> {
+  protected async updateAgentStatus(status: AgentStatus): Promise<void> {
     this.status = status;
     this.agent.status = status;
-    this.agent.updatedAt = new Date().toISOString();
+    this.lastActivityAt = new Date().toISOString();
+    this.agent.updatedAt = this.lastActivityAt;
     await this.emit("agent:status", { status });
   }
 
-  private async emit(type: AgentFrameworkEvent["type"], payload: Record<string, unknown>): Promise<void> {
+  protected async emit(type: AgentFrameworkEvent["type"], payload: Record<string, unknown>): Promise<void> {
     await this.deps.eventBus.publish({
       type,
       agentId: this.id,
@@ -223,8 +255,9 @@ export class AgentEntityImpl implements AgentEntity {
     });
   }
 
-  private async log(level: AgentLogEntry["level"], message: string, metadata?: Record<string, unknown>): Promise<void> {
-    await this.deps.log({ agentId: this.id, timestamp: new Date().toISOString(), level, message, metadata });
+  protected async log(level: AgentLogEntry["level"], message: string, metadata?: Record<string, unknown>): Promise<void> {
+    this.lastActivityAt = new Date().toISOString();
+    await this.deps.log({ agentId: this.id, timestamp: this.lastActivityAt, level, message, metadata });
   }
 }
 
@@ -254,6 +287,8 @@ function emptyExplanation(): LiveWorkExplanation {
     risks: "Žádné.",
     needsFromUser: "Nic.",
     lastCompletedStep: "Inicializace",
+    confidence: "100 %",
+    alternativeApproach: "Žádný.",
     decisionLog: [],
     updatedAt: now,
   };

@@ -19,10 +19,13 @@ Každý agent:
 
 ### Chief of Staff
 
-- **Role:** koordinátor
-- **Specializace:** daily briefing, prioritizace, delegace
-- **Nástroje:** calendar, gmail, obsidian, task-queue, delegate
+- **Role:** digitální ředitel kanceláře – plánuje, prioritizuje, deleguje, kontroluje, reportuje a komunikuje s uživatelem
+- **Specializace:** daily briefing, prioritizace, delegace, koordinace
+- **Nástroje:** Email Service, Calendar Service, Task Manager, Knowledge Service, Agent Manager, Reporting Service
 - **Úkol:** každé ráno připravit briefing a koordinovat ostatní agenty
+- **Stavy:** `idle → thinking → planning → delegating → working → reviewing → reporting`
+- **Live explanation:** vysvětluje co dělá, proč, co zjistil, jaké nástroje používá a co bude následovat
+- **Ovládání:** Start, Stop, Pause, Resume, Restart z dashboardu, detailu agenta, API i CLI
 
 ### Developer Agent
 
@@ -115,8 +118,26 @@ register(definition)
   → start()
   → runTask() / scheduleTask()
   → pause() / resume()
+  → restart()
   → stop()
 ```
+
+Každý agent implementuje jednotné rozhraní `AgentEntity`:
+
+- `initialize()` – registrace agenta
+- `start()` – spuštění do stavu `idle`
+- `stop()` – přechod do stavu `offline`
+- `pause()` / `resume()` – pozastavení a obnovení
+- `restart()` – restart agenta (stop + start)
+- `runTask(task)` – spuštění úkolu
+- `cancelTask(taskId)` – zrušení úkolu
+- `scheduleTask(task, when)` – naplánování úkolu
+- `retry(taskId)` – retry úkolu
+- `heartbeat()` – health check a metriky
+- `report()` – report stavu
+- `explain()` – lidsky čitelné vysvětlení práce
+- `getTaskHistory()` – historie dokončených úkolů
+- `getPendingQueue()` – fronta čekajících úkolů
 
 ## Transparentnost
 

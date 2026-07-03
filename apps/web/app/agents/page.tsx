@@ -15,6 +15,7 @@ import {
   stopAgent,
   pauseAgent,
   resumeAgent,
+  restartAgent,
   getAgentLogs,
 } from "@/lib/api/agents.api";
 import { formatRelative } from "@/lib/format";
@@ -81,11 +82,12 @@ export default function AgentsPage(): JSX.Element {
     return () => eventSource.close();
   }, [load, loadLogs, selectedAgent?.id]);
 
-  async function handleAction(action: "start" | "stop" | "pause" | "resume", id: string): Promise<void> {
+  async function handleAction(action: "start" | "stop" | "pause" | "resume" | "restart", id: string): Promise<void> {
     if (action === "start") await startAgent(id);
     if (action === "stop") await stopAgent(id);
     if (action === "pause") await pauseAgent(id);
     if (action === "resume") await resumeAgent(id);
+    if (action === "restart") await restartAgent(id);
     await load();
   }
 
@@ -139,6 +141,7 @@ export default function AgentsPage(): JSX.Element {
                 onStop={() => void handleAction("stop", agent.id)}
                 onPause={() => void handleAction("pause", agent.id)}
                 onResume={() => void handleAction("resume", agent.id)}
+                onRestart={() => void handleAction("restart", agent.id)}
               />
             ))}
           </div>

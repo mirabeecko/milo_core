@@ -76,11 +76,14 @@ export interface AgentFrameworkEvent {
 export interface AgentRuntimeState {
   status: AgentStatus;
   activeTaskId?: string;
+  taskProgress: number;
   explanation: LiveWorkExplanation;
   pendingTasks: number;
   runningTasks: number;
   completedTasks: number;
   failedTasks: number;
+  runningTimeMs: number;
+  lastActivityAt?: string;
 }
 
 export interface AgentRegistryEntry {
@@ -97,6 +100,7 @@ export interface AgentEntity {
   stop(): Promise<void>;
   pause(): Promise<void>;
   resume(): Promise<void>;
+  restart(): Promise<void>;
   runTask(task: AgentTask): Promise<void>;
   cancelTask(taskId: string): Promise<void>;
   scheduleTask(task: AgentTask, when: string | number): Promise<void>;
@@ -104,4 +108,6 @@ export interface AgentEntity {
   heartbeat(): Promise<void>;
   report(): Promise<Record<string, unknown>>;
   explain(): LiveWorkExplanation;
+  getTaskHistory(): AgentTask[];
+  getPendingQueue(): AgentTask[];
 }

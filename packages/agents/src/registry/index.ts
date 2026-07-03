@@ -1,4 +1,5 @@
 import type { AgentManager } from "../agent-manager.js";
+import { ChiefOfStaffAgent } from "../agents/chief-of-staff.js";
 import { automationAgentDefinition } from "./automation.js";
 import { calendarAgentDefinition } from "./calendar.js";
 import { chiefOfStaffDefinition } from "./chief-of-staff.js";
@@ -33,6 +34,10 @@ export const defaultAgentDefinitions = [
 
 export async function registerDefaultAgents(manager: AgentManager): Promise<void> {
   for (const definition of defaultAgentDefinitions) {
-    await manager.register(definition);
+    if (definition.id === "chief-of-staff") {
+      await manager.register(definition, (def, deps) => new ChiefOfStaffAgent(def, deps));
+    } else {
+      await manager.register(definition);
+    }
   }
 }

@@ -28,6 +28,18 @@ export function formatTime(date: string | Date): string {
   });
 }
 
+export function formatDuration(ms: number): string {
+  if (ms < 1000) return `${ms} ms`;
+  const seconds = Math.floor(ms / 1000);
+  if (seconds < 60) return `${seconds} s`;
+  const minutes = Math.floor(seconds / 60);
+  const remainingSeconds = seconds % 60;
+  if (minutes < 60) return `${minutes} min ${remainingSeconds} s`;
+  const hours = Math.floor(minutes / 60);
+  const remainingMinutes = minutes % 60;
+  return `${hours} h ${remainingMinutes} min`;
+}
+
 export function formatRelative(date: string | Date): string {
   const d = typeof date === "string" ? new Date(date) : date;
   const now = new Date();

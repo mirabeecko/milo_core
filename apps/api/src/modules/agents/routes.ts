@@ -68,6 +68,15 @@ export async function agentsRoutes(
     },
   );
 
+  app.post<{ Params: { id: string } }>(
+    "/:id/restart",
+    { preHandler: authMiddleware },
+    async (request: AuthenticatedRequest<{ Params: { id: string } }>, reply) => {
+      await manager.restart(request.params.id);
+      return reply.send({ status: "restarted" });
+    },
+  );
+
   app.get<{ Params: { id: string }; Querystring: { limit?: string } }>(
     "/:id/logs",
     { preHandler: authMiddleware },
@@ -103,6 +112,30 @@ export async function agentsRoutes(
     async (request: AuthenticatedRequest<{ Params: { id: string } }>, reply) => {
       const explanation = await manager.getExplanation(request.params.id);
       return reply.send(explanation);
+    },
+  );
+
+  app.get<{ Params: { id: string } }>(
+    "/:id/tasks/history",
+    { preHandler: authMiddleware },
+    async (request: AuthenticatedRequest<{ Params: { id: string } }>, reply) => {
+      const entity = manager.getAgent(request.params.id);
+      if (!entity) {
+        return reply.status(404).send({ error: "Agent not found" });
+      }
+      return reply.send(entity.getTaskHistory());
+    },
+  );
+
+  app.get<{ Params: { id: string } }>(
+    "/:id/tasks/queue",
+    { preHandler: authMiddleware },
+    async (request: AuthenticatedRequest<{ Params: { id: string } }>, reply) => {
+      const entity = manager.getAgent(request.params.id);
+      if (!entity) {
+        return reply.status(404).send({ error: "Agent not found" });
+      }
+      return reply.send(entity.getPendingQueue());
     },
   );
 }

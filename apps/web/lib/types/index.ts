@@ -1,6 +1,17 @@
 export type Priority = "critical" | "important" | "low";
 export type Status = "active" | "idle" | "paused" | "error";
-export type AgentStatus = "idle" | "working" | "waiting" | "paused" | "offline" | "error";
+export type AgentStatus =
+  | "idle"
+  | "thinking"
+  | "planning"
+  | "delegating"
+  | "working"
+  | "waiting"
+  | "reviewing"
+  | "reporting"
+  | "paused"
+  | "offline"
+  | "error";
 
 export interface AgentHealth {
   status: "healthy" | "degraded" | "unhealthy";
@@ -50,6 +61,8 @@ export interface LiveWorkExplanation {
   risks: string;
   needsFromUser: string;
   lastCompletedStep: string;
+  confidence: string;
+  alternativeApproach: string;
   decisionLog: { timestamp: string; thought: string }[];
   updatedAt: string;
 }
@@ -57,11 +70,14 @@ export interface LiveWorkExplanation {
 export interface AgentState {
   status: AgentStatus;
   activeTaskId?: string;
+  taskProgress: number;
   explanation: LiveWorkExplanation;
   pendingTasks: number;
   runningTasks: number;
   completedTasks: number;
   failedTasks: number;
+  runningTimeMs: number;
+  lastActivityAt?: string;
 }
 export type ProjectStatus = "active" | "on_hold" | "completed" | "archived";
 export type DocumentSource = "obsidian" | "drive" | "gmail" | "upload" | "isds";
@@ -125,6 +141,30 @@ export interface AgentLogEntry {
   level: "info" | "warn" | "error" | "debug";
   message: string;
   metadata?: Record<string, unknown>;
+}
+
+export type TaskStatus = "pending" | "running" | "completed" | "failed" | "cancelled";
+export type TaskPriority = "critical" | "high" | "normal" | "low";
+export type TaskSource = "user" | "agent" | "schedule" | "system";
+
+export interface AgentTask {
+  id: string;
+  title: string;
+  description?: string;
+  priority: TaskPriority;
+  status: TaskStatus;
+  ownerId: string;
+  ownerType: "user" | "agent";
+  source: TaskSource;
+  log: string[];
+  toolsUsed: string[];
+  citations: string[];
+  retryCount: number;
+  estimateMs?: number;
+  createdAt: string;
+  startedAt?: string;
+  completedAt?: string;
+  failedAt?: string;
 }
 
 export interface Project {

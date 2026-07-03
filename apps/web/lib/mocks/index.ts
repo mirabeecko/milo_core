@@ -102,8 +102,10 @@ export const recommendation: SystemRecommendation = {
 };
 
 function emptyAgentState(status: Agent["state"]["status"]): Agent["state"] {
+  const now = new Date().toISOString();
   return {
     status,
+    taskProgress: 0,
     explanation: {
       currentActivity: "Čekám na úkol.",
       goal: "Být připraven přijmout a vykonat úkol.",
@@ -116,13 +118,17 @@ function emptyAgentState(status: Agent["state"]["status"]): Agent["state"] {
       risks: "Žádné.",
       needsFromUser: "Nic.",
       lastCompletedStep: "Inicializace",
+      confidence: "100 %",
+      alternativeApproach: "Žádný.",
       decisionLog: [],
-      updatedAt: new Date().toISOString(),
+      updatedAt: now,
     },
     pendingTasks: 0,
     runningTasks: 0,
     completedTasks: 0,
     failedTasks: 0,
+    runningTimeMs: 0,
+    lastActivityAt: now,
   };
 }
 

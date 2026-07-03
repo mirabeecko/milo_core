@@ -15,6 +15,7 @@ import type {
   TaskRepository,
 } from "@milo/database";
 import { AgentEntityImpl } from "./agent.js";
+import type { AgentEntityDeps } from "./agent.js";
 import { InMemoryAgentEventBus } from "./event-bus.js";
 import { InMemoryTaskQueue } from "./task-queue.js";
 import { DefaultTaskRunner } from "./task-runner.js";
@@ -49,10 +50,13 @@ export class AgentManager {
     });
   }
 
-  async register(definition: AgentDefinition): Promise<AgentEntity> {
+  async register(
+    definition: AgentDefinition,
+    factory?: (definition: AgentDefinition, deps: AgentEntityDeps) => AgentEntity,
+  ): Promise<AgentEntity> {
     this.definitions.set(definition.id, definition);
     const taskRunner = new DefaultTaskRunner({ queue: this.queue, eventBus: this.eventBus });
-    const entity = new AgentEntityImpl(definition, {
+    const deps: AgentEntityDeps = {
       eventBus: this.eventBus,
       taskRunner,
       log: (entry) => this.deps.repositories.logs.create(entry),
@@ -63,7 +67,8 @@ export class AgentManager {
       metrics: {
         create: (snapshot) => this.deps.repositories.metrics.create(snapshot),
       },
-    });
+    };
+    const entity = factory ? factory(definition, deps) : new AgentEntityImpl(definition, deps);
     await entity.initialize();
     await this.deps.repositories.agents.create(entity.agent);
     this.agents.set(entity.id, entity);
@@ -106,6 +111,12 @@ export class AgentManager {
   async resume(agentId: string): Promise<void> {
     const entity = this.requireAgent(agentId);
     await entity.resume();
+  }
+
+  async restart(agentId: string): Promise<void> {
+    const entity = this.requireAgent(agentId);
+    await entity.stop();
+    await entity.start();
   }
 
   async startAll(): Promise<void> {

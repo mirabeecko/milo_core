@@ -1,4 +1,15 @@
-export type AgentStatus = "idle" | "working" | "waiting" | "paused" | "offline" | "error";
+export type AgentStatus =
+  | "idle"
+  | "thinking"
+  | "planning"
+  | "delegating"
+  | "working"
+  | "waiting"
+  | "reviewing"
+  | "reporting"
+  | "paused"
+  | "offline"
+  | "error";
 
 export type AgentPriority = "critical" | "high" | "normal" | "low";
 
@@ -88,6 +99,8 @@ export interface LiveWorkExplanation {
   risks: string;
   needsFromUser: string;
   lastCompletedStep: string;
+  confidence: string;
+  alternativeApproach: string;
   decisionLog: DecisionLogEntry[];
   updatedAt: string;
 }
