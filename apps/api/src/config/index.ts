@@ -9,6 +9,8 @@ const envSchema = z.object({
   JWT_SECRET: z.string().min(32).optional(),
   REDIS_URL: z.string().default("redis://localhost:6379"),
   LOG_LEVEL: z.enum(["trace", "debug", "info", "warn", "error", "fatal"]).default("info"),
+  OPENAI_API_KEY: z.string().optional(),
+  OPENAI_BASE_URL: z.string().url().optional(),
 });
 
 const parsed = envSchema.safeParse(process.env);

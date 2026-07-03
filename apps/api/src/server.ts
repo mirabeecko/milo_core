@@ -5,6 +5,8 @@ import rateLimit from "@fastify/rate-limit";
 import pino from "pino";
 import { config } from "./config/index.js";
 import { healthRoutes } from "./modules/health/routes.js";
+import { authRoutes } from "./modules/auth/routes.js";
+import { briefingRoutes } from "./modules/briefing/routes.js";
 import { closeRedisClient } from "./infrastructure/redis.js";
 
 const logger = pino({
@@ -26,6 +28,8 @@ async function start(): Promise<void> {
   });
 
   await app.register(healthRoutes, { prefix: "/" });
+  await app.register(authRoutes, { prefix: "/auth" });
+  await app.register(briefingRoutes, { prefix: "/briefing" });
 
   app.addHook("onClose", async () => {
     await closeRedisClient();
