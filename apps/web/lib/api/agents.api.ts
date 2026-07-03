@@ -1,5 +1,5 @@
 import { apiClient, useMockData } from "./client";
-import type { Agent, AgentLogEntry, AgentTask, LiveWorkExplanation } from "@/lib/types";
+import type { Agent, AgentLogEntry, AgentTask, CalendarAgentState, LiveWorkExplanation } from "@/lib/types";
 
 export async function getAgents(): Promise<Agent[]> {
   return apiClient<Agent[]>("/agents");
@@ -53,4 +53,12 @@ export async function getAgentTaskHistory(id: string): Promise<AgentTask[]> {
 
 export async function getAgentTaskQueue(id: string): Promise<AgentTask[]> {
   return apiClient<AgentTask[]>(`/agents/${id}/tasks/queue`);
+}
+
+export async function getAgentCalendarState(id: string): Promise<CalendarAgentState> {
+  return apiClient<CalendarAgentState>(`/agents/${id}/calendar/state`);
+}
+
+export async function syncAgentCalendar(id: string): Promise<{ status: string; state: CalendarAgentState }> {
+  return apiClient<{ status: string; state: CalendarAgentState }>(`/agents/${id}/calendar/sync`, { method: "POST" });
 }

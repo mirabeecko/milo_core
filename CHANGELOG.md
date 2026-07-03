@@ -8,6 +8,13 @@ Formát loosely inspirován [Keep a Changelog](https://keepachangelog.com/en/1.1
 
 ### Added
 
+- Calendar Agent (`CalendarAgent`) – produkční inteligentní manažer času:
+  - `CalendarProvider` interface s `MockCalendarProvider` a `GoogleCalendarProvider` skeletonem.
+  - `DefaultCalendarService` pro synchronizaci, analýzu dne, detekci kolizí, hledání volných slotů a smart doporučení.
+  - Živá simulace stavů `loading_calendar → analyzing → scheduling → reviewing → reporting`.
+  - Nové agent stavy: `loading_calendar`, `analyzing`, `scheduling`.
+  - API endpointy `GET /agents/:id/calendar/state` a `POST /agents/:id/calendar/sync`.
+  - Web UI: specializovaný detail Calendar Agenta s dnešním rozvrhem, produktivním skóre, kolizemi, doporučeními a nadcházejícími událostmi.
 - Chief of Staff agent (`ChiefOfStaffAgent`) – první plně funkční produkční agent:
   - Živá simulace stavů `thinking → planning → delegating → working → reviewing → reporting`.
   - Postupné zvyšování `taskProgress` a generování konkrétního lidsky čitelného vysvětlení.

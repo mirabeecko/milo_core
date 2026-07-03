@@ -29,6 +29,7 @@ import { DashboardLayout } from "@/components/layout/dashboard-layout";
 import { PageHeader } from "@/components/common/page-header";
 import { LoadingState } from "@/components/common/loading-state";
 import { EmptyState } from "@/components/common/empty-state";
+import { CalendarAgentDetail } from "@/components/agent/calendar-agent-detail";
 import {
   getAgent,
   getAgentLogs,
@@ -163,30 +164,36 @@ export default function AgentDetailPage(): JSX.Element {
 
         <div className="grid gap-6 lg:grid-cols-3">
           <div className="space-y-6 lg:col-span-2">
-            <LiveOverviewCard agent={agent} />
-            <ActiveTaskCard agent={agent} />
-            <Tabs defaultValue="queue" className="w-full">
-              <TabsList className="grid w-full grid-cols-3">
-                <TabsTrigger value="queue" className="gap-2">
-                  <ListTodo className="h-4 w-4" /> Fronta
-                </TabsTrigger>
-                <TabsTrigger value="history" className="gap-2">
-                  <History className="h-4 w-4" /> Historie
-                </TabsTrigger>
-                <TabsTrigger value="settings" className="gap-2">
-                  <Settings className="h-4 w-4" /> Nastavení
-                </TabsTrigger>
-              </TabsList>
-              <TabsContent value="queue">
-                <QueueCard queue={queue} />
-              </TabsContent>
-              <TabsContent value="history">
-                <HistoryCard history={history} />
-              </TabsContent>
-              <TabsContent value="settings">
-                <SettingsCard agent={agent} />
-              </TabsContent>
-            </Tabs>
+            {agent.id === "calendar" ? (
+              <CalendarAgentDetail agent={agent} />
+            ) : (
+              <>
+                <LiveOverviewCard agent={agent} />
+                <ActiveTaskCard agent={agent} />
+                <Tabs defaultValue="queue" className="w-full">
+                  <TabsList className="grid w-full grid-cols-3">
+                    <TabsTrigger value="queue" className="gap-2">
+                      <ListTodo className="h-4 w-4" /> Fronta
+                    </TabsTrigger>
+                    <TabsTrigger value="history" className="gap-2">
+                      <History className="h-4 w-4" /> Historie
+                    </TabsTrigger>
+                    <TabsTrigger value="settings" className="gap-2">
+                      <Settings className="h-4 w-4" /> Nastavení
+                    </TabsTrigger>
+                  </TabsList>
+                  <TabsContent value="queue">
+                    <QueueCard queue={queue} />
+                  </TabsContent>
+                  <TabsContent value="history">
+                    <HistoryCard history={history} />
+                  </TabsContent>
+                  <TabsContent value="settings">
+                    <SettingsCard agent={agent} />
+                  </TabsContent>
+                </Tabs>
+              </>
+            )}
           </div>
 
           <div className="space-y-6">
@@ -551,6 +558,12 @@ function statusLabel(status: Agent["state"]["status"] | AgentTask["status"]): st
       return "Kontroluje";
     case "reporting":
       return "Reportuje";
+    case "loading_calendar":
+      return "Načítá kalendář";
+    case "analyzing":
+      return "Analyzuje";
+    case "scheduling":
+      return "Plánuje";
     case "idle":
       return "Čeká";
     case "paused":
@@ -577,17 +590,21 @@ function statusColor(status: Agent["state"]["status"] | AgentTask["status"]): st
     case "delegating":
     case "reviewing":
     case "reporting":
+    case "scheduling":
     case "running":
     case "completed":
       return "border-emerald-500/30 bg-emerald-500/10 text-emerald-500";
     case "thinking":
     case "planning":
+    case "analyzing":
       return "border-amber-500/30 bg-amber-500/10 text-amber-500";
     case "idle":
       return "border-blue-500/30 bg-blue-500/10 text-blue-500";
     case "waiting":
     case "pending":
       return "border-cyan-500/30 bg-cyan-500/10 text-cyan-500";
+    case "loading_calendar":
+      return "border-purple-500/30 bg-purple-500/10 text-purple-500";
     case "paused":
       return "border-slate-500/30 bg-slate-500/10 text-slate-500";
     case "offline":

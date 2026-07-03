@@ -9,6 +9,9 @@ export type AgentStatus =
   | "waiting"
   | "reviewing"
   | "reporting"
+  | "loading_calendar"
+  | "analyzing"
+  | "scheduling"
   | "paused"
   | "offline"
   | "error";
@@ -205,6 +208,74 @@ export interface ObsidianStatus {
   vaultPath?: string;
   noteCount: number;
   indexedAt?: string;
+}
+
+export interface Calendar {
+  id: string;
+  name: string;
+  color?: string;
+  primary: boolean;
+  provider: string;
+}
+
+export interface CalendarEvent {
+  id: string;
+  summary: string;
+  description?: string;
+  location?: string;
+  start: string;
+  end: string;
+  isAllDay: boolean;
+  organizer?: string;
+  attendees: string[];
+  status: "confirmed" | "tentative" | "cancelled";
+  calendarId: string;
+  color?: string;
+}
+
+export interface CalendarConflict {
+  id: string;
+  eventA: CalendarEvent;
+  eventB: CalendarEvent;
+  overlapMinutes: number;
+  severity: "critical" | "warning" | "info";
+  suggestion?: string;
+}
+
+export interface CalendarSuggestion {
+  id: string;
+  type: "move" | "focus_time" | "deep_work" | "break" | "cancel" | "optimize";
+  title: string;
+  description: string;
+  reason: string;
+  impact: "high" | "medium" | "low";
+  relatedEventIds: string[];
+  proposedStart?: string;
+  proposedEnd?: string;
+}
+
+export interface DayAnalysis {
+  date: string;
+  totalEventMinutes: number;
+  freeMinutes: number;
+  focusTimeMinutes: number;
+  deepWorkMinutes: number;
+  breakMinutes: number;
+  eventCount: number;
+  conflictCount: number;
+  overloaded: boolean;
+  productivityScore: number;
+}
+
+export interface CalendarAgentState {
+  calendars: Calendar[];
+  todayEvents: CalendarEvent[];
+  analysis?: DayAnalysis;
+  conflicts: CalendarConflict[];
+  suggestions: CalendarSuggestion[];
+  upcoming: CalendarEvent[];
+  lastSyncedAt?: string;
+  taskProgress: number;
 }
 
 export interface ChatMessage {

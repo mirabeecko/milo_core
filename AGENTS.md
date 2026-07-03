@@ -64,10 +64,14 @@ Každý agent:
 
 ### Calendar Agent
 
-- **Role:** správce kalendáře
-- **Specializace:** scheduling, meeting prep, time management
-- **Nástroje:** calendar, gmail, tasks
-- **Úkol:** plánovat schůzky a optimalizovat časový rozvrh
+- **Role:** osobní manažer času
+- **Specializace:** scheduling, meeting prep, time management, focus time, deep work, conflict detection
+- **Nástroje:** Calendar Service, Conflict Detector, Free Slot Finder, Suggestion Engine, Mock Provider, Google Provider (skeleton)
+- **Úkol:** aktivně řídit čas uživatele – synchronizovat kalendáře, detekovat kolize, navrhovat focus time a deep work, optimalizovat den
+- **Stavy:** `idle → loading_calendar → analyzing → scheduling → reviewing → reporting`
+- **Provideri:** Mock Provider (připraveno), Google Calendar Provider (skeleton pro OAuth)
+- **Live explanation:** vysvětluje analýzu dne, nalezené kolize, volné bloky a doporučení
+- **Dashboard:** dnešní přehled, produktivní skóre, kolize, smart doporučení, nadcházející události
 
 ### Communication Agent
 

@@ -7,3 +7,5 @@ export * from "./agent-manager.js";
 export * from "./registry/index.js";
 export * from "./simulation.js";
 export * from "./agents/chief-of-staff.js";
+export * from "./agents/calendar.js";
+export * from "./services/calendar/index.js";

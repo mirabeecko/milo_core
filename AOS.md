@@ -130,6 +130,47 @@ Výchozí agenti:
 - Communication Agent
 - Automation Agent
 
+## Calendar Service
+
+Centrální abstrakce pro práci s kalendáři:
+
+```ts
+interface CalendarProvider {
+  readonly name: string;
+  readonly isConfigured: boolean;
+  connect(): Promise<void>;
+  disconnect(): Promise<void>;
+  listCalendars(): Promise<Calendar[]>;
+  listEvents(options?): Promise<CalendarEvent[]>;
+  createEvent(event): Promise<CalendarEvent>;
+  updateEvent(id, event): Promise<CalendarEvent>;
+  deleteEvent(id): Promise<void>;
+}
+```
+
+Implementace:
+
+- `MockCalendarProvider` – lokální mock data pro vývoj a testování.
+- `GoogleCalendarProvider` – skeleton pro budoucí Google OAuth integraci.
+
+`DefaultCalendarService` poskytuje:
+
+- synchronizaci kalendářů
+- analýzu dne (vytížení, focus time, deep work, volný čas, přestávky)
+- detekci kolizí
+- hledání volných termínů
+- generování smart doporučení
+
+## Calendar Agent
+
+`CalendarAgent` je druhý produkční agent:
+
+- Synchronizuje kalendáře přes `CalendarService`.
+- Postupně prochází stavy `loading_calendar → analyzing → scheduling → reviewing → reporting`.
+- Detekuje kolize, hledá volné bloky a generuje konkrétní doporučení.
+- Zobrazuje dnešní přehled, produktivní skóre a nadcházející události.
+- API endpointy: `GET /agents/:id/calendar/state`, `POST /agents/:id/calendar/sync`.
+
 ## Chief of Staff – první produkční agent
 
 `ChiefOfStaffAgent` je první plně funkční agent s živou simulací:

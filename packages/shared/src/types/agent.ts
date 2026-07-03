@@ -7,6 +7,9 @@ export type AgentStatus =
   | "waiting"
   | "reviewing"
   | "reporting"
+  | "loading_calendar"
+  | "analyzing"
+  | "scheduling"
   | "paused"
   | "offline"
   | "error";
