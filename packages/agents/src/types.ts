@@ -1,6 +1,7 @@
 import type {
   Agent,
   AgentDefinition,
+  AgentRuntimeConfig,
   AgentStatus,
   AgentTask,
   LiveWorkExplanation,
@@ -15,6 +16,7 @@ export interface AgentFrameworkConfig {
   useBullMq?: boolean;
   defaultModel?: string;
   defaultTemperature?: number;
+  runtime?: Partial<AgentRuntimeConfig>;
 }
 
 export interface TaskJob {

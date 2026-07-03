@@ -3,6 +3,7 @@ import type {
   AgentLogEntry,
   AgentMemoryEntry,
   AgentMetricsSnapshot,
+  AgentRuntimeConfig,
   AgentTask,
   LiveWorkExplanation,
 } from "@milo/shared";
@@ -14,12 +15,22 @@ import type {
   AgentRepository,
   TaskRepository,
 } from "@milo/database";
-import { AgentEntityImpl } from "./agent.js";
+import { AgentEntityImpl, DEFAULT_RUNTIME_CONFIG } from "./agent.js";
 import type { AgentEntityDeps } from "./agent.js";
 import { InMemoryAgentEventBus } from "./event-bus.js";
 import { InMemoryTaskQueue } from "./task-queue.js";
 import { DefaultTaskRunner } from "./task-runner.js";
-import type { AgentEntity, AgentEventBus, AgentFrameworkConfig, AgentFrameworkEvent, TaskQueue } from "./types.js";
+import { AgentScheduler } from "./runtime/agent-scheduler.js";
+import { BackgroundRunner } from "./runtime/background-runner.js";
+import { HealthMonitor } from "./runtime/health-monitor.js";
+import { PriorityTaskQueue } from "./runtime/task-queue-v2.js";
+import type {
+  AgentEntity,
+  AgentEventBus,
+  AgentFrameworkConfig,
+  AgentFrameworkEvent,
+  TaskQueue,
+} from "./types.js";
 
 export interface AgentManagerDeps {
   repositories: {
@@ -40,14 +51,32 @@ export class AgentManager {
   private definitions = new Map<string, AgentDefinition>();
   private eventBus: AgentEventBus;
   private queue: TaskQueue;
+  private scheduler: AgentScheduler;
+  private backgroundRunner: BackgroundRunner;
+  private healthMonitor: HealthMonitor;
+  private priorityQueue: PriorityTaskQueue;
+  private runtimeConfig: AgentRuntimeConfig;
   private heartbeatInterval?: ReturnType<typeof setInterval>;
+  private deadlineInterval?: ReturnType<typeof setInterval>;
 
   constructor(private deps: AgentManagerDeps) {
     this.eventBus = deps.eventBus ?? new InMemoryAgentEventBus();
     this.queue = deps.queue ?? new InMemoryTaskQueue();
+    this.scheduler = new AgentScheduler();
+    this.backgroundRunner = new BackgroundRunner();
+    this.priorityQueue = new PriorityTaskQueue();
+    this.runtimeConfig = { ...DEFAULT_RUNTIME_CONFIG, ...deps.config?.runtime };
+    this.healthMonitor = new HealthMonitor({
+      healthThresholdMs: this.runtimeConfig.healthThresholdMs,
+      maxConsecutiveErrors: this.runtimeConfig.maxConsecutiveErrors,
+    });
     this.eventBus.subscribe(async (event) => {
       await this.persistEvent(event);
     });
+  }
+
+  getConfig(): AgentRuntimeConfig {
+    return this.runtimeConfig;
   }
 
   async register(
@@ -56,7 +85,7 @@ export class AgentManager {
   ): Promise<AgentEntity> {
     this.definitions.set(definition.id, definition);
     const taskRunner = new DefaultTaskRunner({ queue: this.queue, eventBus: this.eventBus });
-    const deps: AgentEntityDeps = {
+    const entityDeps: AgentEntityDeps = {
       eventBus: this.eventBus,
       taskRunner,
       log: (entry) => this.deps.repositories.logs.create(entry),
@@ -67,8 +96,11 @@ export class AgentManager {
       metrics: {
         create: (snapshot) => this.deps.repositories.metrics.create(snapshot),
       },
+      scheduler: this.scheduler,
+      backgroundRunner: this.backgroundRunner,
+      config: this.runtimeConfig,
     };
-    const entity = factory ? factory(definition, deps) : new AgentEntityImpl(definition, deps);
+    const entity = factory ? factory(definition, entityDeps) : new AgentEntityImpl(definition, entityDeps);
     await entity.initialize();
     await this.deps.repositories.agents.create(entity.agent);
     this.agents.set(entity.id, entity);
@@ -115,15 +147,20 @@ export class AgentManager {
 
   async restart(agentId: string): Promise<void> {
     const entity = this.requireAgent(agentId);
-    await entity.stop();
-    await entity.start();
+    await entity.restart();
   }
 
   async startAll(): Promise<void> {
+    this.scheduler.start();
+    this.startDeadlineChecker();
     await Promise.all(this.listAgents().map((agent) => agent.start()));
+    this.startHeartbeat(this.runtimeConfig.heartbeatIntervalMs);
   }
 
   async stopAll(): Promise<void> {
+    this.stopHeartbeat();
+    this.stopDeadlineChecker();
+    this.scheduler.stop();
     await Promise.all(this.listAgents().map((agent) => agent.stop()));
   }
 
@@ -131,15 +168,22 @@ export class AgentManager {
     const full = await this.deps.repositories.tasks.create(task);
     const entity = this.selectAgentForTask(full);
     if (!entity) {
+      this.priorityQueue.enqueue(full, { priority: full.priority, maxRetries: this.runtimeConfig.maxRetries });
       throw new Error(`No suitable agent found for task ${full.title}`);
     }
+
+    this.priorityQueue.enqueue(full, { priority: full.priority, maxRetries: this.runtimeConfig.maxRetries });
     await this.eventBus.publish({
       type: "agent:task:delegated",
       agentId: entity.id,
       timestamp: new Date().toISOString(),
       payload: { taskId: full.id, from: full.ownerId, to: entity.id },
     });
-    void entity.runTask(full);
+
+    const queued = this.priorityQueue.dequeue();
+    if (queued) {
+      void entity.runTask(queued.task);
+    }
     return full;
   }
 
@@ -158,6 +202,7 @@ export class AgentManager {
     if (!task) {
       throw new Error(`Task ${taskId} not found`);
     }
+    this.priorityQueue.cancel(taskId);
     const entity = this.agents.get(task.ownerId);
     if (entity) {
       await entity.cancelTask(taskId);
@@ -174,15 +219,29 @@ export class AgentManager {
     if (!entity) {
       throw new Error(`Agent ${task.ownerId} not found`);
     }
+    const requeued = this.priorityQueue.retry(taskId);
+    if (!requeued) {
+      // If not in priority queue anymore, enqueue again
+      this.priorityQueue.enqueue(task, { priority: task.priority, maxRetries: this.runtimeConfig.maxRetries });
+    }
     await entity.retry(taskId);
-    void entity.runTask({ ...task, retryCount: task.retryCount + 1 });
+    const queued = this.priorityQueue.dequeue();
+    if (queued) {
+      void entity.runTask(queued.task);
+    }
   }
 
   async heartbeat(): Promise<void> {
-    await Promise.all(this.listAgents().map((agent) => agent.heartbeat()));
+    await Promise.all(
+      this.listAgents().map(async (agent) => {
+        await agent.heartbeat();
+        this.healthMonitor.heartbeat(agent.id);
+        agent.agent.health = this.healthMonitor.check(agent.id);
+      }),
+    );
   }
 
-  startHeartbeat(intervalMs = 30000): void {
+  startHeartbeat(intervalMs = this.runtimeConfig.heartbeatIntervalMs): void {
     this.stopHeartbeat();
     this.heartbeatInterval = setInterval(() => {
       void this.heartbeat();
@@ -193,6 +252,20 @@ export class AgentManager {
     if (this.heartbeatInterval) {
       clearInterval(this.heartbeatInterval);
       this.heartbeatInterval = undefined;
+    }
+  }
+
+  startDeadlineChecker(intervalMs = 5000): void {
+    this.stopDeadlineChecker();
+    this.deadlineInterval = setInterval(() => {
+      this.priorityQueue.checkDeadlines();
+    }, intervalMs);
+  }
+
+  stopDeadlineChecker(): void {
+    if (this.deadlineInterval) {
+      clearInterval(this.deadlineInterval);
+      this.deadlineInterval = undefined;
     }
   }
 
@@ -221,6 +294,10 @@ export class AgentManager {
     return this.deps.repositories.tasks.findAll(options);
   }
 
+  getPriorityQueue(): PriorityTaskQueue {
+    return this.priorityQueue;
+  }
+
   async getEvents(options?: { limit?: number; type?: AgentFrameworkEvent["type"] }): Promise<AgentFrameworkEvent[]> {
     const events = await this.deps.repositories.events.findAll(options);
     return events.map((e) => ({
@@ -237,6 +314,8 @@ export class AgentManager {
 
   async close(): Promise<void> {
     this.stopHeartbeat();
+    this.stopDeadlineChecker();
+    this.scheduler.stop();
     await this.stopAll();
     await this.queue.close();
   }
@@ -253,7 +332,17 @@ export class AgentManager {
     if (task.ownerType === "agent" && this.agents.has(task.ownerId)) {
       return this.agents.get(task.ownerId);
     }
+
     const candidates = this.listAgents().filter((a) => a.agent.status !== "offline" && a.agent.status !== "error");
+
+    // Match by tool capability
+    if (task.toolsUsed.length > 0) {
+      const capable = candidates.filter((a) => task.toolsUsed.some((tool) => a.agent.config.tools.includes(tool)));
+      if (capable.length > 0) {
+        return capable[0];
+      }
+    }
+
     return candidates[0];
   }
 

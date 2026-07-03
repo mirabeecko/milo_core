@@ -2,6 +2,7 @@ export type Priority = "critical" | "important" | "low";
 export type Status = "active" | "idle" | "paused" | "error";
 export type AgentStatus =
   | "idle"
+  | "starting"
   | "thinking"
   | "planning"
   | "delegating"
@@ -21,6 +22,8 @@ export type AgentStatus =
   | "building"
   | "deploying"
   | "paused"
+  | "stopping"
+  | "recovering"
   | "offline"
   | "error";
 

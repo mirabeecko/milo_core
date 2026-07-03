@@ -586,6 +586,12 @@ function statusLabel(status: Agent["state"]["status"] | AgentTask["status"]): st
       return "Buildí";
     case "deploying":
       return "Deployuje";
+    case "starting":
+      return "Spouští se";
+    case "stopping":
+      return "Zastavuje se";
+    case "recovering":
+      return "Obnovuje se";
     case "idle":
       return "Čeká";
     case "paused":
@@ -627,6 +633,11 @@ function statusColor(status: Agent["state"]["status"] | AgentTask["status"]): st
       return "border-amber-500/30 bg-amber-500/10 text-amber-500";
     case "idle":
       return "border-blue-500/30 bg-blue-500/10 text-blue-500";
+    case "starting":
+      return "border-sky-500/30 bg-sky-500/10 text-sky-500";
+    case "stopping":
+    case "recovering":
+      return "border-orange-500/30 bg-orange-500/10 text-orange-500";
     case "waiting":
     case "pending":
       return "border-cyan-500/30 bg-cyan-500/10 text-cyan-500";

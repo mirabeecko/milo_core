@@ -5,6 +5,7 @@ import type {
   AgentMemoryEntry,
   AgentMetrics,
   AgentMetricsSnapshot,
+  AgentRuntimeConfig,
   AgentTask,
   AgentStatus,
   LiveWorkExplanation,
@@ -16,6 +17,9 @@ import type {
   AgentRuntimeState,
   TaskRunner,
 } from "./types.js";
+import { AgentStateMachine } from "./runtime/agent-state-machine.js";
+import type { AgentScheduler } from "./runtime/agent-scheduler.js";
+import type { BackgroundRunner } from "./runtime/background-runner.js";
 
 export interface AgentEntityDeps {
   eventBus: AgentEventBus;
@@ -28,20 +32,33 @@ export interface AgentEntityDeps {
   metrics: {
     create: (snapshot: Omit<AgentMetricsSnapshot, "id">) => Promise<AgentMetricsSnapshot>;
   };
+  scheduler?: AgentScheduler;
+  backgroundRunner?: BackgroundRunner;
+  config: AgentRuntimeConfig;
 }
+
+export const DEFAULT_RUNTIME_CONFIG: AgentRuntimeConfig = {
+  heartbeatIntervalMs: 30_000,
+  taskTimeoutMs: 300_000,
+  maxRetries: 2,
+  retryBackoffMs: 1000,
+  healthThresholdMs: 60_000,
+  maxConsecutiveErrors: 3,
+};
 
 export class AgentEntityImpl implements AgentEntity {
   readonly agent: Agent;
-  protected status: AgentStatus = "idle";
+  protected status: AgentStatus = "offline";
   protected activeTaskId?: string;
   protected explanation: LiveWorkExplanation;
   protected pendingTasks = 0;
   protected runningTasks = 0;
   protected completedTasks = 0;
   protected failedTasks = 0;
-  protected stopped = false;
   protected startedAt?: string;
   protected lastActivityAt?: string;
+  protected consecutiveErrors = 0;
+  protected stopped = false;
 
   constructor(
     definition: AgentDefinition,
@@ -50,7 +67,7 @@ export class AgentEntityImpl implements AgentEntity {
     const now = new Date().toISOString();
     this.agent = {
       ...definition,
-      status: "idle",
+      status: "offline",
       health: { status: "healthy", lastHeartbeat: now },
       metrics: emptyMetrics(now),
       memory: {},
@@ -107,29 +124,38 @@ export class AgentEntityImpl implements AgentEntity {
 
   async start(): Promise<void> {
     this.stopped = false;
+    await this.transitionTo("starting");
     this.startedAt = new Date().toISOString();
     this.lastActivityAt = this.startedAt;
-    this.status = "idle";
-    await this.updateAgentStatus("idle");
+    this.consecutiveErrors = 0;
+    await this.transitionTo("idle");
     await this.log("info", `Agent ${this.agent.name} started`);
   }
 
   async stop(): Promise<void> {
     this.stopped = true;
-    this.status = "offline";
-    await this.updateAgentStatus("offline");
+    if (this.activeTaskId) {
+      await this.cancelTask(this.activeTaskId);
+    }
+    await this.transitionTo("stopping");
+    await this.transitionTo("offline");
     await this.log("info", `Agent ${this.agent.name} stopped`);
   }
 
   async pause(): Promise<void> {
-    this.status = "paused";
-    await this.updateAgentStatus("paused");
+    if (!AgentStateMachine.isOperational(this.status) && this.status !== "idle") {
+      throw new Error(`Cannot pause agent ${this.id} from status ${this.status}`);
+    }
+    await this.transitionTo("paused");
     await this.log("info", `Agent ${this.agent.name} paused`);
   }
 
   async resume(): Promise<void> {
-    this.status = this.activeTaskId ? "working" : "idle";
-    await this.updateAgentStatus(this.status);
+    if (this.status !== "paused") {
+      throw new Error(`Cannot resume agent ${this.id} from status ${this.status}`);
+    }
+    const nextStatus = this.activeTaskId ? "working" : "idle";
+    await this.transitionTo(nextStatus);
     await this.log("info", `Agent ${this.agent.name} resumed`);
   }
 
@@ -140,13 +166,13 @@ export class AgentEntityImpl implements AgentEntity {
   }
 
   async runTask(task: AgentTask): Promise<void> {
-    if (this.stopped) {
-      throw new Error(`Agent ${this.id} is offline`);
+    if (AgentStateMachine.isTerminal(this.status)) {
+      throw new Error(`Agent ${this.id} is ${this.status}`);
     }
+
     this.activeTaskId = task.id;
-    this.status = "working";
     this.runningTasks += 1;
-    await this.updateAgentStatus("working");
+    await this.transitionTo("working");
 
     this.setExplanation({
       currentActivity: `Spouštím úkol: ${task.title}`,
@@ -160,48 +186,93 @@ export class AgentEntityImpl implements AgentEntity {
       risks: "Žádné známé riziko.",
       needsFromUser: "Nic.",
       lastCompletedStep: "Přijetí úkolu",
+      confidence: "100 %",
+      alternativeApproach: "Žádný.",
       decisionLog: [{ timestamp: new Date().toISOString(), thought: `Přijal jsem úkol ${task.id}` }],
     });
 
     await this.emit("agent:task:created", { taskId: task.id, title: task.title });
 
-    try {
-      await this.deps.taskRunner.execute(task, this.agent);
-      this.completedTasks += 1;
-      this.setExplanation({
-        ...this.explanation,
-        currentActivity: "Úkol dokončen.",
-        findings: `Úkol ${task.title} byl úspěšně dokončen.`,
-        lastCompletedStep: `Dokončil jsem úkol ${task.title}`,
-      });
-    } catch (error) {
-      this.failedTasks += 1;
-      this.setExplanation({
-        ...this.explanation,
-        currentActivity: "Úkol selhal.",
-        findings: `Úkol ${task.title} selhal: ${error instanceof Error ? error.message : String(error)}`,
-      });
-      throw error;
-    } finally {
-      this.runningTasks = Math.max(0, this.runningTasks - 1);
-      this.activeTaskId = undefined;
-      this.status = "idle";
-      await this.updateAgentStatus("idle");
+    const runner = this.deps.backgroundRunner;
+    if (runner) {
+      try {
+        await runner.run(
+          task.id,
+          async () => this.deps.taskRunner.execute(task, this.agent),
+          this.deps.config.taskTimeoutMs,
+        );
+        this.completedTasks += 1;
+        this.agent.metrics.successfulTasks += 1;
+        this.consecutiveErrors = 0;
+        this.setExplanation({
+          ...this.explanation,
+          currentActivity: "Úkol dokončen.",
+          findings: `Úkol ${task.title} byl úspěšně dokončen.`,
+          lastCompletedStep: `Dokončil jsem úkol ${task.title}`,
+        });
+        await this.emit("agent:task:completed", { taskId: task.id, title: task.title });
+      } catch (error) {
+        await this.handleTaskError(task, error);
+      } finally {
+        this.runningTasks = Math.max(0, this.runningTasks - 1);
+        this.activeTaskId = undefined;
+        if (this.status !== "paused" && this.status !== "error") {
+          await this.transitionTo("idle");
+        }
+      }
+    } else {
+      // Fallback to direct execution when no background runner is provided
+      try {
+        await this.deps.taskRunner.execute(task, this.agent);
+        this.completedTasks += 1;
+        this.agent.metrics.successfulTasks += 1;
+        this.consecutiveErrors = 0;
+        this.setExplanation({
+          ...this.explanation,
+          currentActivity: "Úkol dokončen.",
+          findings: `Úkol ${task.title} byl úspěšně dokončen.`,
+          lastCompletedStep: `Dokončil jsem úkol ${task.title}`,
+        });
+        await this.emit("agent:task:completed", { taskId: task.id, title: task.title });
+      } catch (error) {
+        await this.handleTaskError(task, error);
+      } finally {
+        this.runningTasks = Math.max(0, this.runningTasks - 1);
+        this.activeTaskId = undefined;
+        if (this.status !== "paused" && this.status !== "error") {
+          await this.transitionTo("idle");
+        }
+      }
     }
   }
 
   async cancelTask(taskId: string): Promise<void> {
     await this.log("warn", `Task ${taskId} cancelled`);
-    await this.emit("agent:task:cancelled", { taskId });
+    this.deps.backgroundRunner?.cancel(taskId);
     if (this.activeTaskId === taskId) {
       this.activeTaskId = undefined;
-      this.status = "idle";
-      await this.updateAgentStatus("idle");
+      this.runningTasks = Math.max(0, this.runningTasks - 1);
+      await this.transitionTo("idle");
     }
+    await this.emit("agent:task:cancelled", { taskId });
   }
 
   async scheduleTask(task: AgentTask, when: string | number): Promise<void> {
+    if (!this.deps.scheduler) {
+      this.pendingTasks += 1;
+      await this.log("info", `Task ${task.id} scheduled for ${String(when)} (no scheduler active)`);
+      await this.emit("agent:task:created", { taskId: task.id, title: task.title, scheduledFor: when });
+      return;
+    }
+
     this.pendingTasks += 1;
+    const whenMs = typeof when === "number" ? when : new Date(when).getTime();
+
+    this.deps.scheduler.scheduleAt(whenMs, async () => {
+      this.pendingTasks = Math.max(0, this.pendingTasks - 1);
+      await this.runTask(task);
+    });
+
     await this.log("info", `Task ${task.id} scheduled for ${String(when)}`);
     await this.emit("agent:task:created", { taskId: task.id, title: task.title, scheduledFor: when });
   }
@@ -228,6 +299,21 @@ export class AgentEntityImpl implements AgentEntity {
     };
   }
 
+  protected async transitionTo(status: AgentStatus): Promise<void> {
+    if (!AgentStateMachine.canTransition(this.status, status)) {
+      throw new Error(`Invalid state transition: ${this.status} -> ${status}`);
+    }
+    this.status = status;
+    this.agent.status = status;
+    this.lastActivityAt = new Date().toISOString();
+    this.agent.updatedAt = this.lastActivityAt;
+    await this.emit("agent:status", { status });
+  }
+
+  protected async updateAgentStatus(status: AgentStatus): Promise<void> {
+    await this.transitionTo(status);
+  }
+
   protected setExplanation(partial: Partial<LiveWorkExplanation>): void {
     this.explanation = {
       ...this.explanation,
@@ -236,14 +322,6 @@ export class AgentEntityImpl implements AgentEntity {
     };
     this.lastActivityAt = this.explanation.updatedAt;
     void this.emit("agent:explanation", { explanation: this.explanation });
-  }
-
-  protected async updateAgentStatus(status: AgentStatus): Promise<void> {
-    this.status = status;
-    this.agent.status = status;
-    this.lastActivityAt = new Date().toISOString();
-    this.agent.updatedAt = this.lastActivityAt;
-    await this.emit("agent:status", { status });
   }
 
   protected async emit(type: AgentFrameworkEvent["type"], payload: Record<string, unknown>): Promise<void> {
@@ -258,6 +336,26 @@ export class AgentEntityImpl implements AgentEntity {
   protected async log(level: AgentLogEntry["level"], message: string, metadata?: Record<string, unknown>): Promise<void> {
     this.lastActivityAt = new Date().toISOString();
     await this.deps.log({ agentId: this.id, timestamp: this.lastActivityAt, level, message, metadata });
+  }
+
+  private async handleTaskError(task: AgentTask, error: unknown): Promise<void> {
+    this.failedTasks += 1;
+    this.agent.metrics.failedTasks += 1;
+    this.consecutiveErrors += 1;
+
+    const message = error instanceof Error ? error.message : String(error);
+    this.setExplanation({
+      ...this.explanation,
+      currentActivity: "Úkol selhal.",
+      findings: `Úkol ${task.title} selhal: ${message}`,
+    });
+
+    if (this.consecutiveErrors >= this.deps.config.maxConsecutiveErrors) {
+      await this.transitionTo("error");
+    }
+
+    await this.emit("agent:task:failed", { taskId: task.id, error: message });
+    throw error;
   }
 }
 

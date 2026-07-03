@@ -1,5 +1,6 @@
 export type AgentStatus =
   | "idle"
+  | "starting"
   | "thinking"
   | "planning"
   | "delegating"
@@ -19,15 +20,27 @@ export type AgentStatus =
   | "building"
   | "deploying"
   | "paused"
+  | "stopping"
+  | "recovering"
   | "offline"
   | "error";
 
 export type AgentPriority = "critical" | "high" | "normal" | "low";
+export type AgentHealthStatus = "healthy" | "degraded" | "unhealthy";
 
 export interface AgentHealth {
-  status: "healthy" | "degraded" | "unhealthy";
+  status: AgentHealthStatus;
   lastHeartbeat: string;
   message?: string;
+}
+
+export interface AgentRuntimeConfig {
+  heartbeatIntervalMs: number;
+  taskTimeoutMs: number;
+  maxRetries: number;
+  retryBackoffMs: number;
+  healthThresholdMs: number;
+  maxConsecutiveErrors: number;
 }
 
 export interface AgentMetrics {

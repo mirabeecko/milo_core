@@ -62,9 +62,12 @@ export function AgentCard({
               <p className="text-xs text-muted-foreground">{agent.role}</p>
             </div>
           </div>
-          <Badge variant="outline" className={cn("text-xs", statusColor(state.status))}>
-            {statusLabel(state.status)}
-          </Badge>
+          <div className="flex items-center gap-2">
+            <HealthIndicator health={agent.health.status} />
+            <Badge variant="outline" className={cn("text-xs", statusColor(state.status))}>
+              {statusLabel(state.status)}
+            </Badge>
+          </div>
         </div>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -179,6 +182,11 @@ function statusDotColor(status: Agent["state"]["status"]): string {
       return "bg-amber-500";
     case "idle":
       return "bg-blue-500";
+    case "starting":
+      return "bg-sky-500";
+    case "stopping":
+    case "recovering":
+      return "bg-orange-500";
     case "waiting":
       return "bg-cyan-500";
     case "loading_calendar":
@@ -218,6 +226,11 @@ function statusColor(status: Agent["state"]["status"]): string {
       return "border-amber-500/30 bg-amber-500/10 text-amber-500";
     case "idle":
       return "border-blue-500/30 bg-blue-500/10 text-blue-500";
+    case "starting":
+      return "border-sky-500/30 bg-sky-500/10 text-sky-500";
+    case "stopping":
+    case "recovering":
+      return "border-orange-500/30 bg-orange-500/10 text-orange-500";
     case "waiting":
       return "border-cyan-500/30 bg-cyan-500/10 text-cyan-500";
     case "loading_calendar":
@@ -236,6 +249,25 @@ function statusColor(status: Agent["state"]["status"]): string {
     default:
       return "border-border";
   }
+}
+
+function HealthIndicator({ health }: { health: Agent["health"]["status"] }): JSX.Element {
+  const colors: Record<Agent["health"]["status"], string> = {
+    healthy: "bg-emerald-500",
+    degraded: "bg-amber-500",
+    unhealthy: "bg-rose-500",
+  };
+  const labels: Record<Agent["health"]["status"], string> = {
+    healthy: "Zdravý",
+    degraded: "Degradovaný",
+    unhealthy: "Nefunkční",
+  };
+  return (
+    <div className="flex items-center gap-1.5" title={`Health: ${labels[health]}`}>
+      <span className={cn("h-2 w-2 rounded-full", colors[health])} />
+      <span className="text-xs text-muted-foreground hidden sm:inline">{labels[health]}</span>
+    </div>
+  );
 }
 
 function statusLabel(status: Agent["state"]["status"]): string {
@@ -276,6 +308,12 @@ function statusLabel(status: Agent["state"]["status"]): string {
       return "Buildí";
     case "deploying":
       return "Deployuje";
+    case "starting":
+      return "Spouští se";
+    case "stopping":
+      return "Zastavuje se";
+    case "recovering":
+      return "Obnovuje se";
     case "idle":
       return "Čeká";
     case "paused":

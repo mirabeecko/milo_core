@@ -112,6 +112,42 @@ export async function runMockSimulation(): Promise<void> {
     estimateMs: 2500,
   });
 
+  // Scheduled task: Chief of Staff will run a nightly review in 1 second
+  await manager.schedule(
+    {
+      title: "Noční review",
+      description: "Zkontrolovat denní aktivitu a připravit shrnutí.",
+      priority: "low",
+      status: "pending",
+      ownerId: "chief-of-staff",
+      ownerType: "agent",
+      source: "simulation",
+      log: [],
+      toolsUsed: ["calendar", "obsidian"],
+      citations: [],
+      retryCount: 0,
+      estimateMs: 800,
+    },
+    Date.now() + 1000,
+  );
+
+  // Task with a missed deadline to test deadline checker
+  const missedTask = await manager.delegate({
+    title: "Kritický úkol se zpožděným deadlinem",
+    description: "Tento úkol měl být hotov už včera.",
+    priority: "critical",
+    status: "pending",
+    ownerId: "chief-of-staff",
+    ownerType: "agent",
+    source: "simulation",
+    log: [],
+    toolsUsed: [],
+    citations: [],
+    retryCount: 0,
+    estimateMs: 500,
+  });
+  manager.getPriorityQueue().enqueue(missedTask, { deadline: Date.now() - 1000 });
+
   // Wait for tasks to finish
   await new Promise((resolve) => setTimeout(resolve, 5000));
 
