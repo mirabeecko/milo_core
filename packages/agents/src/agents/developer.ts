@@ -1,5 +1,6 @@
 import type { AgentDefinition, AgentStatus, AgentTask, LiveWorkExplanation } from "@milo/shared";
 import { AgentEntityImpl } from "../agent.js";
+import { AgentStateMachine } from "../runtime/agent-state-machine.js";
 import type { AgentEntityDeps } from "../agent.js";
 import { DefaultDeveloperService } from "../services/developer/index.js";
 import type { DeveloperAgentState } from "../services/developer/types.js";
@@ -26,6 +27,7 @@ export interface DeveloperSimulationStep {
 
 export class DeveloperAgent extends AgentEntityImpl {
   private simulationInterval?: ReturnType<typeof setInterval>;
+  private runningTick?: Promise<void>;
   private currentStepIndex = 0;
   private developerService = new DefaultDeveloperService("/Users/mb/dev/MiLO_Core");
   private state: DeveloperAgentState & {
@@ -234,6 +236,9 @@ export class DeveloperAgent extends AgentEntityImpl {
 
   async stop(): Promise<void> {
     this.stopSimulation();
+    if (this.runningTick) {
+      await this.runningTick.catch(() => undefined);
+    }
     await super.stop();
   }
 
@@ -281,10 +286,10 @@ export class DeveloperAgent extends AgentEntityImpl {
     if (this.stopped) return;
 
     this.simulationInterval = setInterval(() => {
-      void this.simulateTick();
+      this.runningTick = this.simulateTick().finally(() => { this.runningTick = undefined; });
     }, 4000 + Math.random() * 4000);
 
-    void this.simulateTick();
+    this.runningTick = this.simulateTick().finally(() => { this.runningTick = undefined; });
   }
 
   private stopSimulation(): void {
@@ -295,7 +300,7 @@ export class DeveloperAgent extends AgentEntityImpl {
   }
 
   private async simulateTick(): Promise<void> {
-    if (this.stopped || this.status === "paused") return;
+    if (this.stopped || this.status === "paused" || AgentStateMachine.isTerminal(this.status)) return;
 
     const activeTask = this.state.activeTask ?? this.nextTask();
     if (!activeTask) {

@@ -1,5 +1,6 @@
 import type { AgentDefinition, AgentStatus, AgentTask, LiveWorkExplanation } from "@milo/shared";
 import { AgentEntityImpl } from "../agent.js";
+import { AgentStateMachine } from "../runtime/agent-state-machine.js";
 import type { AgentEntityDeps } from "../agent.js";
 
 export interface SimulationStep {
@@ -33,6 +34,7 @@ export interface ChiefOfStaffState {
 
 export class ChiefOfStaffAgent extends AgentEntityImpl {
   private simulationInterval?: ReturnType<typeof setInterval>;
+  private runningTick?: Promise<void>;
   private currentStepIndex = 0;
   private state: ChiefOfStaffState = {
     taskProgress: 0,
@@ -228,6 +230,9 @@ export class ChiefOfStaffAgent extends AgentEntityImpl {
 
   async stop(): Promise<void> {
     this.stopSimulation();
+    if (this.runningTick) {
+      await this.runningTick.catch(() => undefined);
+    }
     await super.stop();
   }
 
@@ -258,10 +263,10 @@ export class ChiefOfStaffAgent extends AgentEntityImpl {
     if (this.stopped) return;
 
     this.simulationInterval = setInterval(() => {
-      void this.simulateTick();
+      this.runningTick = this.simulateTick().finally(() => { this.runningTick = undefined; });
     }, 4000 + Math.random() * 4000);
 
-    void this.simulateTick();
+    this.runningTick = this.simulateTick().finally(() => { this.runningTick = undefined; });
   }
 
   private stopSimulation(): void {
@@ -272,7 +277,7 @@ export class ChiefOfStaffAgent extends AgentEntityImpl {
   }
 
   private async simulateTick(): Promise<void> {
-    if (this.stopped || this.status === "paused") return;
+    if (this.stopped || this.status === "paused" || AgentStateMachine.isTerminal(this.status)) return;
 
     const activeTask = this.state.activeTask ?? this.nextTask();
     if (!activeTask) {
