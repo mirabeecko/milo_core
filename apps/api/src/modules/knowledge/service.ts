@@ -28,7 +28,9 @@ export class KnowledgeService {
   }
 
   async isDemo(): Promise<boolean> {
-    return config.DEMO_MODE || !(await this.isConfigured());
+    // Demo se použije pouze pokud není nakonfigurovaný žádný vault.
+    // Když uživatel zadá cestu, chce reálná data bez ohledu na DEMO_MODE.
+    return !(await this.isConfigured());
   }
 
   async getStatus(): Promise<ObsidianStatus> {

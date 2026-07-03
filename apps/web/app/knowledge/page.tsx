@@ -11,6 +11,7 @@ import { LoadingState } from "@/components/common/loading-state";
 import { EmptyState } from "@/components/common/empty-state";
 import { Badge } from "@/components/ui/badge";
 import { getObsidianNotes, searchObsidian, getObsidianNote, reindexObsidian } from "@/lib/api/knowledge.api";
+import { Markdown } from "@/components/common/markdown";
 import { formatRelative } from "@/lib/format";
 import type { ObsidianNote } from "@/lib/types";
 
@@ -166,9 +167,7 @@ function NoteDialog({
               ))}
             </div>
           )}
-          <div className="prose prose-invert max-w-none whitespace-pre-wrap text-sm">
-            {note.content}
-          </div>
+          <Markdown content={note.content} />
         </CardContent>
       </Card>
     </div>

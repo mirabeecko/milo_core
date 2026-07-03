@@ -52,21 +52,17 @@ export class ObsidianClient {
   private async findMarkdownFiles(dir: string): Promise<string[]> {
     const files: string[] = [];
 
-    try {
-      const entries = await fs.readdir(dir, { withFileTypes: true });
+    const entries = await fs.readdir(dir, { withFileTypes: true });
 
-      for (const entry of entries) {
-        const fullPath = path.join(dir, entry.name);
+    for (const entry of entries) {
+      const fullPath = path.join(dir, entry.name);
 
-        if (entry.isDirectory() && !entry.name.startsWith(".")) {
-          const nested = await this.findMarkdownFiles(fullPath);
-          files.push(...nested);
-        } else if (entry.isFile() && entry.name.endsWith(".md")) {
-          files.push(fullPath);
-        }
+      if (entry.isDirectory() && !entry.name.startsWith(".")) {
+        const nested = await this.findMarkdownFiles(fullPath);
+        files.push(...nested);
+      } else if (entry.isFile() && entry.name.endsWith(".md")) {
+        files.push(fullPath);
       }
-    } catch {
-      // Vault path nemusí existovat v kontejneru
     }
 
     return files.sort((a, b) => a.localeCompare(b));
