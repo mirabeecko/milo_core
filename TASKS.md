@@ -2,7 +2,9 @@
 
 ## Aktuální focus
 
-Milestone 0: Premium Foundation
+Milestone 1: Core Integrations skeleton (Gmail, Calendar, Drive, Obsidian, TTS) — **dokončen**.
+
+Čeká na Architecture Review před přechodem na další fázi.
 
 ---
 
@@ -14,19 +16,23 @@ Milestone 0: Premium Foundation
 - [x] ARCHITECTURE.md
 - [x] ROADMAP.md
 - [x] TASKS.md
-- [x] REVIEW_TEMPLATE.md
+- [x] `docs/reviews/MILESTONE_REVIEW_TEMPLATE.md`
+- [x] `docs/reviews/MILESTONE_0_REVIEW.md`
+- [ ] `docs/reviews/MILESTONE_1_REVIEW.md`
 
 ### Struktura projektu
 
 - [x] Vytvořit monorepo s pnpm workspace
-- [x] Vytvořit `apps/web` (Next.js 15)
+- [x] Vytvořit `apps/web` (Next.js 14 + Tailwind + shadcn/ui)
 - [x] Vytvořit `apps/api` (Fastify 5)
+- [x] Vytvořit `apps/cli`
 - [x] Vytvořit `packages/shared`
 - [x] Vytvořit `packages/ai`
 - [x] Vytvořit `packages/database`
 - [x] Vytvořit `packages/tools`
 - [x] Vytvořit `packages/agents`
 - [x] Vytvořit `packages/design-system`
+- [x] Vytvořit `packages/tts`
 
 ### Docker & Infrastructure
 
@@ -34,18 +40,16 @@ Milestone 0: Premium Foundation
 - [x] `Dockerfile` pro backend
 - [x] `docker-compose.yml` s Postgres, Redis, Ollama volitelně
 - [x] `.env.example`
-- [ ] Přidat Redis service do docker-compose
-- [ ] Přidat S3-compatible storage stub
 
 ### Frontend skeleton
 
-- [ ] Inicializovat Next.js 15 s TypeScript
-- [ ] Nastavit Tailwind CSS
-- [ ] Nastavit shadcn/ui
-- [ ] Vytvořit design tokens a theme
-- [ ] Vytvořit základní layout
-- [ ] Nastavit dark mode jako výchozí
-- [ ] Přidat základní stránky
+- [x] Inicializovat Next.js s TypeScript
+- [x] Nastavit Tailwind CSS
+- [x] Nastavit shadcn/ui
+- [x] Vytvořit základní layout (sidebar, header, dashboard pages)
+- [x] Nastavit dark mode jako výchozí
+- [x] Přidat základní stránky (Home, Brief, Email, Calendar, Documents, Knowledge, Chat, Settings, ...)
+- [x] Přidat TTS controls do UI
 - [ ] Nastavit TanStack Query
 - [ ] Nastavit Zustand
 
@@ -56,10 +60,16 @@ Milestone 0: Premium Foundation
 - [x] Vytvořit základní server
 - [x] Přidat health check endpoint
 - [x] Nastavit testovací framework (Vitest)
-- [ ] Přidat Redis připojení
+- [x] Přidat Redis připojení
 - [ ] Přidat BullMQ setup
-- [ ] Přidat Pino logger
-- [ ] Přidat rate limiting
+- [x] Přidat Pino logger
+- [x] Přidat rate limiting
+
+### Autentizace
+
+- [x] Supabase auth middleware
+- [x] Login page
+- [x] Demo fallback pro lokální vývoj
 
 ### TTS modul
 
@@ -68,42 +78,57 @@ Milestone 0: Premium Foundation
 - [x] Implementovat `SayTtsProvider` pro macOS
 - [x] Implementovat `WebSpeechTtsProvider` pro prohlížeč
 - [x] Vytvořit `TtsRegistry` s graceful fallback
+- [x] Přidat TTS tlačítka do UI
+- [x] Přidat `milo brief --speak` a `milo ask "..." --speak`
 
-### CLI app
+### AI & Agenti
 
-- [x] Vytvořit `@milo/cli` package
-- [x] Příkaz `milo brief --speak`
-- [x] Příkaz `milo ask "..." --speak`
-- [ ] Napojit CLI na Agent Runtime a AI provider
+- [x] Vytvořit `@milo/ai` s abstrakcí providerů
+- [x] Implementovat OpenAI kompatibilní provider
+- [x] Vytvořit `@milo/agents` s Agent Runtime
+- [x] Vytvořit Chief of Staff agenta
+- [x] Napojit briefing na `/api/briefing`
 
-### Shared packages
+### Integrace (Milestone 1 skeleton)
 
-- [x] Vytvořit `@milo/shared` s typy a Zod schema
-- [x] Vytvořit `@milo/design-system` s design tokens
-- [x] Vytvořit `@milo/ai` s AI abstrakcí
-- [x] Vytvořit `@milo/database` s repository pattern
-- [x] Vytvořit `@milo/tools` s tool registry
-- [x] Vytvořit `@milo/agents` s Agent Runtime a Chief of Staff
+- [x] Gmail (`/api/email`)
+- [x] Google Calendar (`/api/calendar`)
+- [x] Google Drive (`/api/documents`)
+- [x] Obsidian (`/api/knowledge/obsidian`)
+
+Všechny integrace aktuálně podporují demo fallback při chybějících credentials.
 
 ### CI
 
-- [x] GitHub Actions workflow pro build, lint, test
-- [ ] Přidat typecheck do CI
+- [x] GitHub Actions workflow pro typecheck, lint, test, build
 
 ### Governance
 
 - [x] Vytvořit šablonu `docs/reviews/MILESTONE_REVIEW_TEMPLATE.md`
 - [x] Vytvořit proces Architecture Review do dokumentace
-- [x] Po Milestone 0 vytvořit první review dokument
+- [x] Milestone 0 Review — APPROVED
+- [ ] Milestone 1 Review — připravit
 
 ---
 
-## Dokončené úkoly
+## Další milníky (připravit)
 
-- Vytvoření repozitáře
-- Základní dokumentace
-- Premium architektura a roadmapa
-- Backend skeleton
+### Milestone 2: Real data & sync
+
+- [ ] Real-time synchronizace Gmail (webhook / polling)
+- [ ] Real-time synchronizace Google Calendar
+- [ ] Real-time synchronizace Google Drive
+- [ ] Indexace Obsidian vaultu do vector databáze
+- [ ] Universal search napříč zdroji
+- [ ] Zdroje u každé odpovědi AI
+
+### Milestone 3: Production readiness
+
+- [ ] Production deployment pipeline
+- [ ] Secrets management
+- [ ] Monitoring & alerting
+- [ ] Rate limiting & quota management
+- [ ] Onboarding flow
 
 ---
 
@@ -116,8 +141,8 @@ Milestone 0: Premium Foundation
 ## Poznámky
 
 - Cílem je premium SaaS produkt srovnatelný s Notion, Linear, Cursor, ChatGPT.
-- Každý rozhodnutí musí projít testem: "Je to dost dobré na 50–100 USD/měsíc?"
-- Pro frontend použijeme Next.js 15 s App Router.
+- Každé rozhodnutí musí projít testem: "Je to dost dobré na 50–100 USD/měsíc?"
+- Pro frontend používáme Next.js 14 s App Router.
 - Pro backend Fastify 5.
 - Pro správu závislostí pnpm workspace.
 - Supabase použijeme jako managed službu, lokálně nepouštíme.
