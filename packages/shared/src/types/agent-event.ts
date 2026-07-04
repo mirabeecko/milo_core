@@ -10,6 +10,8 @@ export type AgentEventType =
   | "agent:task:failed"
   | "agent:task:cancelled"
   | "agent:task:delegated"
+  | "agent:mission:completed"
+  | "agent:mission:failed"
   | "agent:error";
 
 export interface AgentEvent {

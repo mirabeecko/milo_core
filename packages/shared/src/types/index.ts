@@ -20,4 +20,5 @@ export interface ApiError {
 
 export * from "./agent.js";
 export * from "./task.js";
+export * from "./mission.js";
 export * from "./agent-event.js";

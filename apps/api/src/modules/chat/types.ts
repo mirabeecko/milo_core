@@ -15,4 +15,5 @@ export interface ChatRequest {
 export interface ChatResponse {
   message: ChatMessage;
   demo?: boolean;
+  missionId?: string;
 }

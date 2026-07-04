@@ -5,6 +5,7 @@ import {
   InMemoryAgentMemoryRepository,
   InMemoryAgentMetricsRepository,
   InMemoryAgentRepository,
+  InMemoryMissionRepository,
   InMemoryTaskRepository,
 } from "@milo/database";
 import { AgentManager } from "./agent-manager.js";
@@ -15,6 +16,7 @@ function createManager() {
     repositories: {
       agents: new InMemoryAgentRepository(),
       tasks: new InMemoryTaskRepository(),
+      missions: new InMemoryMissionRepository(),
       logs: new InMemoryAgentLogRepository(),
       memory: new InMemoryAgentMemoryRepository(),
       metrics: new InMemoryAgentMetricsRepository(),

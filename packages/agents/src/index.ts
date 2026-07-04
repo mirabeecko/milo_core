@@ -9,6 +9,7 @@ export * from "./runtime/agent-scheduler.js";
 export * from "./runtime/background-runner.js";
 export * from "./runtime/health-monitor.js";
 export * from "./runtime/task-queue-v2.js";
+export * from "./runtime/execution-task-runner.js";
 export * from "./registry/index.js";
 export * from "./simulation.js";
 export * from "./agents/chief-of-staff.js";

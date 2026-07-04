@@ -14,6 +14,7 @@ import { chatRoutes } from "./modules/chat/routes.js";
 import { homeRoutes } from "./modules/home/routes.js";
 import { agentsRoutes } from "./modules/agents/routes.js";
 import { tasksRoutes } from "./modules/tasks/routes.js";
+import { missionsRoutes } from "./modules/missions/routes.js";
 import { eventsRoutes } from "./modules/events/routes.js";
 import { projectsRoutes } from "./modules/projects/routes.js";
 import { closeRedisClient } from "./infrastructure/redis.js";
@@ -46,6 +47,7 @@ async function start(): Promise<void> {
   await app.register(homeRoutes, { prefix: "/home" });
   await app.register(agentsRoutes, { prefix: "/agents" });
   await app.register(tasksRoutes, { prefix: "/tasks" });
+  await app.register(missionsRoutes, { prefix: "/missions" });
   await app.register(eventsRoutes, { prefix: "/events" });
   await app.register(projectsRoutes, { prefix: "/projects" });
 

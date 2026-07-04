@@ -1,15 +1,21 @@
 import { z } from "zod";
+import { dirname, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
+import dotenv from "dotenv";
 
-const defaultDemoMode = process.env.NODE_ENV === "development" ? "true" : "false";
+const __dirname = dirname(fileURLToPath(import.meta.url));
+dotenv.config({ path: resolve(__dirname, "../../../../.env") });
+export const TASKS_FILE_PATH = resolve(__dirname, "../../data/tasks.json");
 
 const envSchema = z.object({
   NODE_ENV: z.enum(["development", "production", "test"]).default("development"),
   API_PORT: z.coerce.number().default(4000),
   API_HOST: z.string().default("0.0.0.0"),
-  DEMO_MODE: z
-    .enum(["true", "false"])
-    .default(defaultDemoMode)
-    .transform((value) => value === "true"),
+  DEMO_MODE: z.preprocess((value) => {
+    if (value !== undefined) return value;
+    const nodeEnv = process.env.NODE_ENV ?? "development";
+    return nodeEnv === "development" ? "true" : "false";
+  }, z.enum(["true", "false"])).transform((value) => value === "true"),
   SUPABASE_URL: z.string().url().optional(),
   SUPABASE_SERVICE_ROLE_KEY: z.string().optional(),
   JWT_SECRET: z.string().min(32).optional(),

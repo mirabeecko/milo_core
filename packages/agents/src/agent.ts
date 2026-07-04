@@ -11,6 +11,8 @@ import type {
   AgentTask,
   AgentStatus,
   LiveWorkExplanation,
+  TaskLogEntry,
+  ToolCall,
 } from "@milo/shared";
 import type {
   AgentEntity,
@@ -36,9 +38,14 @@ export interface AgentEntityDeps {
   metrics: {
     create: (snapshot: Omit<AgentMetricsSnapshot, "id">) => Promise<AgentMetricsSnapshot>;
   };
+  tasks?: {
+    update: (id: string, partial: Partial<AgentTask>) => Promise<AgentTask>;
+  };
   scheduler?: AgentScheduler;
   backgroundRunner?: BackgroundRunner;
   config: AgentRuntimeConfig;
+  vaultPath?: string;
+  projectPath?: string;
 }
 
 export const DEFAULT_RUNTIME_CONFIG: AgentRuntimeConfig = {
@@ -60,6 +67,7 @@ export class AgentEntityImpl implements AgentEntity {
   protected runningTasks = 0;
   protected completedTasks = 0;
   protected failedTasks = 0;
+  protected taskProgress = 0;
   protected startedAt?: string;
   protected lastActivityAt?: string;
   protected consecutiveErrors = 0;
@@ -108,7 +116,7 @@ export class AgentEntityImpl implements AgentEntity {
   }
 
   getTaskProgress(): number {
-    return 0;
+    return this.taskProgress;
   }
 
   getTaskHistory(): AgentTask[] {
@@ -190,9 +198,18 @@ export class AgentEntityImpl implements AgentEntity {
       throw new Error(`Agent ${this.id} is ${this.status}`);
     }
 
+    const startedAt = Date.now();
     this.activeTaskId = task.id;
     this.runningTasks += 1;
+    this.taskProgress = 0;
     await this.transitionTo("working");
+
+    this.agent.metrics.totalTasks += 1;
+
+    await this.deps.tasks?.update(task.id, {
+      status: "running",
+      startedAt: new Date().toISOString(),
+    });
 
     this.setExplanation({
       currentActivity: `Spouštím úkol: ${task.title}`,
@@ -213,55 +230,53 @@ export class AgentEntityImpl implements AgentEntity {
 
     await this.emit("agent:task:created", { taskId: task.id, title: task.title });
 
+    const callbacks = this.createTaskCallbacks(task);
+    const execute = async () => this.deps.taskRunner.execute(task, this.agent, callbacks);
+
     const runner = this.deps.backgroundRunner;
-    if (runner) {
-      try {
-        await runner.run(
-          task.id,
-          async () => this.deps.taskRunner.execute(task, this.agent),
-          this.deps.config.taskTimeoutMs,
-        );
-        this.completedTasks += 1;
-        this.agent.metrics.successfulTasks += 1;
-        this.consecutiveErrors = 0;
-        this.setExplanation({
-          ...this.explanation,
-          currentActivity: "Úkol dokončen.",
-          findings: `Úkol ${task.title} byl úspěšně dokončen.`,
-          lastCompletedStep: `Dokončil jsem úkol ${task.title}`,
-        });
-        await this.emit("agent:task:completed", { taskId: task.id, title: task.title });
-      } catch (error) {
-        await this.handleTaskError(task, error);
-      } finally {
-        this.runningTasks = Math.max(0, this.runningTasks - 1);
-        this.activeTaskId = undefined;
-        if (this.status !== "paused" && this.status !== "error") {
-          await this.transitionTo("idle");
-        }
-      }
-    } else {
-      // Fallback to direct execution when no background runner is provided
-      try {
-        await this.deps.taskRunner.execute(task, this.agent);
-        this.completedTasks += 1;
-        this.agent.metrics.successfulTasks += 1;
-        this.consecutiveErrors = 0;
-        this.setExplanation({
-          ...this.explanation,
-          currentActivity: "Úkol dokončen.",
-          findings: `Úkol ${task.title} byl úspěšně dokončen.`,
-          lastCompletedStep: `Dokončil jsem úkol ${task.title}`,
-        });
-        await this.emit("agent:task:completed", { taskId: task.id, title: task.title });
-      } catch (error) {
-        await this.handleTaskError(task, error);
-      } finally {
-        this.runningTasks = Math.max(0, this.runningTasks - 1);
-        this.activeTaskId = undefined;
-        if (this.status !== "paused" && this.status !== "error") {
-          await this.transitionTo("idle");
-        }
+    try {
+      const result = runner
+        ? await runner.run(task.id, execute, this.deps.config.taskTimeoutMs)
+        : await execute();
+
+      const completedAt = new Date().toISOString();
+      const actualTimeMs = Date.now() - startedAt;
+      const log = Array.isArray(result.log) ? (result.log as TaskLogEntry[]) : [];
+      const toolCalls = Array.isArray(result.toolCalls) ? (result.toolCalls as ToolCall[]) : [];
+
+      await this.deps.tasks?.update(task.id, {
+        status: "completed",
+        completedAt,
+        actualTimeMs,
+        result: {
+          output: typeof result.output === "string" ? result.output : undefined,
+          citations: Array.isArray(result.citations) ? (result.citations as string[]) : undefined,
+          metadata: result.metadata as Record<string, unknown> | undefined,
+        },
+        log: [...task.log, ...log],
+        toolCalls: [...(task.toolCalls ?? []), ...toolCalls],
+      });
+
+      this.completedTasks += 1;
+      this.agent.metrics.successfulTasks += 1;
+      this.updateAverageDuration(actualTimeMs);
+      this.consecutiveErrors = 0;
+      this.taskProgress = 100;
+      this.setExplanation({
+        ...this.explanation,
+        currentActivity: "Úkol dokončen.",
+        findings: `Úkol ${task.title} byl úspěšně dokončen.`,
+        lastCompletedStep: `Dokončil jsem úkol ${task.title}`,
+      });
+      await this.emit("agent:task:completed", { taskId: task.id, title: task.title, result });
+    } catch (error) {
+      await this.handleTaskError(task, error, startedAt);
+    } finally {
+      this.runningTasks = Math.max(0, this.runningTasks - 1);
+      this.activeTaskId = undefined;
+      this.taskProgress = 0;
+      if (this.status !== "paused" && this.status !== "error") {
+        await this.transitionTo("idle");
       }
     }
   }
@@ -314,7 +329,8 @@ export class AgentEntityImpl implements AgentEntity {
       userId: "system",
       traceId: `agent-${this.id}`,
       agentId: this.id,
-      projectPath: "/Users/mb/dev/MiLO_Core",
+      projectPath: this.deps.projectPath,
+      vaultPath: this.deps.vaultPath,
     });
   }
 
@@ -367,12 +383,52 @@ export class AgentEntityImpl implements AgentEntity {
     await this.deps.log({ agentId: this.id, timestamp: this.lastActivityAt, level, message, metadata });
   }
 
-  private async handleTaskError(task: AgentTask, error: unknown): Promise<void> {
+  private createTaskCallbacks(task: AgentTask) {
+    return {
+      onProgress: (progress: number) => {
+        this.taskProgress = progress;
+      },
+      onLog: (entry: TaskLogEntry) => {
+        void this.deps.tasks?.update(task.id, {
+          log: [...task.log, entry],
+        });
+      },
+      onExplanation: (partial: Partial<LiveWorkExplanation>) => {
+        this.setExplanation(partial);
+      },
+    };
+  }
+
+  private updateAverageDuration(durationMs: number): void {
+    const total = this.agent.metrics.successfulTasks + this.agent.metrics.failedTasks;
+    const current = this.agent.metrics.averageDurationMs;
+    this.agent.metrics.averageDurationMs =
+      total <= 1 ? durationMs : Math.round((current * (total - 1) + durationMs) / total);
+    this.agent.metrics.lastUpdatedAt = new Date().toISOString();
+  }
+
+  private async handleTaskError(task: AgentTask, error: unknown, startedAt?: number): Promise<void> {
     this.failedTasks += 1;
     this.agent.metrics.failedTasks += 1;
+    this.agent.metrics.errorCount += 1;
     this.consecutiveErrors += 1;
 
     const message = error instanceof Error ? error.message : String(error);
+    const actualTimeMs = startedAt ? Date.now() - startedAt : undefined;
+
+    await this.deps.tasks?.update(task.id, {
+      status: "failed",
+      completedAt: new Date().toISOString(),
+      actualTimeMs,
+      result: {
+        error: message,
+      },
+      log: [
+        ...task.log,
+        { timestamp: new Date().toISOString(), level: "error", message: `Úkol selhal: ${message}` },
+      ],
+    });
+
     this.setExplanation({
       ...this.explanation,
       currentActivity: "Úkol selhal.",

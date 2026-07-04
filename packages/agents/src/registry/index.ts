@@ -1,50 +1,23 @@
 import type { AgentManager } from "../agent-manager.js";
-import { CalendarAgent } from "../agents/calendar.js";
 import { ChiefOfStaffAgent } from "../agents/chief-of-staff.js";
-import { CommunicationAgent } from "../agents/communication.js";
-import { DeveloperAgent } from "../agents/developer.js";
-import { automationAgentDefinition } from "./automation.js";
-import { calendarAgentDefinition } from "./calendar.js";
+import { ResearchAgent } from "../agents/research.js";
 import { chiefOfStaffDefinition } from "./chief-of-staff.js";
-import { communicationAgentDefinition } from "./communication.js";
-import { developerAgentDefinition } from "./developer.js";
-import { documentAgentDefinition } from "./document.js";
-import { knowledgeAgentDefinition } from "./knowledge.js";
-import { legalAgentDefinition } from "./legal.js";
 import { researchAgentDefinition } from "./research.js";
 
 export * from "./chief-of-staff.js";
-export * from "./developer.js";
 export * from "./research.js";
-export * from "./knowledge.js";
-export * from "./legal.js";
-export * from "./document.js";
-export * from "./calendar.js";
-export * from "./communication.js";
-export * from "./automation.js";
 
-export const defaultAgentDefinitions = [
-  chiefOfStaffDefinition,
-  developerAgentDefinition,
-  researchAgentDefinition,
-  knowledgeAgentDefinition,
-  legalAgentDefinition,
-  documentAgentDefinition,
-  calendarAgentDefinition,
-  communicationAgentDefinition,
-  automationAgentDefinition,
-];
+// Scope is intentionally limited to Chief of Staff and Research Agent
+// until the Mission → Task → Execution → Result → Report flow is fully
+// functional. Other definitions remain in the codebase but are not registered.
+export const activeAgentDefinitions = [chiefOfStaffDefinition, researchAgentDefinition];
 
 export async function registerDefaultAgents(manager: AgentManager): Promise<void> {
-  for (const definition of defaultAgentDefinitions) {
+  for (const definition of activeAgentDefinitions) {
     if (definition.id === "chief-of-staff") {
       await manager.register(definition, (def, deps) => new ChiefOfStaffAgent(def, deps));
-    } else if (definition.id === "calendar") {
-      await manager.register(definition, (def, deps) => new CalendarAgent(def, deps));
-    } else if (definition.id === "communication") {
-      await manager.register(definition, (def, deps) => new CommunicationAgent(def, deps));
-    } else if (definition.id === "developer") {
-      await manager.register(definition, (def, deps) => new DeveloperAgent(def, deps));
+    } else if (definition.id === "research") {
+      await manager.register(definition, (def, deps) => new ResearchAgent(def, deps));
     } else {
       await manager.register(definition);
     }

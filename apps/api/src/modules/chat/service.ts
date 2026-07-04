@@ -1,11 +1,12 @@
+import type { AgentManager } from "@milo/agents";
 import { CommandProcessor } from "./command-processor.js";
 import type { ChatMessage, ChatRequest, ChatResponse } from "./types.js";
 
 export class ChatService {
   private processor: CommandProcessor;
 
-  constructor() {
-    this.processor = new CommandProcessor();
+  constructor(manager?: AgentManager) {
+    this.processor = new CommandProcessor(manager);
   }
 
   async sendMessage(
@@ -26,7 +27,8 @@ export class ChatService {
 
     return {
       message,
-      demo: this.processor.isInDemoMode(),
+      demo: false,
+      missionId: result.missionId,
     };
   }
 }

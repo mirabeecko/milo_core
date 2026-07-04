@@ -26,7 +26,7 @@ export class AuthService {
   private isDemo: boolean;
 
   constructor() {
-    if (!config.SUPABASE_URL || !config.SUPABASE_SERVICE_ROLE_KEY) {
+    if (config.DEMO_MODE || !config.SUPABASE_URL || !config.SUPABASE_SERVICE_ROLE_KEY) {
       this.isDemo = true;
       return;
     }

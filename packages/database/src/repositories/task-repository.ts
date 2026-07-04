@@ -1,7 +1,7 @@
 import type { AgentTask } from "@milo/shared";
 
 export interface TaskRepository {
-  findAll(options?: { status?: string; ownerId?: string; limit?: number }): Promise<AgentTask[]>;
+  findAll(options?: { status?: string; ownerId?: string; missionId?: string; limit?: number }): Promise<AgentTask[]>;
   findById(id: string): Promise<AgentTask | null>;
   create(task: Omit<AgentTask, "id" | "createdAt">): Promise<AgentTask>;
   update(id: string, partial: Partial<AgentTask>): Promise<AgentTask>;
@@ -12,7 +12,7 @@ export class InMemoryTaskRepository implements TaskRepository {
   private tasks = new Map<string, AgentTask>();
   private counter = 0;
 
-  async findAll(options?: { status?: string; ownerId?: string; limit?: number }): Promise<AgentTask[]> {
+  async findAll(options?: { status?: string; ownerId?: string; missionId?: string; limit?: number }): Promise<AgentTask[]> {
     let items = Array.from(this.tasks.values()).sort(
       (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
     );
@@ -21,6 +21,9 @@ export class InMemoryTaskRepository implements TaskRepository {
     }
     if (options?.ownerId) {
       items = items.filter((t) => t.ownerId === options.ownerId);
+    }
+    if (options?.missionId) {
+      items = items.filter((t) => t.missionId === options.missionId);
     }
     if (options?.limit) {
       items = items.slice(0, options.limit);
@@ -35,6 +38,8 @@ export class InMemoryTaskRepository implements TaskRepository {
   async create(task: Omit<AgentTask, "id" | "createdAt">): Promise<AgentTask> {
     this.counter += 1;
     const full: AgentTask = {
+      type: "custom",
+      toolCalls: [],
       ...task,
       id: `task-${this.counter}`,
       createdAt: new Date().toISOString(),
@@ -55,5 +60,15 @@ export class InMemoryTaskRepository implements TaskRepository {
 
   async delete(id: string): Promise<void> {
     this.tasks.delete(id);
+  }
+
+  seed(tasks: AgentTask[]): void {
+    for (const task of tasks) {
+      this.tasks.set(task.id, task);
+      const numericId = Number(task.id.replace("task-", ""));
+      if (!Number.isNaN(numericId) && numericId > this.counter) {
+        this.counter = numericId;
+      }
+    }
   }
 }

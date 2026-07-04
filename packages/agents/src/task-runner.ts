@@ -1,5 +1,5 @@
 import type { Agent, AgentTask, TaskStatus } from "@milo/shared";
-import type { AgentEventBus, TaskQueue, TaskRunner } from "./types.js";
+import type { AgentEventBus, TaskQueue, TaskRunner, TaskRunnerCallbacks } from "./types.js";
 
 export interface TaskRunnerDeps {
   queue: TaskQueue;
@@ -9,7 +9,11 @@ export interface TaskRunnerDeps {
 export class DefaultTaskRunner implements TaskRunner {
   constructor(private deps: TaskRunnerDeps) {}
 
-  async execute(task: AgentTask, agent: Agent): Promise<Record<string, unknown>> {
+  async execute(
+    task: AgentTask,
+    agent: Agent,
+    callbacks?: TaskRunnerCallbacks,
+  ): Promise<Record<string, unknown>> {
     const job = await this.deps.queue.add({
       taskId: task.id,
       agentId: agent.id,
@@ -25,7 +29,7 @@ export class DefaultTaskRunner implements TaskRunner {
     });
 
     try {
-      await this.simulateWork(task, job.id);
+      await this.simulateWork(task, job.id, callbacks);
       const result: Record<string, unknown> = {
         taskId: task.id,
         status: "completed" as TaskStatus,
@@ -52,12 +56,19 @@ export class DefaultTaskRunner implements TaskRunner {
     }
   }
 
-  private async simulateWork(task: AgentTask, jobId: string): Promise<void> {
+  private async simulateWork(task: AgentTask, jobId: string, callbacks?: TaskRunnerCallbacks): Promise<void> {
     const steps = 5;
     const duration = Math.max(500, task.estimateMs ?? 2000);
     for (let i = 1; i <= steps; i++) {
       await sleep(duration / steps);
-      await this.deps.queue.updateProgress(jobId, Math.round((i / steps) * 100));
+      const progress = Math.round((i / steps) * 100);
+      await this.deps.queue.updateProgress(jobId, progress);
+      callbacks?.onProgress?.(progress);
+      callbacks?.onLog?.({
+        timestamp: new Date().toISOString(),
+        level: "info",
+        message: `Simulated step ${i}/${steps}`,
+      });
     }
   }
 }

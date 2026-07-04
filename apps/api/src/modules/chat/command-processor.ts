@@ -1,55 +1,72 @@
-import { OpenAiProvider } from "@milo/ai";
-import { config } from "../../config/index.js";
+import type { AgentManager } from "@milo/agents";
+import type { CreateMissionInput } from "@milo/shared";
 
 export interface CommandResult {
   text: string;
   sources: string[];
   suggestedActions: string[];
+  missionId?: string;
 }
 
 export class CommandProcessor {
-  private provider: OpenAiProvider | null = null;
-  private isDemo: boolean;
-
-  constructor() {
-    if (!config.OPENAI_API_KEY) {
-      this.isDemo = true;
-      return;
-    }
-
-    this.isDemo = false;
-    this.provider = new OpenAiProvider({
-      apiKey: config.OPENAI_API_KEY,
-      baseURL: config.OPENAI_BASE_URL,
-    });
-  }
+  constructor(private manager?: AgentManager) {}
 
   async process(message: string): Promise<CommandResult> {
-    if (this.isDemo || !this.provider) {
-      return this.generateMockResponse(message);
+    const lower = message.toLowerCase();
+
+    if (this.looksLikeResearchQuery(lower)) {
+      return this.createMissionFromQuery(message);
     }
 
-    const reply = await this.provider.complete([
-      {
-        role: "system",
-        content:
-          "Jsi MiLO, osobní operační systém uživatele. Odpovídej stručně, jasně a v češtině. Pokud odpovíš na základě dokumentů nebo dat, uveď zdroje.",
-      },
-      { role: "user", content: message },
-    ]);
+    return this.generateFallbackResponse(message);
+  }
+
+  private looksLikeResearchQuery(input: string): boolean {
+    const researchKeywords = [
+      "najdi",
+      "hledej",
+      "vyhledej",
+      "najděte",
+      "hledejte",
+      "vyhledejte",
+      "rešerše",
+      "dokumenty",
+      "smlouvy",
+      "poznámky",
+      "soubory",
+      "find",
+      "search",
+      "look up",
+    ];
+    return researchKeywords.some((keyword) => input.includes(keyword));
+  }
+
+  private async createMissionFromQuery(message: string): Promise<CommandResult> {
+    if (!this.manager) {
+      return {
+        text: "Agent manager není dostupný. Zprávu zpracuji lokálně.",
+        sources: [],
+        suggestedActions: ["Zkusit znovu"],
+      };
+    }
+
+    const input: CreateMissionInput = {
+      title: message,
+      description: message,
+      priority: "normal",
+    };
+
+    const mission = await this.manager.createMission(input);
 
     return {
-      text: reply,
-      sources: [],
-      suggestedActions: [],
+      text: `Vytvořil jsem misi **${mission.title}**. Research Agent začal prohledávat dostupné zdroje. Výsledek se objeví v detailu mise.`,
+      sources: ["Agent Runtime"],
+      suggestedActions: ["Zobrazit mise", "Zobrazit agenty"],
+      missionId: mission.id,
     };
   }
 
-  isInDemoMode(): boolean {
-    return this.isDemo;
-  }
-
-  private generateMockResponse(input: string): CommandResult {
+  private generateFallbackResponse(input: string): CommandResult {
     const lower = input.toLowerCase();
 
     if (lower.includes("priorit") || lower.includes("co dnes")) {
@@ -66,48 +83,25 @@ Doporučuji začít kritickou prioritou, protože má nejbližší deadline.`,
       };
     }
 
-    if (lower.includes("dokument") || lower.includes("tj krupka")) {
-      return {
-        text: `Našel jsem 3 dokumenty související s TJ Krupka:
-
-- Smlouva TJ Krupka 2026 (Obsidian)
-- ISDS: Doručenka 123456
-- Ninja Týden rozpočet (Google Drive)
-
-Chceš, abych otevřel konkrétní dokument nebo připravil shrnutí?`,
-        sources: ["Obsidian", "ISDS", "Google Drive"],
-        suggestedActions: ["Otevřít smlouvu", "Shrnutí kauzy TJ Krupka"],
-      };
-    }
-
     if (lower.includes("agent") || lower.includes("co udělali")) {
       return {
-        text: `Aktuální stav agentů:
-
-- **Chief of Staff**: vygeneroval ranní briefing v 7:00
-- **Research Agent**: indexoval 127 poznámek z Obsidianu
-- **Legal Agent**: čeká na úkol
-- **Developer Agent**: pozastaveno
-- **Knowledge Agent**: čeká na úkol
-
-2 položky čekají na tvé rozhodnutí.`,
+        text: `Aktuální stav agentů zobrazíš v dashboardu Agent Operating Center. Chief of Staff a Research Agent jsou aktivní.`,
         sources: ["Agent Logs"],
-        suggestedActions: ["Zobrazit agenty", "Zobrazit rozhodnutí"],
+        suggestedActions: ["Zobrazit agenty"],
       };
     }
 
     return {
-      text: `Rozumím. Zatím pracuji s mock daty, ale struktura chatu je připravená na napojení reálného LLM.
+      text: `Rozumím. Pro vyhledání dokumentů napiš například:
 
-Můžeš se zeptat například:
-- Co dnes musím řešit?
-- Najdi dokumenty ke kauze TJ Krupka.
-- Co udělali agenti?`,
+- Najdi všechny dokumenty týkající se Komárky.
+- Hledej smlouvy s Lesy ČR.
+- Najdi poznámky o TJ Krupka.`,
       sources: [],
       suggestedActions: [
-        "Co dnes musím řešit?",
         "Najdi dokumenty ke kauze TJ Krupka.",
-        "Co udělali agenti?",
+        "Hledej smlouvy s Lesy ČR.",
+        "Najdi poznámky o Komárce.",
       ],
     };
   }

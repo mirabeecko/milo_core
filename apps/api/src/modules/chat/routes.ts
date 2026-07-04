@@ -2,6 +2,7 @@ import { FastifyInstance, FastifyPluginOptions } from "fastify";
 import { z } from "zod";
 import { ChatService } from "./service.js";
 import { AuthenticatedRequest, authMiddleware } from "../auth/middleware.js";
+import { getAgentManager } from "../agents/manager.js";
 
 const chatRequestSchema = z.object({
   message: z.string().min(1),
@@ -12,7 +13,8 @@ export async function chatRoutes(
   app: FastifyInstance,
   _options: FastifyPluginOptions,
 ): Promise<void> {
-  const chatService = new ChatService();
+  const manager = await getAgentManager();
+  const chatService = new ChatService(manager);
 
   app.post(
     "/",

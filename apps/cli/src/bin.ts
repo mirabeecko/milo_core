@@ -7,6 +7,7 @@ import {
   InMemoryAgentMemoryRepository,
   InMemoryAgentMetricsRepository,
   InMemoryAgentRepository,
+  InMemoryMissionRepository,
   InMemoryTaskRepository,
 } from "@milo/database";
 import { AgentManager, registerDefaultAgents } from "@milo/agents";
@@ -23,6 +24,7 @@ async function getManager(): Promise<AgentManager> {
       repositories: {
         agents: new InMemoryAgentRepository(),
         tasks: new InMemoryTaskRepository(),
+        missions: new InMemoryMissionRepository(),
         logs: new InMemoryAgentLogRepository(),
         memory: new InMemoryAgentMemoryRepository(),
         metrics: new InMemoryAgentMetricsRepository(),

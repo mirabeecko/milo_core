@@ -36,3 +36,8 @@ Thumbs.db
 .temp
 .tmp
 .vercel
+
+# Local runtime data
+apps/api/data/tasks.json
+apps/api/data/missions.json
+apps/data/

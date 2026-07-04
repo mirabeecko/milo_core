@@ -6,6 +6,7 @@ import type {
   AgentStatus,
   AgentTask,
   LiveWorkExplanation,
+  TaskLogEntry,
 } from "@milo/shared";
 
 export interface AgentFrameworkConfig {
@@ -18,6 +19,12 @@ export interface AgentFrameworkConfig {
   defaultModel?: string;
   defaultTemperature?: number;
   runtime?: Partial<AgentRuntimeConfig>;
+}
+
+export interface TaskRunnerCallbacks {
+  onProgress?: (progress: number) => void;
+  onLog?: (entry: TaskLogEntry) => void;
+  onExplanation?: (explanation: Partial<LiveWorkExplanation>) => void;
 }
 
 export interface TaskJob {
@@ -49,7 +56,7 @@ export interface TaskQueue {
 }
 
 export interface TaskRunner {
-  execute(task: AgentTask, agent: Agent): Promise<Record<string, unknown>>;
+  execute(task: AgentTask, agent: Agent, callbacks?: TaskRunnerCallbacks): Promise<Record<string, unknown>>;
 }
 
 export interface AgentEventBus {
@@ -70,6 +77,8 @@ export interface AgentFrameworkEvent {
     | "agent:task:failed"
     | "agent:task:cancelled"
     | "agent:task:delegated"
+    | "agent:mission:completed"
+    | "agent:mission:failed"
     | "agent:error";
   agentId: string;
   timestamp: string;

@@ -5,7 +5,9 @@ import type {
   AgentMetricsSnapshot,
   AgentRuntimeConfig,
   AgentTask,
+  CreateMissionInput,
   LiveWorkExplanation,
+  Mission,
 } from "@milo/shared";
 import type {
   AgentEventRepository,
@@ -13,6 +15,7 @@ import type {
   AgentMemoryRepository,
   AgentMetricsRepository,
   AgentRepository,
+  MissionRepository,
   TaskRepository,
 } from "@milo/database";
 import { AgentEntityImpl, DEFAULT_RUNTIME_CONFIG } from "./agent.js";
@@ -21,7 +24,7 @@ import { AgentMemoryImpl, RepositoryMemoryStorage } from "./memory/index.js";
 import type { AgentEntityDeps } from "./agent.js";
 import { InMemoryAgentEventBus } from "./event-bus.js";
 import { InMemoryTaskQueue } from "./task-queue.js";
-import { DefaultTaskRunner } from "./task-runner.js";
+import { ExecutionTaskRunner } from "./runtime/execution-task-runner.js";
 import { AgentScheduler } from "./runtime/agent-scheduler.js";
 import { BackgroundRunner } from "./runtime/background-runner.js";
 import { HealthMonitor } from "./runtime/health-monitor.js";
@@ -38,6 +41,7 @@ export interface AgentManagerDeps {
   repositories: {
     agents: AgentRepository;
     tasks: TaskRepository;
+    missions: MissionRepository;
     logs: AgentLogRepository;
     memory: AgentMemoryRepository;
     metrics: AgentMetricsRepository;
@@ -46,6 +50,8 @@ export interface AgentManagerDeps {
   eventBus?: AgentEventBus;
   queue?: TaskQueue;
   config?: AgentFrameworkConfig;
+  vaultPath?: string;
+  projectPath?: string;
 }
 
 export class AgentManager {
@@ -78,6 +84,13 @@ export class AgentManager {
     this.eventBus.subscribe(async (event) => {
       await this.persistEvent(event);
     });
+    this.eventBus.subscribe(async (event) => {
+      await this.handleMissionLifecycleEvent(event);
+    });
+  }
+
+  getMissionRepository(): MissionRepository {
+    return this.deps.repositories.missions;
   }
 
   getConfig(): AgentRuntimeConfig {
@@ -89,7 +102,13 @@ export class AgentManager {
     factory?: (definition: AgentDefinition, deps: AgentEntityDeps) => AgentEntity,
   ): Promise<AgentEntity> {
     this.definitions.set(definition.id, definition);
-    const taskRunner = new DefaultTaskRunner({ queue: this.queue, eventBus: this.eventBus });
+    const taskRunner = new ExecutionTaskRunner({
+      queue: this.queue,
+      eventBus: this.eventBus,
+      toolRegistry: this.toolRegistry,
+      vaultPath: this.deps.vaultPath,
+      projectPath: this.deps.projectPath,
+    });
     const entityDeps: AgentEntityDeps = {
       eventBus: this.eventBus,
       taskRunner,
@@ -101,11 +120,16 @@ export class AgentManager {
       metrics: {
         create: (snapshot) => this.deps.repositories.metrics.create(snapshot),
       },
+      tasks: {
+        update: (id, partial) => this.deps.repositories.tasks.update(id, partial),
+      },
       scheduler: this.scheduler,
       backgroundRunner: this.backgroundRunner,
       toolRegistry: this.toolRegistry,
       agentMemory: new AgentMemoryImpl(definition.id, new RepositoryMemoryStorage(this.deps.repositories.memory)),
       config: this.runtimeConfig,
+      vaultPath: this.deps.vaultPath,
+      projectPath: this.deps.projectPath,
     };
     const entity = factory ? factory(definition, entityDeps) : new AgentEntityImpl(definition, entityDeps);
     await entity.initialize();
@@ -173,6 +197,11 @@ export class AgentManager {
 
   async delegate(task: Omit<AgentTask, "id" | "createdAt">): Promise<AgentTask> {
     const full = await this.deps.repositories.tasks.create(task);
+    await this.runDelegatedTask(full);
+    return full;
+  }
+
+  private async runDelegatedTask(full: AgentTask): Promise<void> {
     const entity = this.selectAgentForTask(full);
     if (!entity) {
       this.priorityQueue.enqueue(full, { priority: full.priority, maxRetries: this.runtimeConfig.maxRetries });
@@ -200,7 +229,50 @@ export class AgentManager {
         }).catch(() => undefined);
       });
     }
-    return full;
+  }
+
+  async createMission(input: CreateMissionInput): Promise<Mission> {
+    const mission = await this.deps.repositories.missions.create({
+      title: input.title,
+      description: input.description,
+      ownerId: "chief-of-staff",
+      status: "pending",
+      priority: input.priority ?? "normal",
+    });
+
+    const task = await this.deps.repositories.tasks.create({
+      title: `Research: ${input.title}`,
+      description: input.description,
+      type: "search",
+      priority: input.priority ?? "normal",
+      status: "pending",
+      ownerId: "research",
+      ownerType: "agent",
+      source: "chief-of-staff",
+      missionId: mission.id,
+      log: [],
+      toolsUsed: ["obsidian", "web-search"],
+      citations: [],
+      retryCount: 0,
+      estimateMs: 60_000,
+    });
+
+    await this.deps.repositories.missions.update(mission.id, {
+      status: "running",
+      startedAt: new Date().toISOString(),
+    });
+
+    try {
+      await this.runDelegatedTask(task);
+    } catch {
+      // Task is enqueued, will run when a matching agent comes online.
+    }
+
+    const updated = await this.deps.repositories.missions.findById(mission.id);
+    if (!updated) {
+      throw new Error(`Mission ${mission.id} was lost after creation`);
+    }
+    return updated;
   }
 
   async schedule(task: Omit<AgentTask, "id" | "createdAt">, when: string | number): Promise<AgentTask> {
@@ -305,9 +377,18 @@ export class AgentManager {
   async getTasks(options?: {
     status?: string;
     ownerId?: string;
+    missionId?: string;
     limit?: number;
   }): Promise<AgentTask[]> {
     return this.deps.repositories.tasks.findAll(options);
+  }
+
+  async getMissions(options?: { status?: string; limit?: number }): Promise<Mission[]> {
+    return this.deps.repositories.missions.findAll(options);
+  }
+
+  async getMissionById(id: string): Promise<Mission | null> {
+    return this.deps.repositories.missions.findById(id);
   }
 
   getPriorityQueue(): PriorityTaskQueue {
@@ -376,6 +457,50 @@ export class AgentManager {
     }
 
     return candidates[0];
+  }
+
+  private async handleMissionLifecycleEvent(event: AgentFrameworkEvent): Promise<void> {
+    if (event.type === "agent:task:completed") {
+      const taskId = typeof event.payload.taskId === "string" ? event.payload.taskId : undefined;
+      if (!taskId) return;
+      const task = await this.deps.repositories.tasks.findById(taskId);
+      if (!task?.missionId) return;
+      const mission = await this.deps.repositories.missions.findById(task.missionId);
+      if (!mission) return;
+      const result = task.result ?? { output: "Úkol dokončen bez výstupu." };
+      await this.deps.repositories.missions.update(mission.id, {
+        status: "completed",
+        completedAt: new Date().toISOString(),
+        result,
+      });
+      await this.eventBus.publish({
+        type: "agent:mission:completed",
+        agentId: "chief-of-staff",
+        timestamp: new Date().toISOString(),
+        payload: { missionId: mission.id, taskId, result },
+      }).catch(() => undefined);
+      return;
+    }
+
+    if (event.type === "agent:task:failed") {
+      const taskId = typeof event.payload.taskId === "string" ? event.payload.taskId : undefined;
+      if (!taskId) return;
+      const task = await this.deps.repositories.tasks.findById(taskId);
+      if (!task?.missionId) return;
+      const mission = await this.deps.repositories.missions.findById(task.missionId);
+      if (!mission) return;
+      await this.deps.repositories.missions.update(mission.id, {
+        status: "failed",
+        completedAt: new Date().toISOString(),
+        result: { error: typeof event.payload.error === "string" ? event.payload.error : "Neznámá chyba" },
+      });
+      await this.eventBus.publish({
+        type: "agent:mission:failed",
+        agentId: "chief-of-staff",
+        timestamp: new Date().toISOString(),
+        payload: { missionId: mission.id, taskId, error: event.payload.error },
+      }).catch(() => undefined);
+    }
   }
 
   private async persistEvent(event: AgentFrameworkEvent): Promise<void> {

@@ -4,6 +4,7 @@ import {
   InMemoryAgentMemoryRepository,
   InMemoryAgentMetricsRepository,
   InMemoryAgentRepository,
+  InMemoryMissionRepository,
   InMemoryTaskRepository,
 } from "@milo/database";
 import { AgentManager } from "./agent-manager.js";
@@ -14,6 +15,7 @@ export async function runMockSimulation(): Promise<void> {
     repositories: {
       agents: new InMemoryAgentRepository(),
       tasks: new InMemoryTaskRepository(),
+      missions: new InMemoryMissionRepository(),
       logs: new InMemoryAgentLogRepository(),
       memory: new InMemoryAgentMemoryRepository(),
       metrics: new InMemoryAgentMetricsRepository(),
@@ -36,6 +38,7 @@ export async function runMockSimulation(): Promise<void> {
   await manager.delegate({
     title: "Připravit ranní briefing",
     description: "Shrnutí dne, priority a schůzky.",
+    type: "report",
     priority: "critical",
     status: "pending",
     ownerId: "chief-of-staff",
@@ -52,6 +55,7 @@ export async function runMockSimulation(): Promise<void> {
   await manager.delegate({
     title: "Rešerše ke kauze TJ Krupka",
     description: "Najít relevantní usnesení a smlouvy.",
+    type: "search",
     priority: "high",
     status: "pending",
     ownerId: "research",
@@ -62,54 +66,6 @@ export async function runMockSimulation(): Promise<void> {
     citations: [],
     retryCount: 0,
     estimateMs: 2000,
-  });
-
-  // Legal Agent analyzes a contract
-  await manager.delegate({
-    title: "Analýza smlouvy TJ Krupka",
-    description: "Kontrola rizik a termínů.",
-    priority: "high",
-    status: "pending",
-    ownerId: "legal",
-    ownerType: "agent",
-    source: "simulation",
-    log: [],
-    toolsUsed: ["pdf-parser", "legal-notes"],
-    citations: [],
-    retryCount: 0,
-    estimateMs: 1800,
-  });
-
-  // Developer Agent reviews architecture
-  await manager.delegate({
-    title: "Review architektury MiLO_Core",
-    description: "Kontrola DDD a čisté architektury.",
-    priority: "normal",
-    status: "pending",
-    ownerId: "developer",
-    ownerType: "agent",
-    source: "simulation",
-    log: [],
-    toolsUsed: ["code-search", "github"],
-    citations: [],
-    retryCount: 0,
-    estimateMs: 1200,
-  });
-
-  // Knowledge Agent indexes vault
-  await manager.delegate({
-    title: "Indexovat Obsidian vault",
-    description: "Aktualizace knowledge báze.",
-    priority: "normal",
-    status: "pending",
-    ownerId: "knowledge",
-    ownerType: "agent",
-    source: "simulation",
-    log: [],
-    toolsUsed: ["obsidian", "vector-store"],
-    citations: [],
-    retryCount: 0,
-    estimateMs: 2500,
   });
 
   // Scheduled task: Chief of Staff will run a nightly review in 1 second
