@@ -135,9 +135,14 @@ export class ExecutionTaskRunner implements TaskRunner {
       updateExplanation: (partial: Partial<LiveWorkExplanation>) => void;
     },
   ): Promise<TaskResult & { metadata?: Record<string, unknown> }> {
+    const text = (task.description ?? task.title ?? "").toLowerCase();
+    const isWeatherQuery = /počasí|předpověď|vítr|větru|teplota|teploty|weather|wind|forecast|temperature/.test(text);
+
     switch (task.type) {
       case "search":
-        return this.executeSearch(task, agent, context, helpers);
+        return isWeatherQuery
+          ? this.executeWeather(task, agent, context, helpers)
+          : this.executeSearch(task, agent, context, helpers);
       case "analyze":
         return this.executeAnalyze(task, agent, context, helpers);
       case "summarize":
@@ -147,7 +152,9 @@ export class ExecutionTaskRunner implements TaskRunner {
       case "delegate":
         return this.executeDelegate(task, agent, context, helpers);
       default:
-        return this.executeCustom(task, agent, context, helpers);
+        return isWeatherQuery
+          ? this.executeWeather(task, agent, context, helpers)
+          : this.executeCustom(task, agent, context, helpers);
     }
   }
 
@@ -241,6 +248,56 @@ export class ExecutionTaskRunner implements TaskRunner {
     return {
       output: `Hledal jsem "${query}", ale nemám přístup k žádnému zdroji. Nakonfiguruj prosím Obsidian vault.`,
       metadata: { query },
+    };
+  }
+
+  private async executeWeather(
+    task: AgentTask,
+    _agent: Agent,
+    context: ToolContext,
+    { addLog, reportProgress, updateExplanation, toolCalls }: {
+      addLog: (level: TaskLogEntry["level"], message: string, metadata?: Record<string, unknown>) => void;
+      reportProgress: (progress: number) => Promise<void>;
+      updateExplanation: (partial: Partial<LiveWorkExplanation>) => void;
+      toolCalls: ToolCall[];
+    },
+  ): Promise<TaskResult & { metadata?: Record<string, unknown> }> {
+    const location = this.extractLocation(task);
+    if (!location) {
+      throw new Error("Nelze určit lokalitu pro předpověď počasí");
+    }
+
+    addLog("info", `Zjistuji předpověď větru pro: ${location}`);
+    updateExplanation({ currentActivity: `Zjistuji předpověď pro ${location}`, nextStep: "Zavolám weather API" });
+    await reportProgress(20);
+
+    const forecast = await this.executeTool(
+      "weather:forecast",
+      { location, days: 3 },
+      context,
+      toolCalls,
+    );
+
+    if (!forecast || typeof forecast !== "object") {
+      throw new Error("Weather API nevrátilo data");
+    }
+
+    const typed = forecast as { location: string; days: Array<{ date: string; maxWindSpeedKmh: number; maxWindGustsKmh: number; dominantWindDirection: number }> };
+    addLog("info", `Předpověď získána pro ${typed.location}`);
+    updateExplanation({
+      currentActivity: "Zpracovávám předpověď větru",
+      findings: `Získáno ${typed.days.length} dnů předpovědi`,
+      nextStep: "Vrátím výsledek",
+    });
+    await reportProgress(90);
+
+    return {
+      output: this.formatWeatherResult(typed.location, typed.days),
+      citations: ["Open-Meteo"],
+      metadata: {
+        location: typed.location,
+        daysCount: typed.days.length,
+      },
     };
   }
 
@@ -401,6 +458,81 @@ export class ExecutionTaskRunner implements TaskRunner {
       }
     }
 
+    return lines.join("\n");
+  }
+
+  private extractLocation(task: AgentTask): string | undefined {
+    const text = task.description ?? task.title ?? "";
+    const lower = text.toLowerCase();
+
+    const cityMap: Record<string, string> = {
+      praha: "Prague",
+      praze: "Prague",
+      brno: "Brno",
+      brně: "Brno",
+      ostrava: "Ostrava",
+      ostravě: "Ostrava",
+      plzeň: "Plzeň",
+      plzni: "Plzeň",
+      liberec: "Liberec",
+      liberci: "Liberec",
+      olomouc: "Olomouc",
+      olomouci: "Olomouc",
+      ústí: "Usti nad Labem",
+      "ústí nad labem": "Usti nad Labem",
+      hradec: "Hradec Kralove",
+      "hradec králové": "Hradec Kralove",
+      pardubice: "Pardubice",
+      zlín: "Zlin",
+      karlovy: "Karlovy Vary",
+      "karlovy vary": "Karlovy Vary",
+    };
+
+    for (const [czech, english] of Object.entries(cityMap)) {
+      if (lower.includes(czech)) {
+        return english;
+      }
+    }
+
+    const knownPatterns = [
+      /(?:v|ve|pro)\s+([A-Z][A-Za-z\s-]{1,30})(?:\?|\.|$)/,
+      /(?:v|ve|pro)\s+([A-Z][A-Za-z\s-]{1,30})/,
+    ];
+    for (const pattern of knownPatterns) {
+      const match = text.match(pattern);
+      if (match?.[1]) {
+        const trimmed = match[1].trim();
+        if (trimmed.length > 1) return trimmed;
+      }
+    }
+
+    const withoutPrefix = text
+      .replace(/^(najdi|hledej|vyhledej|najděte|hledejte|vyhledejte|find|search|zjisti|jaká je)\s+/i, "")
+      .replace(/\s+(počasí|předpověď|vítr|větru|teplota|weather|wind|forecast|temperature)/gi, "")
+      .trim();
+
+    if (withoutPrefix.length > 1 && /^[A-Za-z\s-]+$/.test(withoutPrefix)) {
+      return withoutPrefix;
+    }
+
+    return undefined;
+  }
+
+  private formatWeatherResult(
+    location: string,
+    days: Array<{ date: string; maxWindSpeedKmh: number; maxWindGustsKmh: number; dominantWindDirection: number }>,
+  ): string {
+    const direction = (deg: number): string => {
+      const dirs = ["S", "SV", "V", "JV", "J", "JZ", "Z", "SZ"];
+      return dirs[Math.round(deg / 45) % 8] ?? "?";
+    };
+
+    const lines: string[] = [`Předpověď větru pro **${location}** (zdroj Open-Meteo):`, ""];
+    for (const day of days) {
+      lines.push(
+        `- **${day.date}**: max vítr ${Math.round(day.maxWindSpeedKmh)} km/h, nárazy až ${Math.round(day.maxWindGustsKmh)} km/h, směr ${direction(day.dominantWindDirection)}`,
+      );
+    }
     return lines.join("\n");
   }
 }

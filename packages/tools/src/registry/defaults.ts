@@ -4,6 +4,7 @@ import { registerShellTools } from "../providers/shell/index.js";
 import { registerWebSearchTools } from "../providers/web-search/index.js";
 import { registerGitHubTools } from "../providers/github/index.js";
 import { registerObsidianTools } from "../providers/obsidian/tools/index.js";
+import { registerWeatherTools } from "../providers/weather/index.js";
 
 export function createDefaultToolRegistry(): ToolRegistry {
   const registry = new ToolRegistry();
@@ -12,5 +13,6 @@ export function createDefaultToolRegistry(): ToolRegistry {
   registerWebSearchTools(registry);
   registerGitHubTools(registry);
   registerObsidianTools(registry);
+  registerWeatherTools(registry);
   return registry;
 }
