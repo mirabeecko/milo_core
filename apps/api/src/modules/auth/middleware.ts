@@ -27,19 +27,19 @@ export async function authMiddleware(
   }
 
   if (!accessToken) {
-    return reply.status(401).send({ error: "Unauthorized" });
+    return reply.status(401).send({ error: "Unauthorized", message: "Chybí autentizační token" });
   }
 
   try {
     const user = await authService.getUser(accessToken);
 
     if (!user) {
-      return reply.status(401).send({ error: "Unauthorized" });
+      return reply.status(401).send({ error: "Unauthorized", message: "Neplatný nebo vypršený token" });
     }
 
     request.user = user;
   } catch (error) {
     request.log.error(error);
-    return reply.status(401).send({ error: "Unauthorized" });
+    return reply.status(401).send({ error: "Unauthorized", message: "Chyba při ověření tokenu" });
   }
 }

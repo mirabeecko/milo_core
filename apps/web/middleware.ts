@@ -1,6 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 
-const publicRoutes = ["/login"];
+const publicRoutes = ["/login", "/register"];
 
 export function middleware(request: NextRequest): NextResponse {
   const { pathname } = request.nextUrl;
@@ -11,6 +11,7 @@ export function middleware(request: NextRequest): NextResponse {
 
   // TODO: ověřit Supabase session token z cookies
   // Pro demo režim povolíme všechny routy
+  // V produkci: return NextResponse.redirect(new URL('/login', request.url));
   return NextResponse.next();
 }
 
