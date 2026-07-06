@@ -1,7 +1,3 @@
-import { apiClient } from "./client";
-import type { ApiResponse } from "./types";
-import type { CalendarEvent, Email } from "@/lib/types";
-
 export interface HomeMeeting {
   id: string;
   summary: string;
@@ -84,9 +80,4 @@ export interface HomeData {
   activity: HomeActivity[];
   calendarConnected: boolean;
   emailConnected: boolean;
-}
-
-export async function getHomeData(): Promise<ApiResponse<HomeData>> {
-  const response = await apiClient<ApiResponse<HomeData>>("/home");
-  return response;
 }
