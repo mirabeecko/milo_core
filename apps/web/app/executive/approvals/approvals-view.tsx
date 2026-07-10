@@ -166,7 +166,7 @@ export function ApprovalsView({ approvals: initialApprovals }: Props) {
       </div>
 
       <p className="text-xs text-muted-foreground text-center">
-        Zdroj: TASKS.md, ROADMAP.md, docs/adr/ — statická data
+        Zdroj: Executive API — live data z /executive/approvals
       </p>
     </div>
   );

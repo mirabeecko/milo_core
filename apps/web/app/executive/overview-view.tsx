@@ -35,7 +35,8 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { generateBriefing, type BriefingResponse } from "@/lib/api/briefing.api";
+import { type BriefingResponse } from "@/lib/api/briefing.api";
+import { generateBriefing } from "@/lib/api/briefing.api";
 import {
   useExecutiveOverview,
   useExecutiveMissions,
@@ -59,6 +60,9 @@ import type {
   ActivityItem,
 } from "@/lib/data/executive/types";
 import { LiveIndicator } from "./live-indicator";
+import { ProgressRing } from "@/components/ui/progress-ring";
+import { CountUp } from "@/components/ui/count-up";
+import { useDataRefreshPulse } from "./use-data-refresh-pulse";
 
 interface Props {
   overview: ExecutiveOverview;
@@ -429,19 +433,21 @@ export function DailyCommandCenterView(props: Props) {
 
             <div className="grid grid-cols-2 gap-2">
               <div className="rounded-lg border border-border p-2.5 text-center">
-                <p className="text-lg font-bold">{missions.length}</p>
+                <p className="text-lg font-bold"><CountUp from={0} to={missions.length} /></p>
                 <p className="text-[10px] text-muted-foreground">Total Missions</p>
               </div>
               <div className="rounded-lg border border-border p-2.5 text-center">
-                <p className="text-lg font-bold">{activeDepts.length}/{departments.length}</p>
+                <p className="text-lg font-bold"><CountUp from={0} to={activeDepts.length} />/{departments.length}</p>
                 <p className="text-[10px] text-muted-foreground">Active / Total</p>
               </div>
               <div className="rounded-lg border border-border p-2.5 text-center">
-                <p className="text-lg font-bold text-emerald-500">{completedMissions.length}</p>
+                <p className="text-lg font-bold text-emerald-500"><CountUp from={0} to={completedMissions.length} /></p>
                 <p className="text-[10px] text-muted-foreground">Completed</p>
               </div>
               <div className="rounded-lg border border-border p-2.5 text-center">
-                <p className={cn("text-lg font-bold", failedMissions.length > 0 ? "text-rose-500" : "text-muted-foreground")}>{failedMissions.length}</p>
+                <p className={cn("text-lg font-bold", failedMissions.length > 0 ? "text-rose-500" : "text-muted-foreground")}>
+                  <CountUp from={0} to={failedMissions.length} />
+                </p>
                 <p className="text-[10px] text-muted-foreground">Failed</p>
               </div>
             </div>
@@ -468,7 +474,7 @@ export function DailyCommandCenterView(props: Props) {
         </Card>
 
         {/* MISSIONS */}
-        <Card className="flex flex-col">
+        <Card className={cn("flex flex-col", useDataRefreshPulse({ dataUpdatedAt: missionsQ.dataUpdatedAt, isFetching: missionsQ.isFetching }))}>
           <CardHeader className="pb-2">
             <div className="flex items-center justify-between">
               <CardTitle className="text-sm flex items-center gap-2">
@@ -483,10 +489,7 @@ export function DailyCommandCenterView(props: Props) {
           <CardContent className="flex-1 space-y-1.5">
             {[...activeMissions, ...failedMissions, ...completedMissions.slice(0, 2)].slice(0, 5).map((m) => (
               <div key={m.id} className="flex items-start gap-2 rounded-md border border-border/50 p-2.5 hover:bg-accent/30 transition-colors">
-                {m.status === "completed" && <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500 mt-0.5 shrink-0" />}
-                {m.status === "failed" && <XCircle className="h-3.5 w-3.5 text-rose-500 mt-0.5 shrink-0" />}
-                {m.status === "running" && <CircleDot className="h-3.5 w-3.5 text-blue-500 mt-0.5 shrink-0 animate-pulse" />}
-                {m.status === "pending" && <Clock className="h-3.5 w-3.5 text-muted-foreground mt-0.5 shrink-0" />}
+                <MissionRing status={m.status} />
                 <div className="min-w-0 flex-1">
                   <p className="text-xs font-medium truncate">{m.title}</p>
                   <div className="flex items-center gap-1.5 mt-0.5">
@@ -508,7 +511,7 @@ export function DailyCommandCenterView(props: Props) {
         </Card>
 
         {/* DEPARTMENTS */}
-        <Card className="flex flex-col">
+        <Card className={cn("flex flex-col", useDataRefreshPulse({ dataUpdatedAt: departmentsQ.dataUpdatedAt, isFetching: departmentsQ.isFetching }))}>
           <CardHeader className="pb-2">
             <div className="flex items-center justify-between">
               <CardTitle className="text-sm flex items-center gap-2">
@@ -533,7 +536,12 @@ export function DailyCommandCenterView(props: Props) {
                     <p className="text-xs font-medium">{dept.shortName}</p>
                     <p className="text-[10px] text-muted-foreground truncate">{dept.domain}</p>
                   </div>
-                  <div className={cn("h-2 w-2 rounded-full", isActive ? "bg-emerald-500" : dept.status === "ready" ? "bg-amber-500" : "bg-muted-foreground/30")} />
+                  <ProgressRing
+                    value={isActive ? 100 : dept.status === "ready" ? 50 : 0}
+                    size={16}
+                    strokeWidth={2}
+                    color={isActive ? "emerald" : dept.status === "ready" ? "amber" : "muted"}
+                  />
                 </div>
               );
             })}
@@ -541,7 +549,7 @@ export function DailyCommandCenterView(props: Props) {
         </Card>
 
         {/* APPROVALS */}
-        <Card className="flex flex-col">
+        <Card className={cn("flex flex-col", useDataRefreshPulse({ dataUpdatedAt: approvalsQ.dataUpdatedAt, isFetching: approvalsQ.isFetching }))}>
           <CardHeader className="pb-2">
             <div className="flex items-center justify-between">
               <CardTitle className="text-sm flex items-center gap-2">
@@ -587,7 +595,7 @@ export function DailyCommandCenterView(props: Props) {
         </Card>
 
         {/* RISKS & BLOCKERS */}
-        <Card className="flex flex-col">
+        <Card className={cn("flex flex-col", useDataRefreshPulse({ dataUpdatedAt: risksQ.dataUpdatedAt, isFetching: risksQ.isFetching || blockersQ.isFetching }))}>
           <CardHeader className="pb-2">
             <div className="flex items-center justify-between">
               <CardTitle className="text-sm flex items-center gap-2">
@@ -639,7 +647,7 @@ export function DailyCommandCenterView(props: Props) {
         </Card>
 
         {/* LATEST ACTIVITY */}
-        <Card className="flex flex-col">
+        <Card className={cn("flex flex-col", useDataRefreshPulse({ dataUpdatedAt: activityQ.dataUpdatedAt, isFetching: activityQ.isFetching }))}>
           <CardHeader className="pb-2">
             <div className="flex items-center justify-between">
               <CardTitle className="text-sm flex items-center gap-2">
@@ -656,11 +664,11 @@ export function DailyCommandCenterView(props: Props) {
               const config = activityTypeConfig[item.type] ?? activityTypeConfig.system;
               const Icon = config.icon;
               return (
-                <div key={item.id} className="flex gap-2 rounded-md p-2 hover:bg-accent/30 transition-colors">
-                  <div className={cn("mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded", config.color)}>
-                    <Icon className="h-3 w-3" />
+                <div key={item.id} className="timeline-item group">
+                  <div className={cn("timeline-dot", config.color)}>
+                    <Icon className="h-2.5 w-2.5" />
                   </div>
-                  <div className="min-w-0 flex-1">
+                  <div className="min-w-0 flex-1 rounded-md p-2 hover:bg-accent/30 transition-colors">
                     <p className="text-xs font-medium truncate">{item.title}</p>
                     <div className="flex items-center gap-1.5 mt-0.5">
                       <span className="text-[9px] text-muted-foreground">{item.actor}</span>
@@ -787,4 +795,19 @@ function renderBriefCompact(text: string): React.ReactNode[] {
     if (line.startsWith("> ")) return <p key={i} className="text-xs text-muted-foreground italic border-l-2 border-border pl-2 my-1">{line.slice(2)}</p>;
     return <p key={i} className="text-xs">{line}</p>;
   });
+}
+
+function MissionRing({ status }: { status: Mission["status"] }) {
+  const size = 20;
+  const sw = 2;
+  switch (status) {
+    case "completed":
+      return <ProgressRing value={100} size={size} strokeWidth={sw} color="emerald" />;
+    case "failed":
+      return <ProgressRing value={100} size={size} strokeWidth={sw} color="rose" />;
+    case "running":
+      return <ProgressRing value={60} size={size} strokeWidth={sw} color="blue" />;
+    default:
+      return <ProgressRing value={0} size={size} strokeWidth={sw} color="muted" />;
+  }
 }

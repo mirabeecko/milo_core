@@ -197,7 +197,7 @@ export function RisksView({ risks: initialRisks, blockers: initialBlockers }: Pr
       </Tabs>
 
       <p className="text-xs text-muted-foreground text-center">
-        Zdroj: BOOTSTRAP_AND_ROADMAP.md, TASKS.md, ARCHITECTURE.md, AUDIT.md — statická analýza
+        Zdroj: Executive API — live data z /executive/risks
       </p>
     </div>
   );

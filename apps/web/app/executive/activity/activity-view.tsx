@@ -64,19 +64,16 @@ export function ActivityView({ activity: initialActivity }: Props) {
             </div>
           )}
 
-          <div className="space-y-1">
+          <div className="space-y-0">
             {activity.map((item) => {
               const config = typeConfig[item.type] ?? typeConfig.system;
               const Icon = config.icon;
               return (
-                <div
-                  key={item.id}
-                  className="flex gap-3 rounded-lg p-3 hover:bg-accent/50 transition-colors"
-                >
-                  <div className={`mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${config.color}`}>
-                    <Icon className="h-4 w-4" />
+                <div key={item.id} className="timeline-item group">
+                  <div className={`timeline-dot flex items-center justify-center ${config.color.split(" ")[0]}`}>
+                    <Icon className="h-2.5 w-2.5" />
                   </div>
-                  <div className="min-w-0 flex-1">
+                  <div className="min-w-0 flex-1 rounded-md p-2 hover:bg-accent/30 transition-colors">
                     <div className="flex items-center gap-2 flex-wrap">
                       <p className="text-sm font-medium truncate">{item.title}</p>
                       <Badge variant="outline" className="text-[10px]">{config.label}</Badge>
@@ -89,14 +86,7 @@ export function ActivityView({ activity: initialActivity }: Props) {
                       {item.department && (
                         <Badge variant="secondary" className="text-[10px] h-4">{item.department}</Badge>
                       )}
-                      <span className="text-[10px] text-muted-foreground">
-                        {new Date(item.timestamp).toLocaleString("cs-CZ", {
-                          day: "numeric",
-                          month: "numeric",
-                          hour: "2-digit",
-                          minute: "2-digit",
-                        })}
-                      </span>
+                      <span className="text-[9px] text-muted-foreground ml-auto">{formatTimelineDate(item.timestamp)}</span>
                     </div>
                   </div>
                 </div>
@@ -117,15 +107,11 @@ export function ActivityView({ activity: initialActivity }: Props) {
           <CardContent className="space-y-2 text-sm">
             <div className="flex items-center gap-2">
               <div className="flex h-2 w-2 rounded-full bg-emerald-500" />
-              <span className="text-muted-foreground">Git log (posledních 20 commitů)</span>
+              <span className="text-muted-foreground">Executive Event Log (JSONL) — live telemetrie</span>
             </div>
             <div className="flex items-center gap-2">
               <div className="flex h-2 w-2 rounded-full bg-emerald-500" />
-              <span className="text-muted-foreground">Analýza dokumentů (ROADMAP.md, CHANGELOG.md)</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="flex h-2 w-2 rounded-full bg-amber-500" />
-              <span className="text-muted-foreground">Live telemetrie (není k dispozici)</span>
+              <span className="text-muted-foreground">Git log (posledních 20 commitů)</span>
             </div>
           </CardContent>
         </Card>
@@ -134,7 +120,7 @@ export function ActivityView({ activity: initialActivity }: Props) {
           <CardHeader className="pb-3">
             <CardTitle className="text-base flex items-center gap-2">
               <Zap className="h-4 w-4 text-muted-foreground" />
-              Chybějící telemetrie pro live verzi
+              Chybějící telemetrie
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-1 text-sm">
@@ -156,4 +142,16 @@ export function ActivityView({ activity: initialActivity }: Props) {
       </p>
     </div>
   );
+}
+
+function formatTimelineDate(iso: string): string {
+  try {
+    const d = new Date(iso);
+    const diffMs = Date.now() - d.getTime();
+    const diffHrs = Math.floor(diffMs / 3600000);
+    if (diffHrs < 1) return `${Math.floor(diffMs / 60000)}m ago`;
+    if (diffHrs < 24) return `${diffHrs}h ago`;
+    if (diffHrs < 48) return "yesterday";
+    return d.toLocaleDateString("cs-CZ", { day: "numeric", month: "numeric" });
+  } catch { return iso; }
 }

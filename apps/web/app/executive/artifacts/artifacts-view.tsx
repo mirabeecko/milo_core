@@ -159,7 +159,7 @@ export function ArtifactsView({ artifacts: initialArtifacts, decisions: initialD
       </Tabs>
 
       <p className="text-xs text-muted-foreground text-center">
-        Zdroj: docs/adr/*.md — statická data z lokálního filesystému
+        Zdroj: Executive API — live data z /executive/artifacts
       </p>
     </div>
   );

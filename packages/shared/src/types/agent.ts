@@ -1,160 +1,63 @@
-export type AgentStatus =
-  | "idle"
-  | "starting"
-  | "thinking"
-  | "planning"
-  | "delegating"
-  | "working"
-  | "waiting"
-  | "reviewing"
-  | "reporting"
-  | "loading_calendar"
-  | "loading_messages"
-  | "analyzing"
-  | "scheduling"
-  | "summarizing"
-  | "drafting_reply"
-  | "reading_code"
-  | "implementing"
-  | "testing"
-  | "building"
-  | "deploying"
-  | "paused"
-  | "stopping"
-  | "recovering"
-  | "offline"
-  | "error";
+export type AgentStatus = "draft" | "specified" | "planned" | "in_development" | "partially_operational" | "operational" | "degraded" | "blocked" | "deprecated" | "archived";
+export type AgentLifecycleStatus = "specified" | "in_development" | "operational" | "offline";
 
-export type AgentPriority = "critical" | "high" | "normal" | "low";
-export type AgentHealthStatus = "healthy" | "degraded" | "unhealthy";
-
-export interface AgentHealth {
-  status: AgentHealthStatus;
-  lastHeartbeat: string;
-  message?: string;
-}
-
-export interface AgentRuntimeConfig {
-  heartbeatIntervalMs: number;
-  taskTimeoutMs: number;
-  maxRetries: number;
-  retryBackoffMs: number;
-  healthThresholdMs: number;
-  maxConsecutiveErrors: number;
-}
-
-export interface AgentMetrics {
-  totalTasks: number;
-  successfulTasks: number;
-  failedTasks: number;
-  retriedTasks: number;
-  averageDurationMs: number;
-  totalTokens?: number;
-  errorCount: number;
-  lastUpdatedAt: string;
-}
-
-export interface AgentPermissions {
-  canRead: string[];
-  canWrite: string[];
-  canExecute: string[];
-}
-
-export interface AgentConfig {
-  model: string;
-  temperature: number;
-  maxTokens?: number;
-  systemPrompt: string;
-  knowledge: string[];
-  tools: string[];
-  permissions: AgentPermissions;
-  retryPolicy: {
-    maxRetries: number;
-    backoffMs: number;
-  };
-  timeoutMs: number;
+export interface AgentVersion {
+  id: string;
+  agent_id: string;
+  version_number: number;
+  version_label?: string;
+  specification: Record<string, unknown>;
+  change_summary?: string;
+  change_reason?: string;
+  created_by: string;
+  parent_version_id?: string;
+  status: string;
+  approved_at?: string;
+  deployed_at?: string;
+  created_at: string;
 }
 
 export interface Agent {
   id: string;
+  slug: string;
   name: string;
-  description: string;
-  role: string;
-  specialization: string;
-  priority: AgentPriority;
+  description?: string;
+  purpose?: string;
+  category?: string;
+  owner?: string;
   status: AgentStatus;
-  health: AgentHealth;
-  metrics: AgentMetrics;
-  config: AgentConfig;
-  memory: Record<string, unknown>;
-  createdAt: string;
-  updatedAt: string;
+  lifecycle_status: AgentLifecycleStatus;
+  risk_level: string;
+  priority: string;
+  active_version_id?: string;
+  deployed_version_id?: string;
+  implementation_progress: number;
+  runtime_status: string;
+  created_at: string;
+  updated_at: string;
+  archived_at?: string;
+  versions?: AgentVersion[];
+  use_cases?: any[];
+  active_spec?: Record<string, unknown>;
 }
 
-export interface AgentDefinition {
-  id: string;
+export interface CreateAgentInput {
+  slug: string;
   name: string;
-  description: string;
-  role: string;
-  specialization: string;
-  priority: AgentPriority;
-  config: AgentConfig;
+  description?: string;
+  purpose?: string;
+  category?: string;
+  owner?: string;
+  risk_level?: string;
 }
 
-export interface AgentSnapshot {
-  agent: Agent;
-  activeTaskId?: string;
-  explanation: LiveWorkExplanation;
-  pendingTasks: number;
-  runningTasks: number;
-  completedTasks: number;
-  failedTasks: number;
-}
-
-export interface LiveWorkExplanation {
-  currentActivity: string;
-  goal: string;
-  reason: string;
-  findings: string;
-  evidence: string[];
-  toolsUsed: string[];
-  nextStep: string;
-  estimatedCompletion: string;
-  risks: string;
-  needsFromUser: string;
-  lastCompletedStep: string;
-  confidence: string;
-  alternativeApproach: string;
-  decisionLog: DecisionLogEntry[];
-  updatedAt: string;
-}
-
-export interface DecisionLogEntry {
-  timestamp: string;
-  thought: string;
-}
-
-export interface AgentLogEntry {
-  id: string;
-  agentId: string;
-  timestamp: string;
-  level: "info" | "warn" | "error" | "debug";
-  message: string;
-  metadata?: Record<string, unknown>;
-}
-
-export interface AgentMemoryEntry {
-  id: string;
-  agentId: string;
-  key: string;
-  value: unknown;
-  createdAt: string;
-  updatedAt: string;
-}
-
-export interface AgentMetricsSnapshot {
-  id: string;
-  agentId: string;
-  timestamp: string;
-  metrics: AgentMetrics;
+export interface UpdateAgentInput {
+  name?: string;
+  description?: string;
+  purpose?: string;
+  category?: string;
+  owner?: string;
+  status?: AgentStatus;
+  risk_level?: string;
+  implementation_progress?: number;
 }

@@ -24,8 +24,12 @@ import { notifierRoutes } from "./modules/notifier/routes.js";
 import { reviewsRoutes } from "./modules/reviews/routes.js";
 import { focusRoutes } from "./modules/focus/routes.js";
 import { budgetRoutes } from "./modules/budget/routes.js";
+import { controlAgentsRoutes } from "./modules/control/agents.js";
+import { controlUseCasesRoutes } from "./modules/control/use-cases.js";
+import { controlCapabilitiesRoutes } from "./modules/control/capabilities.js";
 import { weeklyRoutes } from "./modules/weekly/routes.js";
 import { executiveRoutes } from "./modules/executive/routes.js";
+
 import { startCronScheduler, stopCronScheduler } from "./services/cron-scheduler.js";
 import { closeRedisClient } from "./infrastructure/redis.js";
 import { closeQueue } from "./infrastructure/queue.js";
@@ -72,6 +76,9 @@ async function start(): Promise<void> {
   await app.register(budgetRoutes, { prefix: "/budget" });
   await app.register(weeklyRoutes, { prefix: "/weekly" });
   await app.register(executiveRoutes);
+  await app.register(controlAgentsRoutes);
+  await app.register(controlUseCasesRoutes);
+  await app.register(controlCapabilitiesRoutes);
 
   app.setErrorHandler((error: Error & { statusCode?: number }, _request, reply) => {
     app.log.error({ err: error }, "Unhandled API error");

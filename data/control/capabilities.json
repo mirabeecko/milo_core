@@ -1,0 +1,83 @@
+[
+  {
+    "id": "cap-1783722930617",
+    "capability_code": "document_search",
+    "name": "Fulltextové vyhledávání",
+    "description": "Markdown, PDF, zdrojový kód",
+    "category": "knowledge",
+    "created_at": "2026-07-10T22:35:30.617Z",
+    "updated_at": "2026-07-10T22:35:30.617Z"
+  },
+  {
+    "id": "cap-1783722930617",
+    "capability_code": "ocr",
+    "name": "OCR",
+    "description": "Optické rozpoznávání textu",
+    "category": "knowledge",
+    "created_at": "2026-07-10T22:35:30.617Z",
+    "updated_at": "2026-07-10T22:35:30.617Z"
+  },
+  {
+    "id": "cap-1783722930617",
+    "capability_code": "deadline_extraction",
+    "name": "Extrakce lhůt",
+    "description": "Vyhledání datumů v dokumentech",
+    "category": "legal",
+    "created_at": "2026-07-10T22:35:30.617Z",
+    "updated_at": "2026-07-10T22:35:30.617Z"
+  },
+  {
+    "id": "cap-1783722930617",
+    "capability_code": "gmail_search",
+    "name": "Gmail vyhledávání",
+    "description": "Čtení a klasifikace emailů",
+    "category": "communication",
+    "created_at": "2026-07-10T22:35:30.617Z",
+    "updated_at": "2026-07-10T22:35:30.617Z"
+  },
+  {
+    "id": "cap-1783722930617",
+    "capability_code": "telegram_send",
+    "name": "Telegram odesílání",
+    "description": "Odesílání zpráv",
+    "category": "communication",
+    "created_at": "2026-07-10T22:35:30.617Z",
+    "updated_at": "2026-07-10T22:35:30.618Z"
+  },
+  {
+    "id": "cap-1783722930618",
+    "capability_code": "docker_health",
+    "name": "Docker health check",
+    "description": "Monitoring kontejnerů",
+    "category": "infrastructure",
+    "created_at": "2026-07-10T22:35:30.618Z",
+    "updated_at": "2026-07-10T22:35:30.618Z"
+  },
+  {
+    "id": "cap-1783722930618",
+    "capability_code": "backup",
+    "name": "Zálohování",
+    "description": "Automatické zálohy",
+    "category": "infrastructure",
+    "created_at": "2026-07-10T22:35:30.618Z",
+    "updated_at": "2026-07-10T22:35:30.618Z"
+  },
+  {
+    "id": "cap-1783722930618",
+    "capability_code": "git_diff",
+    "name": "Git diff",
+    "description": "Analýza změn v repozitáři",
+    "category": "development",
+    "created_at": "2026-07-10T22:35:30.618Z",
+    "updated_at": "2026-07-10T22:35:30.618Z"
+  },
+  {
+    "id": "cap-1783722930618",
+    "capability_code": "code_review",
+    "name": "Code review",
+    "description": "Kontrola kvality kódu",
+    "category": "quality",
+    "created_at": "2026-07-10T22:35:30.618Z",
+    "updated_at": "2026-07-10T22:35:30.618Z"
+  }
+]

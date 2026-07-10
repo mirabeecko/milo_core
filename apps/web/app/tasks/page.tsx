@@ -298,9 +298,9 @@ export default function TasksPage() {
                       )}
 
                       <div className="mt-2 flex items-center gap-3 flex-wrap text-xs text-muted-foreground">
-                        {task.toolsUsed.length > 0 && (
+                        {(task.toolsUsed || []).length > 0 && (
                           <div className="flex items-center gap-1 flex-wrap">
-                            {task.toolsUsed.map((tool) => (
+                            {(task.toolsUsed || []).map((tool) => (
                               <Badge key={tool} variant="secondary" className="text-[10px] px-1.5 py-0">
                                 {tool}
                               </Badge>

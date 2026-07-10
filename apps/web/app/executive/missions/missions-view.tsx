@@ -6,7 +6,6 @@ import {
   CheckCircle2,
   XCircle,
   Clock,
-  AlertCircle,
   ChevronDown,
   ChevronUp,
 } from "lucide-react";
@@ -17,6 +16,7 @@ import { cn } from "@/lib/utils";
 import type { Mission } from "@/lib/data/executive/types";
 import { useExecutiveMissions } from "@/lib/data/executive/use-executive-queries";
 import { LiveIndicator } from "@/app/executive/live-indicator";
+import { ProgressRing } from "@/components/ui/progress-ring";
 
 interface Props {
   missions: Mission[];
@@ -30,12 +30,12 @@ export function MissionsView({ missions: initialMissions }: Props) {
   const failed = missions.filter((m) => m.status === "failed");
   const running = missions.filter((m) => m.status === "running");
 
-  const statusIcon = (status: Mission["status"]) => {
+  const missionRing = (status: Mission["status"]) => {
     switch (status) {
-      case "completed": return <CheckCircle2 className="h-4 w-4 text-emerald-500" />;
-      case "failed": return <XCircle className="h-4 w-4 text-rose-500" />;
-      case "running": return <Bot className="h-4 w-4 text-blue-500 animate-pulse" />;
-      default: return <Clock className="h-4 w-4 text-muted-foreground" />;
+      case "completed": return <ProgressRing value={100} size={24} strokeWidth={2.5} color="emerald" />;
+      case "failed": return <ProgressRing value={100} size={24} strokeWidth={2.5} color="rose" />;
+      case "running": return <ProgressRing value={60} size={24} strokeWidth={2.5} color="blue" />;
+      default: return <ProgressRing value={0} size={24} strokeWidth={2.5} color="muted" />;
     }
   };
 
@@ -123,7 +123,7 @@ export function MissionsView({ missions: initialMissions }: Props) {
                 onClick={() => setExpandedId(expandedId === mission.id ? null : mission.id)}
                 className="w-full flex items-center gap-3 p-3 hover:bg-accent/50 transition-colors text-left"
               >
-                {statusIcon(mission.status)}
+                {missionRing(mission.status)}
                 <div className="min-w-0 flex-1">
                   <p className="text-sm font-medium truncate">{mission.title}</p>
                   <p className="text-xs text-muted-foreground truncate">
@@ -193,7 +193,7 @@ export function MissionsView({ missions: initialMissions }: Props) {
       </Card>
 
       <p className="text-xs text-muted-foreground text-center">
-        Data source: apps/api/data/missions.json — lokální soubor
+        Zdroj: Executive API — live data z /executive/missions
       </p>
     </div>
   );

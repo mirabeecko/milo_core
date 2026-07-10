@@ -127,7 +127,7 @@ export function DepartmentsView({ departments: initialDepartments }: Props) {
       </div>
 
       <p className="text-xs text-muted-foreground text-center">
-        Zdroj: docs/board/EXECUTIVE_BOARD_AND_DEPARTMENTS.md — statická data, ne live telemetrie
+        Zdroj: Executive API — live data z /executive/departments
       </p>
     </div>
   );

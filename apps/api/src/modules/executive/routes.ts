@@ -323,8 +323,19 @@ export async function executiveRoutes(
   // ═══════════════════════════════════════════════════════════════════
 
   app.get("/executive/risks", async (_req, reply) => {
-    const events = readRecentEvents(500).filter((e) => e.event_type === "risk_raised");
-    return reply.send({ count: events.length, risks: events });
+    const highRiskApprovals = listApprovals("pending").filter((a) => a.risk_level === "critical" || a.risk_level === "high");
+    const riskEvents = readRecentEvents(100).filter((e) =>
+      ["mission_blocked", "approval_requested", "risk_raised", "mission_failed"].includes(e.event_type)
+    );
+    const risks = [
+      ...highRiskApprovals.map((a) => ({
+        event_id: a.id, event_type: "approval_pending", department: a.department,
+        summary: a.what, timestamp: a.requested_at,
+        payload: { risk_level: a.risk_level, why: a.why },
+      })),
+      ...riskEvents,
+    ];
+    return reply.send({ count: risks.length, risks });
   });
 
   // ═══════════════════════════════════════════════════════════════════
