@@ -7,14 +7,14 @@
     "purpose": "Orchestrace organizace",
     "category": "executive",
     "owner": "Vlastník",
-    "status": "draft",
+    "status": "partially_operational",
     "lifecycle_status": "specified",
     "risk_level": "medium",
     "priority": "normal",
-    "implementation_progress": 0,
+    "implementation_progress": 100,
     "runtime_status": "offline",
     "created_at": "2026-07-10T22:35:30.610Z",
-    "updated_at": "2026-07-10T22:35:30.615Z"
+    "updated_at": "2026-07-10T22:39:59.346Z"
   },
   {
     "id": "agent-1783722930615-o5tk",
@@ -24,14 +24,14 @@
     "purpose": "Architektura",
     "category": "executive",
     "owner": "OC",
-    "status": "draft",
+    "status": "specified",
     "lifecycle_status": "specified",
     "risk_level": "medium",
     "priority": "normal",
     "implementation_progress": 0,
     "runtime_status": "offline",
     "created_at": "2026-07-10T22:35:30.615Z",
-    "updated_at": "2026-07-10T22:35:30.615Z"
+    "updated_at": "2026-07-10T22:39:59.346Z"
   },
   {
     "id": "agent-1783722930615-n8b3",
@@ -41,14 +41,14 @@
     "purpose": "Vývoj",
     "category": "executive",
     "owner": "ARCH",
-    "status": "draft",
+    "status": "specified",
     "lifecycle_status": "specified",
     "risk_level": "medium",
     "priority": "normal",
     "implementation_progress": 0,
     "runtime_status": "offline",
     "created_at": "2026-07-10T22:35:30.615Z",
-    "updated_at": "2026-07-10T22:35:30.615Z"
+    "updated_at": "2026-07-10T22:39:59.346Z"
   },
   {
     "id": "agent-1783722930615-bnov",
@@ -58,14 +58,14 @@
     "purpose": "Knowledge management",
     "category": "executive",
     "owner": "OC",
-    "status": "draft",
+    "status": "partially_operational",
     "lifecycle_status": "specified",
     "risk_level": "medium",
     "priority": "normal",
-    "implementation_progress": 0,
+    "implementation_progress": 100,
     "runtime_status": "offline",
     "created_at": "2026-07-10T22:35:30.615Z",
-    "updated_at": "2026-07-10T22:35:30.615Z"
+    "updated_at": "2026-07-10T22:39:59.346Z"
   },
   {
     "id": "agent-1783722930615-kj6k",
@@ -75,14 +75,14 @@
     "purpose": "Komunikace",
     "category": "executive",
     "owner": "OC",
-    "status": "draft",
+    "status": "partially_operational",
     "lifecycle_status": "specified",
     "risk_level": "medium",
     "priority": "normal",
-    "implementation_progress": 0,
+    "implementation_progress": 100,
     "runtime_status": "offline",
     "created_at": "2026-07-10T22:35:30.615Z",
-    "updated_at": "2026-07-10T22:35:30.615Z"
+    "updated_at": "2026-07-10T22:39:59.347Z"
   },
   {
     "id": "agent-1783722930615-mtsk",
@@ -92,14 +92,14 @@
     "purpose": "Provoz",
     "category": "executive",
     "owner": "OC",
-    "status": "draft",
+    "status": "partially_operational",
     "lifecycle_status": "specified",
     "risk_level": "medium",
     "priority": "normal",
-    "implementation_progress": 0,
+    "implementation_progress": 100,
     "runtime_status": "offline",
     "created_at": "2026-07-10T22:35:30.615Z",
-    "updated_at": "2026-07-10T22:35:30.615Z"
+    "updated_at": "2026-07-10T22:39:59.347Z"
   },
   {
     "id": "agent-1783722930615-ng4k",
@@ -109,13 +109,13 @@
     "purpose": "Kvalita",
     "category": "executive",
     "owner": "OC",
-    "status": "draft",
+    "status": "partially_operational",
     "lifecycle_status": "specified",
     "risk_level": "medium",
     "priority": "normal",
-    "implementation_progress": 0,
+    "implementation_progress": 100,
     "runtime_status": "offline",
     "created_at": "2026-07-10T22:35:30.615Z",
-    "updated_at": "2026-07-10T22:35:30.615Z"
+    "updated_at": "2026-07-10T22:39:59.347Z"
   }
 ]
