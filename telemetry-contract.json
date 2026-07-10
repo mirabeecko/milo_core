@@ -1,0 +1,279 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "MiLO Telemetry Contract v1.0",
+  "description": "Autoritativní datový kontrakt pro MiLO Executive Dashboard. Dashboard tým konzumuje tento kontrakt — nezávislý na Hermes, nezávislý na LLM providerovi.",
+  "meta": {
+    "version": "1.0.0",
+    "authority": "AUTHORITATIVE — tento soubor definuje všechny události, které dashboard zobrazuje.",
+    "maintainer": "OC Department",
+    "update_policy": "Změny přes ADR schválené Executive Boardem.",
+    "generated": "2026-07-08T00:00:00Z"
+  },
+  "status_model": {
+    "department_status": {
+      "type": "string",
+      "enum": ["active", "ready", "blocked", "paused", "retired"],
+      "description": "active=plně funkční, ready=připraveno ale čeká na blokátor, blocked=čeká na externí závislost, paused=dočasně pozastaveno, retired=zrušeno"
+    },
+    "mission_status": {
+      "type": "string",
+      "enum": ["pending", "planning", "active", "reviewing", "completed", "failed", "cancelled", "blocked"],
+      "description": "Stavy mise podle CONCEPTUAL_MODEL.md"
+    },
+    "agent_status": {
+      "type": "string",
+      "enum": ["offline", "idle", "starting", "working", "waiting", "paused", "failed", "stopping"],
+      "description": "Stavy agenta podle ADR-0003"
+    },
+    "risk_level": {
+      "type": "string",
+      "enum": ["low", "medium", "high", "critical"],
+      "description": "Úroveň rizika"
+    },
+    "approval_status": {
+      "type": "string",
+      "enum": ["not_required", "pending", "approved", "rejected"],
+      "description": "Stav schválení"
+    }
+  },
+  "data_ownership": {
+    "departments": "organization-registry.json → departments → id",
+    "agents": "organization-registry.json → agents → id",
+    "missions": "Vlastněno zadavatelem mise. ID formát: M-{DEPARTMENT}-NNN.",
+    "events": "Generovány komponentami MiLO. Dashboard je read-only konzument.",
+    "constitution": "CONSTITUTION.md — read-only, neměnný bez Owner approval"
+  },
+  "events": {
+    "objective_started": {
+      "id": "objective_started",
+      "description": "Chief definoval nový strategický cíl",
+      "schema": {
+        "event_id": "string (UUID)",
+        "event_type": "\"objective_started\"",
+        "timestamp": "string (ISO 8601)",
+        "objective_id": "string",
+        "objective_name": "string",
+        "department": "string (department ID — volitelné, null pokud průřezový)",
+        "summary": "string (jedna věta — o co jde)",
+        "priority": "\"critical\" | \"high\" | \"normal\" | \"low\"",
+        "deadline": "string (ISO 8601 — volitelné)"
+      }
+    },
+    "mission_created": {
+      "id": "mission_created",
+      "description": "Nová mise byla vytvořena a přiřazena oddělení",
+      "schema": {
+        "event_id": "string (UUID)",
+        "event_type": "\"mission_created\"",
+        "timestamp": "string (ISO 8601)",
+        "mission_id": "string (M-{DEPT}-NNN)",
+        "mission_name": "string",
+        "department": "string (department ID)",
+        "owner_agent": "string (agent ID)",
+        "priority": "\"critical\" | \"high\" | \"normal\" | \"low\"",
+        "autonomy_level": "integer (0–4)",
+        "deadline": "string (ISO 8601 — volitelné)",
+        "summary": "string"
+      }
+    },
+    "mission_assigned": {
+      "id": "mission_assigned",
+      "description": "Mise byla přiřazena konkrétnímu agentovi",
+      "schema": {
+        "event_id": "string (UUID)",
+        "event_type": "\"mission_assigned\"",
+        "timestamp": "string (ISO 8601)",
+        "mission_id": "string",
+        "department": "string",
+        "agent_id": "string (komu byla přiřazena)",
+        "assigned_by": "string (kdo přiřadil — Department Lead ID)"
+      }
+    },
+    "mission_progress": {
+      "id": "mission_progress",
+      "description": "Mise postoupila — změna stavu nebo progress",
+      "schema": {
+        "event_id": "string (UUID)",
+        "event_type": "\"mission_progress\"",
+        "timestamp": "string (ISO 8601)",
+        "mission_id": "string",
+        "department": "string",
+        "agent_id": "string",
+        "previous_status": "string (mission_status)",
+        "new_status": "string (mission_status)",
+        "progress_pct": "integer (0–100)",
+        "summary": "string (co se změnilo)"
+      }
+    },
+    "mission_blocked": {
+      "id": "mission_blocked",
+      "description": "Mise narazila na blokátor",
+      "schema": {
+        "event_id": "string (UUID)",
+        "event_type": "\"mission_blocked\"",
+        "timestamp": "string (ISO 8601)",
+        "mission_id": "string",
+        "department": "string",
+        "agent_id": "string",
+        "blocker_description": "string (co blokuje)",
+        "blocker_type": "\"dependency\" | \"approval\" | \"resource\" | \"technical\" | \"external\"",
+        "blocked_by": "string (mission_id, department_id, nebo 'owner')",
+        "escalated": "boolean",
+        "escalated_to": "string (volitelné — agent_id nebo 'owner')"
+      }
+    },
+    "mission_completed": {
+      "id": "mission_completed",
+      "description": "Mise byla dokončena (úspěšně nebo neúspěšně)",
+      "schema": {
+        "event_id": "string (UUID)",
+        "event_type": "\"mission_completed\"",
+        "timestamp": "string (ISO 8601)",
+        "mission_id": "string",
+        "department": "string",
+        "agent_id": "string",
+        "result": "\"success\" | \"partial_success\" | \"failure\"",
+        "summary": "string (co se povedlo/nepovedlo)",
+        "lessons_learned": "string (volitelné)",
+        "artifact_refs": ["string (cesty k výstupním souborům)"],
+        "duration_seconds": "number"
+      }
+    },
+    "agent_created": {
+      "id": "agent_created",
+      "description": "Nový agent byl vytvořen (Specialist nebo Worker)",
+      "schema": {
+        "event_id": "string (UUID)",
+        "event_type": "\"agent_created\"",
+        "timestamp": "string (ISO 8601)",
+        "agent_id": "string",
+        "agent_name": "string",
+        "agent_type": "\"executive\" | \"specialist\" | \"worker\"",
+        "department": "string",
+        "created_by": "string (kdo vytvořil — Department Lead ID)",
+        "parent_mission": "string (mission_id — volitelné, pro Workery)"
+      }
+    },
+    "agent_started": {
+      "id": "agent_started",
+      "description": "Agent přešel do aktivního stavu",
+      "schema": {
+        "event_id": "string (UUID)",
+        "event_type": "\"agent_started\"",
+        "timestamp": "string (ISO 8601)",
+        "agent_id": "string",
+        "department": "string",
+        "previous_status": "string (agent_status)",
+        "new_status": "string (agent_status)"
+      }
+    },
+    "agent_waiting": {
+      "id": "agent_waiting",
+      "description": "Agent čeká na externí vstup (lidské schválení, API)",
+      "schema": {
+        "event_id": "string (UUID)",
+        "event_type": "\"agent_waiting\"",
+        "timestamp": "string (ISO 8601)",
+        "agent_id": "string",
+        "department": "string",
+        "waiting_for": "\"owner_approval\" | \"api_response\" | \"dependency\" | \"human_input\"",
+        "waiting_since": "string (ISO 8601)",
+        "timeout_at": "string (ISO 8601 — volitelné)",
+        "summary": "string (na co čeká)"
+      }
+    },
+    "agent_failed": {
+      "id": "agent_failed",
+      "description": "Agent selhal při vykonávání úkolu",
+      "schema": {
+        "event_id": "string (UUID)",
+        "event_type": "\"agent_failed\"",
+        "timestamp": "string (ISO 8601)",
+        "agent_id": "string",
+        "department": "string",
+        "mission_id": "string (volitelné)",
+        "error_type": "string",
+        "error_summary": "string",
+        "retry_count": "integer",
+        "will_retry": "boolean"
+      }
+    },
+    "artifact_created": {
+      "id": "artifact_created",
+      "description": "Byl vytvořen výstupní artefakt (dokument, kód, report)",
+      "schema": {
+        "event_id": "string (UUID)",
+        "event_type": "\"artifact_created\"",
+        "timestamp": "string (ISO 8601)",
+        "artifact_type": "\"document\" | \"code\" | \"test\" | \"report\" | \"adr\" | \"mission_record\" | \"board_record\"",
+        "artifact_path": "string (relativní cesta v repozitáři)",
+        "department": "string",
+        "agent_id": "string",
+        "mission_id": "string (volitelné)",
+        "summary": "string"
+      }
+    },
+    "decision_proposed": {
+      "id": "decision_proposed",
+      "description": "Bylo navrženo nové rozhodnutí (ADR/DR)",
+      "schema": {
+        "event_id": "string (UUID)",
+        "event_type": "\"decision_proposed\"",
+        "timestamp": "string (ISO 8601)",
+        "decision_id": "string (ADR-NNNN nebo DR-YYYY-NNN)",
+        "decision_type": "\"adr\" | \"dr\"",
+        "title": "string",
+        "department": "string",
+        "proposed_by": "string (agent_id)",
+        "status": "\"proposed\"",
+        "requires_approval": "boolean"
+      }
+    },
+    "decision_approved": {
+      "id": "decision_approved",
+      "description": "Rozhodnutí bylo schváleno",
+      "schema": {
+        "event_id": "string (UUID)",
+        "event_type": "\"decision_approved\"",
+        "timestamp": "string (ISO 8601)",
+        "decision_id": "string",
+        "approved_by": "\"board\" | \"chief\" | \"owner\"",
+        "vote": "string (volitelné — 'X pro / Y proti / Z zdrželo')"
+      }
+    },
+    "risk_raised": {
+      "id": "risk_raised",
+      "description": "Bylo identifikováno nové riziko",
+      "schema": {
+        "event_id": "string (UUID)",
+        "event_type": "\"risk_raised\"",
+        "timestamp": "string (ISO 8601)",
+        "risk_id": "string",
+        "risk_description": "string",
+        "risk_level": "string (risk_level)",
+        "department": "string",
+        "mission_id": "string (volitelné)",
+        "raised_by": "string (agent_id)",
+        "mitigation": "string (volitelné)"
+      }
+    },
+    "approval_requested": {
+      "id": "approval_requested",
+      "description": "Je vyžadováno schválení Vlastníkem",
+      "schema": {
+        "event_id": "string (UUID)",
+        "event_type": "\"approval_requested\"",
+        "timestamp": "string (ISO 8601)",
+        "approval_id": "string",
+        "requested_by": "string (agent_id)",
+        "department": "string",
+        "mission_id": "string (volitelné)",
+        "what": "string (co se požaduje schválit)",
+        "why": "string (proč je potřeba schválení)",
+        "risk_level": "string (risk_level)",
+        "status": "\"pending\"",
+        "timeout_hours": "integer (po kolika hodinách eskalovat)"
+      }
+    }
+  }
+}

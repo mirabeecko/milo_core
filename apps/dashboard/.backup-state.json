@@ -1,0 +1,16 @@
+{
+  "daily_hashes": [
+    "8ff926c722967066529ec54bfebb37079dbcdd340db969f53f607f3748636a68",
+    "620fabe89189ce88f948beeab77b5f70aba41c9f7849ffe68212e40d8285f41c",
+    "97d79a581ef44c9aabbef5cc21de9c31b8825fbb411e773d03e822b4a8715e09",
+    "8b41767983d0c5e3083cb7731e6b7cf2e137551478d5c00365a58f3f472aeb6c"
+  ],
+  "daily_files": [
+    "/Users/mb/dev/milo-os/backups/daily/milo-backup-daily-2026-07-06_194526.tar.gz",
+    "/Users/mb/dev/milo-os/backups/daily/milo-backup-daily-2026-07-06_200305.tar.gz",
+    "/Users/mb/dev/milo-os/backups/daily/milo-backup-daily-2026-07-06_213307.tar.gz",
+    "/Users/mb/dev/milo-os/backups/daily/milo-backup-daily-2026-07-06_214926.tar.gz"
+  ],
+  "weekly_files": [],
+  "last_backup": "2026-07-06T21:49:26.606237"
+}

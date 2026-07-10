@@ -11,38 +11,9 @@ export interface ObsidianSearchResponse {
   query: string;
 }
 
-const demoObsidianNotes: ObsidianNote[] = [
-  {
-    id: "demo-obsidian-1",
-    title: "Welcome to MiLO",
-    path: "welcome.md",
-    content: "# Welcome to MiLO\n\nToto je demo poznámka z Obsidianu.\n\n#milo #setup",
-    modifiedAt: new Date().toISOString(),
-    tags: ["#milo", "#setup"],
-  },
-  {
-    id: "demo-obsidian-2",
-    title: "Daily Notes Template",
-    path: "templates/daily.md",
-    content: "# {{date}}\n\n## Priority\n- [ ] Hlavní úkol\n\n## Poznámky\n\n#daily",
-    modifiedAt: new Date(Date.now() - 86400_000).toISOString(),
-    tags: ["#daily"],
-  },
-];
-
 export async function getObsidianNotes(query?: string, maxResults = 50): Promise<ObsidianNote[]> {
   if (useMockData) {
-    let notes = demoObsidianNotes;
-    if (query) {
-      const lower = query.toLowerCase();
-      notes = notes.filter(
-        (note) =>
-          note.title.toLowerCase().includes(lower) ||
-          note.content.toLowerCase().includes(lower) ||
-          note.tags.some((tag) => tag.toLowerCase().includes(lower)),
-      );
-    }
-    return notes.slice(0, maxResults);
+    return [];
   }
 
   const params = new URLSearchParams();
@@ -54,13 +25,7 @@ export async function getObsidianNotes(query?: string, maxResults = 50): Promise
 
 export async function searchObsidian(query: string): Promise<ObsidianNote[]> {
   if (useMockData) {
-    const lower = query.toLowerCase();
-    return demoObsidianNotes.filter(
-      (note) =>
-        note.title.toLowerCase().includes(lower) ||
-        note.content.toLowerCase().includes(lower) ||
-        note.tags.some((tag) => tag.toLowerCase().includes(lower)),
-    );
+    return [];
   }
 
   const response = await apiClient<ObsidianSearchResponse>(
@@ -71,7 +36,7 @@ export async function searchObsidian(query: string): Promise<ObsidianNote[]> {
 
 export async function getObsidianNote(id: string): Promise<ObsidianNote | null> {
   if (useMockData) {
-    return demoObsidianNotes.find((note) => note.id === id) ?? null;
+    return null;
   }
 
   const response = await apiClient<{ note: ObsidianNote }>(`/knowledge/obsidian/${id}`);
@@ -80,7 +45,7 @@ export async function getObsidianNote(id: string): Promise<ObsidianNote | null> 
 
 export async function reindexObsidian(): Promise<{ indexed: number }> {
   if (useMockData) {
-    return { indexed: demoObsidianNotes.length };
+    return { indexed: 0 };
   }
 
   return apiClient<{ indexed: number }>("/knowledge/index", { method: "POST" });
@@ -91,7 +56,8 @@ export async function getObsidianStatus(): Promise<ObsidianStatus> {
     return {
       configured: false,
       demo: true,
-      noteCount: demoObsidianNotes.length,
+      noteCount: 0,
+      message: "Obsidian vault není nakonfigurován",
     };
   }
 
@@ -104,7 +70,7 @@ export async function setObsidianVaultPath(vaultPath: string): Promise<ObsidianS
       configured: true,
       demo: false,
       vaultPath,
-      noteCount: demoObsidianNotes.length,
+      noteCount: 0,
       indexedAt: new Date().toISOString(),
     };
   }

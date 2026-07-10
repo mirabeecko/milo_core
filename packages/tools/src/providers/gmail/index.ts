@@ -1,20 +1,34 @@
 import { google, gmail_v1 } from "googleapis";
 import { EmailMessage, ListEmailsOptions } from "./types.js";
+import type { GoogleTokens } from "../google/auth.js";
 
 export interface GmailClientConfig {
   accessToken: string;
   refreshToken?: string;
+  clientId?: string;
+  clientSecret?: string;
+  onTokensRefreshed?: (tokens: GoogleTokens) => void;
 }
 
 export class GmailClient {
   private gmail;
 
   constructor(config: GmailClientConfig) {
-    const auth = new google.auth.OAuth2();
+    const auth = new google.auth.OAuth2(config.clientId, config.clientSecret);
     auth.setCredentials({
       access_token: config.accessToken,
       refresh_token: config.refreshToken,
     });
+
+    if (config.onTokensRefreshed) {
+      auth.on("tokens", (tokens) => {
+        config.onTokensRefreshed?.({
+          accessToken: tokens.access_token ?? config.accessToken,
+          refreshToken: tokens.refresh_token ?? config.refreshToken,
+          expiryDate: tokens.expiry_date ?? undefined,
+        });
+      });
+    }
 
     this.gmail = google.gmail({ version: "v1", auth });
   }

@@ -1,14 +1,17 @@
 import type { AgentDefinition, AgentStatus, AgentTask, LiveWorkExplanation } from "@milo/shared";
+import { CalendarClient } from "@milo/tools";
 import { AgentEntityImpl } from "../agent.js";
 import { AgentStateMachine } from "../runtime/agent-state-machine.js";
 import type { AgentEntityDeps } from "../agent.js";
 import {
   DefaultCalendarService,
+  GoogleCalendarProvider,
   MockCalendarProvider,
 } from "../services/calendar/index.js";
 import type {
   Calendar,
   CalendarEvent,
+  CalendarProvider,
   CalendarSuggestion,
   Conflict,
   DayAnalysis,
@@ -23,6 +26,7 @@ export interface CalendarAgentState {
   upcoming: CalendarEvent[];
   lastSyncedAt?: string;
   taskProgress: number;
+  isDemoData?: boolean;
 }
 
 export interface CalendarSimulationStep {
@@ -50,6 +54,7 @@ export class CalendarAgent extends AgentEntityImpl {
   private runningTick?: Promise<void>;
   private currentStepIndex = 0;
   private calendarService = new DefaultCalendarService(new MockCalendarProvider());
+  private isDemoData = true;
   private state: CalendarAgentState & { activeTask?: AgentTask; taskHistory: AgentTask[]; pendingQueue: AgentTask[] } = {
     calendars: [],
     todayEvents: [],
@@ -247,7 +252,11 @@ export class CalendarAgent extends AgentEntityImpl {
 
   async start(): Promise<void> {
     await super.start();
-    await this.calendarService.sync();
+    try {
+      await this.calendarService.sync();
+    } catch (err) {
+      console.warn({ err }, "Initial calendar sync failed, using mock provider");
+    }
     this.startSimulation();
   }
 
@@ -272,19 +281,53 @@ export class CalendarAgent extends AgentEntityImpl {
   }
 
   getTaskHistory(): AgentTask[] {
-    return this.state.taskHistory;
+    return [...this.state.taskHistory, ...this.taskHistory];
   }
 
   getPendingQueue(): AgentTask[] {
-    return this.state.pendingQueue;
+    return [...this.state.pendingQueue, ...this.pendingQueue];
   }
 
   getCalendarState(): CalendarAgentState {
-    return this.state;
+    return { ...this.state, isDemoData: this.isDemoData };
+  }
+
+  private async resolveProvider(): Promise<CalendarProvider> {
+    const googleAuth = this.deps.googleAuth;
+    if (googleAuth?.isConfigured) {
+      const tokens = await googleAuth.getTokens("calendar");
+      if (tokens) {
+        const client = new CalendarClient({
+          accessToken: tokens.accessToken,
+          refreshToken: tokens.refreshToken,
+          clientId: googleAuth.clientId,
+          clientSecret: googleAuth.clientSecret,
+          onTokensRefreshed: (refreshed) => void googleAuth.saveTokens("calendar", refreshed),
+        });
+        this.isDemoData = false;
+        return new GoogleCalendarProvider(client);
+      }
+    }
+    this.isDemoData = true;
+    return new MockCalendarProvider();
   }
 
   async syncCalendar(): Promise<void> {
-    await this.calendarService.sync();
+    try {
+      this.calendarService = new DefaultCalendarService(
+        this.isDemoData ? new MockCalendarProvider() : await this.resolveProvider(),
+      );
+      await this.calendarService.sync();
+    } catch (err) {
+      if (!this.isDemoData) {
+        console.warn("Calendar sync failed, falling back to mock provider:", err);
+        this.isDemoData = true;
+        this.calendarService = new DefaultCalendarService(new MockCalendarProvider());
+        await this.calendarService.sync();
+      } else {
+        throw err;
+      }
+    }
     this.state.calendars = this.calendarService.getCalendars();
     this.state.lastSyncedAt = this.calendarService.getLastSyncedAt();
     const today = new Date().toISOString().split("T")[0];
@@ -305,10 +348,18 @@ export class CalendarAgent extends AgentEntityImpl {
     if (this.stopped) return;
 
     this.simulationInterval = setInterval(() => {
-      this.runningTick = this.simulateTick().finally(() => { this.runningTick = undefined; });
+      this.runningTick = this.simulateTick()
+        .catch((err) => {
+          console.error({ err }, "Calendar simulation tick failed");
+        })
+        .finally(() => { this.runningTick = undefined; });
     }, 4000 + Math.random() * 4000);
 
-    this.runningTick = this.simulateTick().finally(() => { this.runningTick = undefined; });
+    this.runningTick = this.simulateTick()
+      .catch((err) => {
+        console.error({ err }, "Calendar simulation tick failed");
+      })
+      .finally(() => { this.runningTick = undefined; });
   }
 
   private stopSimulation(): void {
@@ -428,9 +479,9 @@ export class CalendarAgent extends AgentEntityImpl {
       currentActivity: "Čekám na další synchronizaci nebo instrukci.",
       goal: "Být připraven okamžitě reagovat na změny v kalendáři.",
       reason: "Calendar Agent musí být vždy připraven hlídat čas uživatele.",
-      findings: `Synchronizováno ${this.state.calendars.length} kalendářů, ${this.state.todayEvents.length} událostí dnes, ${this.state.conflicts.length} kolizí, ${this.state.suggestions.length} doporučení.`,
+      findings: `Synchronizováno ${this.state.calendars.length} kalendářů, ${this.state.todayEvents.length} událostí dnes, ${this.state.conflicts.length} kolizí, ${this.state.suggestions.length} doporučení.${this.isDemoData ? " Kalendář není připojen. Připojte Google Calendar pro reálná data." : " (reálná data z Google Kalendáře)"}`,
       evidence: ["Kalendáře", "Dnešní události", "Analýza dne"],
-      toolsUsed: ["Calendar Service", "Mock Provider"],
+      toolsUsed: this.isDemoData ? ["Calendar Service", "Mock Provider"] : ["Calendar Service", "Google Calendar API"],
       nextStep: "Synchronizovat kalendář nebo reagovat na nový požadavek.",
       estimatedCompletion: "Neurčito",
       risks: "Žádná.",

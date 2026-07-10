@@ -2,6 +2,10 @@ import { FastifyInstance, FastifyPluginOptions } from "fastify";
 import { z } from "zod";
 import { AuthService } from "./service.js";
 import { authMiddleware, AuthenticatedRequest } from "./middleware.js";
+import { CalendarService } from "../calendar/service.js";
+import { EmailService } from "../email/service.js";
+import { setGoogleTokens, type GoogleService } from "../../config/google-tokens.js";
+import { config } from "../../config/index.js";
 
 const loginSchema = z.object({
   email: z.string().email(),
@@ -64,6 +68,51 @@ export async function authRoutes(
     } catch (error) {
       request.log.error(error);
       return reply.status(500).send({ error: "Logout failed" });
+    }
+  });
+
+  app.get("/google/callback", async (request, reply) => {
+    const query = request.query as { code?: string; state?: string; error?: string };
+
+    if (query.error) {
+      return reply.status(400).send({ error: "Google OAuth denied" });
+    }
+
+    if (!query.code || !query.state) {
+      return reply.status(400).send({ error: "Missing code or state" });
+    }
+
+    let state: { userId?: string; service?: GoogleService };
+    try {
+      state = JSON.parse(query.state);
+    } catch {
+      return reply.status(400).send({ error: "Invalid state" });
+    }
+
+    const { userId, service } = state;
+    if (!userId || !service) {
+      return reply.status(400).send({ error: "Invalid state" });
+    }
+
+    try {
+      if (service === "calendar") {
+        const calendarService = new CalendarService();
+        const tokens = await calendarService.exchangeCode(query.code);
+        await setGoogleTokens(userId, "calendar", tokens);
+        return reply.redirect(`${config.APP_URL}/calendar?connected=1`);
+      }
+
+      if (service === "email") {
+        const emailService = new EmailService();
+        const tokens = await emailService.exchangeCode(query.code);
+        await setGoogleTokens(userId, "email", tokens);
+        return reply.redirect(`${config.APP_URL}/email?connected=1`);
+      }
+
+      return reply.status(400).send({ error: "Invalid service" });
+    } catch (error) {
+      request.log.error(error);
+      return reply.status(400).send({ error: "Failed to connect Google account" });
     }
   });
 }

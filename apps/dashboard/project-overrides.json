@@ -1,0 +1,21 @@
+{
+  "_comment": "Manualni prepsani casu a nakladu projektu. Scanner toto nacte a prepise vychozi hodnoty.",
+  "overrides": {
+    "webdo24": { "time_spent": 45, "time_remaining": 20, "total_cost_czk": 230, "estimated_remaining_cost_czk": 500 },
+    "webdo24-backend": { "time_spent": 55, "time_remaining": 15, "total_cost_czk": 260, "estimated_remaining_cost_czk": 100 },
+    "executive-ai": { "time_spent": 80, "time_remaining": 15, "total_cost_czk": 450, "estimated_remaining_cost_czk": 200 },
+    "MiLO_Core": { "time_spent": 120, "time_remaining": 200, "total_cost_czk": 320, "estimated_remaining_cost_czk": 2000 },
+    "MiLO_Agent": { "time_spent": 70, "time_remaining": 100, "total_cost_czk": 180, "estimated_remaining_cost_czk": 500 },
+    "marketing_agent": { "time_spent": 35, "time_remaining": 30, "total_cost_czk": 110, "estimated_remaining_cost_czk": 200 },
+    "design-agent": { "time_spent": 40, "time_remaining": 30, "total_cost_czk": 90, "estimated_remaining_cost_czk": 150 },
+    "obcanai": { "time_spent": 100, "time_remaining": 20, "total_cost_czk": 350, "estimated_remaining_cost_czk": 100 },
+    "n8n": { "time_spent": 20, "time_remaining": 5, "total_cost_czk": 50, "estimated_remaining_cost_czk": 30 },
+    "ninja-tyden": { "time_spent": 30, "time_remaining": 25, "total_cost_czk": 80, "estimated_remaining_cost_czk": 150 },
+    "tjkrupkacz25": { "time_spent": 40, "time_remaining": 10, "total_cost_czk": 180, "estimated_remaining_cost_czk": 60 },
+    "SPOL_OS": { "time_spent": 90, "time_remaining": 120, "total_cost_czk": 380, "estimated_remaining_cost_czk": 800 },
+    "she skates": { "time_spent": 25, "time_remaining": 20, "total_cost_czk": 40, "estimated_remaining_cost_czk": 60 },
+    "voice-ai-terminal": { "time_spent": 55, "time_remaining": 35, "total_cost_czk": 160, "estimated_remaining_cost_czk": 250 },
+    "mbrozek-ai": { "time_spent": 60, "time_remaining": 90, "total_cost_czk": 200, "estimated_remaining_cost_czk": 600 },
+    "milo-os": { "time_spent": 6, "time_remaining": 40, "total_cost_czk": 30, "estimated_remaining_cost_czk": 400 }
+  }
+}

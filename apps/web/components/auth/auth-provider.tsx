@@ -53,6 +53,13 @@ export function AuthProvider({ children }: { children: ReactNode }): JSX.Element
     }
 
     const supabase = createSupabaseClient();
+    if (!supabase) {
+      setUser(demoUser);
+      setAccessToken("demo-token");
+      storeToken("demo-token");
+      setIsLoading(false);
+      return;
+    }
 
     void supabase.auth.getSession().then(({ data: { session } }) => {
       const mappedUser = session ? mapUser(session.user) : null;
@@ -85,6 +92,12 @@ export function AuthProvider({ children }: { children: ReactNode }): JSX.Element
     }
 
     const supabase = createSupabaseClient();
+    if (!supabase) {
+      setUser(demoUser);
+      setAccessToken("demo-token");
+      storeToken("demo-token");
+      return;
+    }
     const { data, error } = await supabase.auth.signInWithPassword({ email, password });
 
     if (error) {
@@ -107,6 +120,12 @@ export function AuthProvider({ children }: { children: ReactNode }): JSX.Element
     }
 
     const supabase = createSupabaseClient();
+    if (!supabase) {
+      setUser(null);
+      setAccessToken(null);
+      storeToken(null);
+      return;
+    }
     await supabase.auth.signOut();
     setUser(null);
     setAccessToken(null);

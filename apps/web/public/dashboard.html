@@ -1,0 +1,964 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MiLO — Agentic OS Dashboard</title>
+<style>
+:root {
+  --bg: #03040a;
+  --surface: rgba(255,255,255,0.025);
+  --surface-hover: rgba(255,255,255,0.055);
+  --border: rgba(255,255,255,0.07);
+  --border-strong: rgba(255,255,255,0.13);
+  --text: #f2f4f7;
+  --text-secondary: #8b93a7;
+  --text-muted: #565e73;
+  --accent: #3b82f6;
+  --accent-2: #8b5cf6;
+  --accent-3: #ec4899;
+  --success: #22c55e;
+  --warning: #f59e0b;
+  --danger: #ef4444;
+  --radius: 22px;
+  --radius-sm: 14px;
+  --shadow: 0 28px 90px rgba(0,0,0,0.55);
+}
+* { box-sizing: border-box; margin: 0; }
+html { scroll-behavior: smooth; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif;
+  background: var(--bg); color: var(--text); min-height: 100vh; overflow-x: hidden;
+}
+body::before {
+  content: ""; position: fixed; inset: 0;
+  background: radial-gradient(ellipse at 15% 0%, rgba(59,130,246,0.14) 0%, transparent 45%),
+              radial-gradient(ellipse at 85% 10%, rgba(139,92,246,0.12) 0%, transparent 40%),
+              radial-gradient(ellipse at 50% 100%, rgba(236,72,153,0.08) 0%, transparent 40%);
+  pointer-events: none; z-index: 0;
+}
+.app { display: flex; min-height: 100vh; position: relative; z-index: 1; }
+
+/* Sidebar */
+.sidebar {
+  width: 260px; flex-shrink: 0; background: rgba(255,255,255,0.02);
+  border-right: 1px solid var(--border); backdrop-filter: blur(20px);
+  display: flex; flex-direction: column; padding: 24px 18px;
+  position: sticky; top: 0; height: 100vh; overflow-y: auto;
+}
+.brand { display: flex; align-items: center; gap: 10px; margin-bottom: 30px; }
+.brand-icon {
+  width: 38px; height: 38px; border-radius: 12px;
+  background: linear-gradient(135deg, var(--accent), var(--accent-2));
+  display: grid; place-items: center; font-weight: 800; font-size: 1rem;
+  box-shadow: 0 8px 24px rgba(59,130,246,0.3);
+}
+.brand-text { font-size: 1.2rem; font-weight: 700; letter-spacing: -0.02em; }
+.brand-sub { font-size: 0.65rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.12em; }
+.nav-section { margin-bottom: 22px; }
+.nav-title { font-size: 0.6rem; text-transform: uppercase; letter-spacing: 0.14em; color: var(--text-muted); margin: 0 0 8px 8px; }
+.nav-list { list-style: none; padding: 0; }
+.nav-list li { margin: 3px 0; }
+.nav-list button, .nav-list a {
+  width: 100%; text-align: left; padding: 8px 10px; border-radius: 8px;
+  background: transparent; border: none; color: var(--text-secondary);
+  font-size: 0.85rem; cursor: pointer; display: flex; align-items: center; gap: 8px;
+  transition: .15s; text-decoration: none;
+}
+.nav-list button:hover, .nav-list button.active, .nav-list a:hover { background: var(--surface-hover); color: var(--text); }
+.nav-list button.active { box-shadow: inset 0 0 0 1px var(--border-strong); }
+.nav-badge {
+  margin-left: auto; background: rgba(59,130,246,0.15); color: var(--accent);
+  font-size: 0.6rem; padding: 2px 6px; border-radius: 999px; font-weight: 600;
+}
+
+/* Main */
+.main { flex: 1; min-width: 0; padding: 28px 32px 48px; }
+.topbar {
+  display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 28px;
+}
+.search-wrap { position: relative; flex: 1; max-width: 420px; }
+.search-wrap svg { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); width: 16px; height: 16px; opacity: .5; }
+#search {
+  width: 100%; padding: 10px 12px 10px 38px; border-radius: var(--radius-sm);
+  background: var(--surface); border: 1px solid var(--border); color: var(--text);
+  font-size: 0.9rem; outline: none; transition: .15s;
+}
+#search:focus { border-color: var(--accent); background: rgba(255,255,255,0.04); box-shadow: 0 0 0 3px rgba(59,130,246,0.1); }
+.topbar-meta { display: flex; align-items: center; gap: 10px; color: var(--text-secondary); font-size: 0.8rem; }
+.pill {
+  background: var(--surface); border: 1px solid var(--border); padding: 6px 12px;
+  border-radius: 999px; font-size: 0.75rem; color: var(--text-secondary);
+}
+
+/* Stats row */
+.stats-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 24px; }
+.stat-card {
+  background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-sm);
+  padding: 18px; position: relative; overflow: hidden; cursor: default;
+}
+.stat-card:hover { background: var(--surface-hover); transform: translateY(-2px); transition: .15s; }
+.stat-card::after { content: ""; position: absolute; top: 0; left: 0; right: 0; height: 2px; opacity: .5; }
+.stat-card:nth-child(1)::after { background: linear-gradient(90deg, var(--accent), var(--accent-2)); }
+.stat-card:nth-child(2)::after { background: var(--success); }
+.stat-card:nth-child(3)::after { background: var(--warning); }
+.stat-card:nth-child(4)::after { background: var(--accent-3); }
+.stat-label { font-size: 0.7rem; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 6px; }
+.stat-value { font-size: 1.7rem; font-weight: 800; letter-spacing: -0.03em; }
+.stat-delta { font-size: 0.75rem; color: var(--text-muted); margin-top: 3px; }
+
+/* Section headers */
+.section-header {
+  display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 18px; flex-wrap: wrap;
+}
+.section-title { margin: 0; font-size: 1.25rem; font-weight: 700; letter-spacing: -0.02em; }
+.section-meta { color: var(--text-secondary); font-size: 0.8rem; }
+.btn {
+  display: inline-flex; align-items: center; gap: 6px; padding: 9px 15px; border-radius: 10px;
+  font-size: 0.85rem; font-weight: 600; cursor: pointer; border: none; transition: .15s;
+}
+.btn-primary { background: linear-gradient(135deg, var(--accent), var(--accent-2)); color: #fff; box-shadow: 0 6px 20px rgba(59,130,246,0.25); }
+.btn-primary:hover { transform: translateY(-1px); box-shadow: 0 10px 26px rgba(59,130,246,0.35); }
+.btn-ghost { background: var(--surface); border: 1px solid var(--border); color: var(--text); }
+.btn-ghost:hover { background: var(--surface-hover); }
+.btn-sm { padding: 5px 10px; font-size: 0.75rem; border-radius: 7px; }
+
+/* Website cards */
+.websites-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 28px; }
+.website-card {
+  background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-sm);
+  padding: 16px; cursor: pointer; transition: .15s; position: relative; overflow: hidden;
+}
+.website-card:hover { background: var(--surface-hover); transform: translateY(-2px); border-color: var(--border-strong); }
+.website-card::after { content: ""; position: absolute; top: 0; left: 0; right: 0; height: 2px; background: linear-gradient(90deg, var(--accent-2), var(--accent-3)); opacity: .5; }
+.website-domain { font-size: 0.85rem; font-weight: 700; margin-bottom: 4px; }
+.website-metrics { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-top: 8px; }
+.wm-box { background: rgba(0,0,0,0.2); border-radius: 6px; padding: 6px; text-align: center; }
+.wm-val { font-size: 0.9rem; font-weight: 700; }
+.wm-lbl { font-size: 0.6rem; color: var(--text-muted); text-transform: uppercase; }
+.website-ads { font-size: 0.7rem; color: var(--text-muted); margin-top: 6px; }
+
+/* WIP section */
+.wip-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 14px; margin-bottom: 28px; }
+.wip-card {
+  background: var(--surface); border: 1px solid rgba(245,158,11,0.15); border-radius: var(--radius-sm);
+  padding: 16px; border-left: 3px solid var(--warning);
+}
+.wip-project { font-size: 0.85rem; font-weight: 700; margin-bottom: 4px; }
+.wip-title { font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 6px; }
+.wip-meta { font-size: 0.7rem; color: var(--text-muted); }
+.wip-badge {
+  display: inline-block; padding: 3px 8px; border-radius: 999px; font-size: 0.65rem;
+  background: rgba(245,158,11,0.15); color: var(--warning); margin-left: 8px;
+}
+
+/* Project grid */
+.project-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(290px, 1fr)); gap: 16px; }
+.project-card {
+  position: relative; background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius-sm); overflow: hidden; transition: .2s; cursor: pointer;
+}
+.project-card:hover { transform: translateY(-3px); box-shadow: 0 16px 40px rgba(0,0,0,0.3); border-color: var(--border-strong); }
+.card-glow { position: absolute; inset: 0; opacity: 0; background: radial-gradient(circle at 50% 0%, rgba(59,130,246,0.12), transparent 60%); transition: .3s; }
+.project-card:hover .card-glow { opacity: 1; }
+.card-main { position: relative; padding: 18px; }
+.card-header-row { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; }
+.card-status {
+  display: inline-flex; align-items: center; gap: 6px; padding: 4px 8px; border-radius: 999px;
+  background: rgba(255,255,255,0.04); border: 1px solid var(--border); font-size: 0.68rem; font-weight: 600; color: var(--text-secondary);
+}
+.status-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--warning); }
+.status-dot.green { background: var(--success); }
+.status-dot.blue { background: var(--accent); }
+.status-dot.red { background: var(--danger); }
+.status-dot.gray { background: var(--text-muted); }
+.card-ring { width: 46px; height: 46px; }
+.card-title { margin: 0 0 6px; font-size: 1.05rem; font-weight: 700; }
+.card-desc { color: var(--text-secondary); font-size: 0.8rem; line-height: 1.5; margin: 0 0 12px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.card-footer { border-top: 1px solid var(--border); padding-top: 10px; }
+.card-meta { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; font-size: 0.75rem; color: var(--text-muted); }
+.rating { color: #fbbf24; letter-spacing: 1px; }
+.card-tags { display: flex; flex-wrap: wrap; gap: 4px; }
+.tag {
+  display: inline-flex; align-items: center; padding: 2px 7px; border-radius: 999px;
+  background: rgba(255,255,255,0.04); border: 1px solid var(--border); color: var(--text-secondary);
+  font-size: 0.68rem; cursor: pointer; transition: .15s;
+}
+.tag:hover { background: rgba(59,130,246,0.12); color: #fff; border-color: rgba(59,130,246,0.3); }
+.card-changed { position: absolute; top: 10px; right: 10px; width: 8px; height: 8px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 10px var(--accent); z-index: 2; }
+.card-cost { font-size: 0.7rem; color: var(--text-muted); margin-top: 4px; }
+
+/* Filters */
+.filter-bar { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-bottom: 18px; }
+.filter-bar input {
+  flex: 1; min-width: 200px; padding: 9px 12px; border-radius: 10px;
+  background: var(--surface); border: 1px solid var(--border); color: var(--text); font-size: 0.85rem;
+}
+.filter-bar input:focus { outline: none; border-color: var(--accent); }
+.tag-filter {
+  background: var(--surface); border: 1px solid var(--border); color: var(--text-secondary);
+  border-radius: 999px; padding: 5px 11px; cursor: pointer; font-size: 0.75rem; transition: .15s;
+}
+.tag-filter:hover, .tag-filter.active { background: rgba(59,130,246,0.12); color: #fff; border-color: rgba(59,130,246,0.35); }
+
+/* Modal */
+.modal-overlay {
+  position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 100;
+  display: none; align-items: center; justify-content: center; backdrop-filter: blur(4px);
+}
+.modal-overlay.active { display: flex; }
+.modal-box {
+  background: #0a0c14; border: 1px solid var(--border-strong); border-radius: var(--radius);
+  width: 90vw; max-width: 720px; max-height: 85vh; overflow-y: auto;
+  padding: 28px; box-shadow: var(--shadow); position: relative;
+}
+.modal-close {
+  position: absolute; top: 14px; right: 14px; background: var(--surface); border: 1px solid var(--border);
+  color: var(--text); border-radius: 8px; width: 32px; height: 32px; display: grid; place-items: center;
+  cursor: pointer; font-size: 1.1rem; transition: .15s;
+}
+.modal-close:hover { background: var(--surface-hover); }
+.modal-title { font-size: 1.4rem; font-weight: 700; margin-bottom: 4px; }
+.modal-subtitle { font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 20px; }
+.modal-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 20px; }
+.modal-field { background: rgba(0,0,0,0.18); border-radius: 10px; padding: 12px; border: 1px solid var(--border); }
+.modal-field-label { font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-muted); margin-bottom: 4px; }
+.modal-field-value { font-size: 0.9rem; font-weight: 600; word-break: break-all; }
+.modal-field-value a { color: var(--accent); text-decoration: none; }
+.modal-field-value a:hover { text-decoration: underline; }
+.modal-cost-table { width: 100%; border-collapse: collapse; margin-top: 12px; font-size: 0.82rem; }
+.modal-cost-table th, .modal-cost-table td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--border); }
+.modal-cost-table th { color: var(--text-muted); text-transform: uppercase; font-size: 0.65rem; letter-spacing: 0.06em; }
+.modal-cost-table td { color: var(--text); }
+
+/* Cost section */
+.costs-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 28px; }
+.cost-panel {
+  background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 20px;
+}
+.cost-panel h3 { margin: 0 0 12px; font-size: 1rem; }
+.cost-bar-wrap { display: flex; align-items: center; gap: 10px; margin: 8px 0; font-size: 0.85rem; }
+.cost-bar-label { width: 130px; flex-shrink: 0; color: var(--text-secondary); }
+.cost-bar { flex: 1; height: 10px; background: rgba(255,255,255,0.06); border-radius: 999px; overflow: hidden; }
+.cost-bar-fill { height: 100%; border-radius: 999px; transition: width .3s; }
+.cost-bar-value { width: 80px; text-align: right; font-size: 0.8rem; color: var(--text); flex-shrink: 0; }
+
+/* Calendar */
+.calendar-list { list-style: none; padding: 0; }
+.calendar-list li {
+  display: flex; align-items: center; gap: 10px; padding: 8px 0; border-bottom: 1px solid var(--border); font-size: 0.82rem;
+}
+.calendar-list li:last-child { border-bottom: none; }
+.cal-time { width: 50px; flex-shrink: 0; color: var(--text-muted); font-size: 0.75rem; }
+.cal-dot { width: 4px; height: 4px; border-radius: 50%; background: var(--accent); flex-shrink: 0; }
+.cal-summary { flex: 1; }
+
+/* Empty states */
+.empty-state { color: var(--text-muted); font-style: italic; font-size: 0.85rem; padding: 16px 0; }
+
+/* Footer */
+.footer {
+  margin-top: 40px; padding-top: 20px; border-top: 1px solid var(--border);
+  color: var(--text-muted); font-size: 0.75rem; display: flex; justify-content: space-between;
+}
+
+.hidden { display: none !important; }
+
+/* Responsive */
+@media (max-width: 900px) {
+  .sidebar { display: none; }
+  .main { padding: 16px; }
+  .stats-row, .websites-row { grid-template-columns: repeat(2, 1fr); }
+  .project-grid, .wip-grid { grid-template-columns: 1fr; }
+  .costs-grid { grid-template-columns: 1fr; }
+  .modal-grid { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="brand-icon">M</div>
+      <div>
+        <div class="brand-text">MiLO OS</div>
+        <div class="brand-sub">Agentic Operating System</div>
+      </div>
+    </div>
+    <div class="nav-section">
+      <div class="nav-title">Dashboard</div>
+      <ul class="nav-list">
+        <li><button class="active" onclick="scrollToSection('projects')">Projekty</button></li>
+        <li><button onclick="scrollToSection('my-websites')">Moje weby</button></li>
+        <li><button onclick="scrollToSection('wip-section')">Rozpracovane <span class="nav-badge" id="wip-badge">0</span></button></li>
+        <li><button onclick="scrollToSection('costs-section')">LLM Naklady</button></li>
+        <li><button onclick="scrollToSection('calendar-section')">Kalendar</button></li>
+      </ul>
+    </div>
+    <div class="nav-section">
+      <div class="nav-title">Akce</div>
+      <ul class="nav-list">
+        <li><button onclick="createNewDashboard()">+ Novy dashboard</button></li>
+        <li><button onclick="runScanner()">Skenovat projekty</button></li>
+        <li><button onclick="runBackup()">Zalohovat</button></li>
+      </ul>
+    </div>
+    <div class="nav-section">
+      <div class="nav-title">Projekty</div>
+      <ul class="nav-list">
+        <li><button onclick="filterBy('all')">Vsechny projekty</button></li>
+        <li><button onclick="showProgress('Před finišem')">Pred finisem <span class="nav-badge" id="nb-almost">0</span></button></li>
+        <li><button onclick="showProgress('Rozděláno')">Rozdelano <span class="nav-badge" id="nb-active">0</span></button></li>
+        <li><button onclick="showChanged()">Zmeneno <span class="nav-badge" id="nb-changed">0</span></button></li>
+      </ul>
+    </div>
+  </aside>
+
+  <main class="main">
+    <div class="topbar">
+      <div class="search-wrap">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+        <input type="text" id="search" placeholder="Hledat projekt, tag nebo popis...">
+      </div>
+      <div class="topbar-meta">
+        <span class="pill" id="scan-time">Nacitam data...</span>
+        <span class="pill" id="data-source">JSON</span>
+      </div>
+    </div>
+
+    <section class="stats-row" id="stats-row">
+      <div class="stat-card"><div class="stat-label">Projektu celkem</div><div class="stat-value" id="stat-total">-</div><div class="stat-delta">v /Users/mb/dev</div></div>
+      <div class="stat-card"><div class="stat-label">Temer hotovych</div><div class="stat-value" id="stat-done">-</div><div class="stat-delta">pokrok >= 75%</div></div>
+      <div class="stat-card"><div class="stat-label">LLM naklady celkem</div><div class="stat-value" id="stat-costs">-</div><div class="stat-delta">Kc celkove</div></div>
+      <div class="stat-card"><div class="stat-label">Rozpracovano</div><div class="stat-value" id="stat-wip">-</div><div class="stat-delta">aktivnich veci</div></div>
+    </section>
+
+    <section id="my-websites">
+      <div class="section-header">
+        <h2 class="section-title">Moje weby</h2>
+        <span class="section-meta" id="analytics-meta">Klikni na kartu pro detail GA4 a Ads</span>
+      </div>
+      <div class="websites-row" id="websites-row">
+        <div class="website-card" onclick="showWebsiteDetail('tjkrupka.cz')">
+          <div class="website-domain">tjkrupka.cz</div>
+          <div class="website-metrics">
+            <div class="wm-box"><div class="wm-val" id="tjkrupka-visitors">-</div><div class="wm-lbl">navstevnici</div></div>
+            <div class="wm-box"><div class="wm-val" id="tjkrupka-conv">-</div><div class="wm-lbl">konverze</div></div>
+          </div>
+          <div class="website-ads">GA4: G-NM6R8S2X39</div>
+        </div>
+        <div class="website-card" onclick="showWebsiteDetail('sheskates.cz')">
+          <div class="website-domain">sheskates.cz</div>
+          <div class="website-metrics">
+            <div class="wm-box"><div class="wm-val" id="sheskates-visitors">-</div><div class="wm-lbl">navstevnici</div></div>
+            <div class="wm-box"><div class="wm-val" id="sheskates-conv">-</div><div class="wm-lbl">konverze</div></div>
+          </div>
+          <div class="website-ads">Ads: AW-18191922314</div>
+        </div>
+        <div class="website-card" onclick="showWebsiteDetail('webdo24.cz')">
+          <div class="website-domain">webdo24.cz</div>
+          <div class="website-metrics">
+            <div class="wm-box"><div class="wm-val" id="webdo24-visitors">-</div><div class="wm-lbl">navstevnici</div></div>
+            <div class="wm-box"><div class="wm-val" id="webdo24-conv">-</div><div class="wm-lbl">konverze</div></div>
+          </div>
+          <div class="website-ads">GA4: G-815XCLCGY8</div>
+        </div>
+        <div class="website-card" onclick="showWebsiteDetail('ninja-tyden.cz')">
+          <div class="website-domain">ninja-tyden.cz</div>
+          <div class="website-metrics">
+            <div class="wm-box"><div class="wm-val" id="ninjatyden-visitors">-</div><div class="wm-lbl">navstevnici</div></div>
+            <div class="wm-box"><div class="wm-val" id="ninjatyden-conv">-</div><div class="wm-lbl">konverze</div></div>
+          </div>
+          <div class="website-ads">GA4: G-KDMZ8KZC3F</div>
+        </div>
+      </div>
+    </section>
+
+    <section id="wip-section">
+      <div class="section-header">
+        <h2 class="section-title">Rozpracovane</h2>
+        <span class="section-meta">Projekty kde se aktualne neco deje — at se neco nedela 2x</span>
+      </div>
+      <div class="wip-grid" id="wip-grid"><p class="empty-state">Zadne rozpracovane polozky.</p></div>
+    </section>
+
+    <section id="costs-section">
+      <div class="section-header">
+        <h2 class="section-title">LLM Naklady</h2>
+        <button class="btn btn-sm btn-ghost" onclick="toggleCostsView()">Prepni zobrazeni</button>
+      </div>
+      <div class="costs-grid" id="costs-grid">
+        <div class="cost-panel">
+          <h3>Podle projektu</h3>
+          <div id="costs-by-project"><p class="empty-state">Zadna data o nakladech. Spust scanner pro detekci.</p></div>
+        </div>
+        <div class="cost-panel">
+          <h3>Podle modelu</h3>
+          <div id="costs-by-model"><p class="empty-state">Zadna data o nakladech.</p></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="calendar-section">
+      <div class="section-header">
+        <h2 class="section-title">Kalendar</h2>
+        <span class="section-meta">Google Calendar — dnes a zitra</span>
+      </div>
+      <div class="panel" style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:20px;">
+        <ul class="calendar-list" id="calendar-list">
+          <li><span class="cal-time">--:--</span><span class="cal-dot"></span><span class="cal-summary">Nacitam kalendar... (potrebuje Google Calendar API credentials)</span></li>
+        </ul>
+      </div>
+    </section>
+
+    <section id="projects" style="margin-top:28px;">
+      <div class="section-header">
+        <h2 class="section-title">Projekty</h2>
+        <span class="section-meta">Klikni na kartu pro detail · celkem <strong id="proj-count">0</strong> projektu</span>
+      </div>
+      <div class="filter-bar">
+        <input type="text" id="grid-search" placeholder="Filtrovat projekty...">
+        <button class="tag-filter" onclick="filterBy('all')">vsechny</button>
+        <button class="tag-filter" data-tag="agent" onclick="filterBy('agent')">agent</button>
+        <button class="tag-filter" data-tag="ai" onclick="filterBy('ai')">ai</button>
+        <button class="tag-filter" data-tag="web" onclick="filterBy('web')">web</button>
+        <button class="tag-filter" data-tag="app" onclick="filterBy('app')">app</button>
+        <button class="tag-filter" data-tag="analytics" onclick="filterBy('analytics')">analytics</button>
+        <button class="tag-filter" data-tag="dashboard" onclick="filterBy('dashboard')">dashboard</button>
+        <select onchange="sortProjects(this.value)" style="background:var(--surface);border:1px solid var(--border);color:var(--text);border-radius:10px;padding:9px 12px;font-size:0.85rem;">
+          <option value="progress-desc">Nejvetsi pokrok</option>
+          <option value="progress-asc">Nejmensi pokrok</option>
+          <option value="rating-desc">Nejvyssi hodnoceni</option>
+          <option value="name-asc">Abecedne</option>
+          <option value="cost-desc">Nejvyssi naklady</option>
+        </select>
+      </div>
+      <div class="project-grid" id="grid"><p class="empty-state">Nacitam projekty...</p></div>
+    </section>
+
+    <footer class="footer">
+      <span>MiLO OS · Generovano <span id="footer-time">-</span></span>
+      <span>Scanner: python3 scanner.py</span>
+    </footer>
+  </main>
+</div>
+
+<!-- Project Detail Modal -->
+<div class="modal-overlay" id="modal-overlay">
+  <div class="modal-box" id="modal-box">
+    <button class="modal-close" onclick="closeModal()">X</button>
+    <div id="modal-content"></div>
+  </div>
+</div>
+
+<script src="data.js"></script>
+<script>
+let allProjects = [];
+let costsData = null;
+let analyticsData = null;
+let activeTag = null;
+
+function loadData() {
+  if (window.__MILO_DATA__) {
+    const d = window.__MILO_DATA__;
+    allProjects = d.projects?.projects || [];
+    costsData = d.costs || null;
+    analyticsData = d.analytics || null;
+    document.getElementById('data-source').textContent = 'LIVE';
+    document.getElementById('scan-time').textContent = 'Scan: ' + new Date(d.projects?.updated_at).toLocaleString('cs-CZ');
+    document.getElementById('footer-time').textContent = d.projects?.updated_at ? new Date(d.projects.updated_at).toLocaleString('cs-CZ') : '-';
+    document.getElementById('proj-count').textContent = allProjects.length;
+    document.getElementById('stat-total').textContent = allProjects.length;
+  } else {
+    document.getElementById('data-source').textContent = 'NO DATA';
+    allProjects = [];
+    costsData = null;
+    analyticsData = null;
+  }
+  renderAll();
+}
+
+function renderAll() {
+  renderStats();
+  renderWIP();
+  renderProjects();
+  if (costsData) renderCosts();
+  if (analyticsData) renderWebsites();
+  updateNavBadges();
+}
+
+function renderStats() {
+  const total = allProjects.length;
+  const done = allProjects.filter(p => p.progress >= 75).length;
+  const totalCost = allProjects.reduce((s,p) => s + (p.total_cost_czk||0), 0);
+  const wips = allProjects.filter(p => p.works_in_progress && p.works_in_progress.length > 0).length;
+  document.getElementById('stat-total').textContent = total;
+  document.getElementById('stat-done').textContent = done;
+  document.getElementById('stat-costs').textContent = Math.round(totalCost).toLocaleString('cs-CZ') + ' Kc';
+  document.getElementById('stat-wip').textContent = wips;
+}
+
+function renderWIP() {
+  const wipGrid = document.getElementById('wip-grid');
+  const wipItems = [];
+  allProjects.forEach(p => {
+    if (p.works_in_progress) {
+      p.works_in_progress.forEach(w => {
+        wipItems.push({project: p.name, title: w, progress: p.progress});
+      });
+    }
+  });
+  document.getElementById('wip-badge').textContent = wipItems.length;
+  if (!wipItems.length) {
+    wipGrid.innerHTML = '<p class="empty-state">Zadne rozpracovane polozky. Vsechno je pod kontrolou.</p>';
+    return;
+  }
+  wipGrid.innerHTML = wipItems.map(w => `
+    <div class="wip-card">
+      <div class="wip-project">${esc(w.project)}<span class="wip-badge">aktivni</span></div>
+      <div class="wip-title">${esc(w.title)}</div>
+      <div class="wip-meta">Pokrok projektu: ${w.progress}%</div>
+    </div>
+  `).join('');
+}
+
+function renderCosts() {
+  if (!costsData) return;
+  const byProject = costsData.by_project || {};
+  const byModel = costsData.by_model || {};
+  const totalCost = costsData.total_cost_czk || 0;
+
+  const maxProjectCost = Math.max(1, ...Object.values(byProject).map(v => v.total_cost_czk || 0));
+  const projectBars = Object.entries(byProject)
+    .sort((a,b) => (b[1].total_cost_czk||0) - (a[1].total_cost_czk||0))
+    .slice(0, 10)
+    .map(([name, data]) => {
+      const pct = maxProjectCost > 0 ? ((data.total_cost_czk||0) / maxProjectCost * 100) : 0;
+      return `<div class="cost-bar-wrap">
+        <span class="cost-bar-label">${esc(name)}</span>
+        <div class="cost-bar"><div class="cost-bar-fill" style="width:${pct}%;background:linear-gradient(90deg,var(--accent),var(--accent-2))"></div></div>
+        <span class="cost-bar-value">${Math.round(data.total_cost_czk||0)} Kc</span>
+      </div>`;
+    }).join('');
+
+  const maxModelCost = Math.max(1, ...Object.values(byModel));
+  const modelBars = Object.entries(byModel)
+    .sort((a,b) => b[1] - a[1])
+    .slice(0, 8)
+    .map(([model, cost]) => {
+      const pct = maxModelCost > 0 ? (cost / maxModelCost * 100) : 0;
+      return `<div class="cost-bar-wrap">
+        <span class="cost-bar-label">${esc(model)}</span>
+        <div class="cost-bar"><div class="cost-bar-fill" style="width:${pct}%;background:linear-gradient(90deg,var(--accent-3),var(--warning))"></div></div>
+        <span class="cost-bar-value">${Math.round(cost)} Kc</span>
+      </div>`;
+    }).join('');
+
+  document.getElementById('costs-by-project').innerHTML = projectBars || '<p class="empty-state">Zadna data</p>';
+  document.getElementById('costs-by-model').innerHTML = modelBars || '<p class="empty-state">Zadna data</p>';
+}
+
+function renderWebsites() {
+  if (!analyticsData || !analyticsData.websites) return;
+
+  const isLive = analyticsData.source === 'live';
+
+  Object.entries(analyticsData.websites).forEach(([domain, data]) => {
+    const key = domain.replace('.cz','').replace('-','');
+    const vEl = document.getElementById(key + '-visitors');
+    const cEl = document.getElementById(key + '-conv');
+
+    if (data.overview) {
+      if (vEl) vEl.textContent = (data.overview.totalUsers || 0).toLocaleString('cs-CZ');
+      if (cEl) cEl.textContent = (data.overview.conversions || 0).toLocaleString('cs-CZ');
+    } else if (data.needs_credentials) {
+      if (vEl) { vEl.textContent = 'N/A'; vEl.style.color = '#888'; }
+      if (cEl) { cEl.textContent = 'N/A'; cEl.style.color = '#888'; }
+    } else {
+      if (vEl) vEl.textContent = '-';
+      if (cEl) cEl.textContent = '-';
+    }
+  });
+
+  // Update data source badge
+  document.getElementById('data-source').textContent = isLive ? 'LIVE' : 'MOCK';
+  document.getElementById('analytics-meta').textContent = isLive
+    ? 'Ziva data z GA4 + Google Ads'
+    : 'Credentials chybi. Ziskej refresh token: viz AGENTS.md';
+}
+
+function renderProjects() {
+  const grid = document.getElementById('grid');
+  if (!allProjects.length) {
+    grid.innerHTML = '<p class="empty-state">Zadne projekty. Spust scanner pro nacteni dat.</p>';
+    return;
+  }
+  grid.innerHTML = allProjects.map(p => {
+    const statusDotClass = p.status.includes('Dokon') || p.status.includes('Archiv') ? 'green' :
+                          p.status.includes('Nasaz') || p.status.includes('test') ? 'blue' :
+                          p.status.includes('Před') ? 'blue' : p.status.includes('koncept') ? 'gray' : '';
+    const progressColor = p.progress >= 75 ? '#30d158' : p.progress >= 50 ? '#ff9f0a' : '#ff6b35';
+    const dash = 160.22;
+    const offset = dash - (dash * p.progress / 100);
+    const changed = p.changed_since_last ? '<div class="card-changed"></div>' : '';
+    const costStr = p.total_cost_czk ? ` | ${Math.round(p.total_cost_czk)} Kc` : '';
+    const timeStr = p.time_spent ? `${p.time_spent}h straveno` : '';
+    return `
+    <article class="project-card" data-name="${esc(p.name)}" data-tags="${(p.tags||[]).join(' ')}" data-progress="${p.progress}" data-rating="${p.rating}" data-status="${esc(p.status)}" onclick="showDetail('${esc(p.name)}')">
+      <div class="card-glow"></div>
+      ${changed}
+      <div class="card-main">
+        <div class="card-header-row">
+          <div class="card-status"><span class="status-dot ${statusDotClass}"></span>${esc(p.status)}</div>
+          <div class="card-ring"><svg width="46" height="46" viewBox="0 0 56 56">
+            <circle cx="28" cy="28" r="25.5" fill="none" stroke="rgba(255,255,255,0.08)" stroke-width="5"/>
+            <circle cx="28" cy="28" r="25.5" fill="none" stroke="${progressColor}" stroke-width="5" stroke-linecap="round" stroke-dasharray="${dash.toFixed(2)}" stroke-dashoffset="${offset.toFixed(2)}" transform="rotate(-90 28 28)"/>
+            <text x="50%" y="50%" dominant-baseline="central" text-anchor="middle" fill="currentColor" font-size="15" font-weight="700">${p.progress}%</text>
+          </svg></div>
+        </div>
+        <h3 class="card-title">${esc(p.name)}</h3>
+        <p class="card-desc">${esc(p.description || '')}</p>
+        <div class="card-footer">
+          <div class="card-meta">
+            <span>${timeStr}${costStr}</span>
+            <span class="rating">${'★'.repeat(p.rating||0)}${'☆'.repeat(5-(p.rating||0))}</span>
+          </div>
+          <div class="card-tags">${(p.tags||[]).map(t => `<span class="tag" onclick="event.stopPropagation();filterBy('${esc(t)}')">${esc(t)}</span>`).join('')}</div>
+        </div>
+      </div>
+    </article>`;
+  }).join('');
+}
+
+function showDetail(name) {
+  const p = allProjects.find(x => x.name === name);
+  if (!p) return;
+
+  const gh = p.github || {};
+  const costs = p.llm_costs || [];
+  const costRows = costs.length
+    ? costs.map((c,i) => `<tr><td>${c.date||'-'}</td><td>${esc(c.model||'unknown')}</td><td>${(c.tokens||0).toLocaleString()}</td><td>${(c.cost_czk||0)} Kc</td><td>${esc(c.source||'')}</td></tr>`).join('')
+    : '<tr><td colspan="5" class="empty-state">Zadne detailni naklady. Spust scanner s LLM logy.</td></tr>';
+
+  const totalCost = Math.round(p.total_cost_czk || 0);
+  const remainingCost = Math.round(p.estimated_remaining_cost_czk || 0);
+
+  document.getElementById('modal-content').innerHTML = `
+    <div class="modal-title">${esc(p.name)}</div>
+    <div class="modal-subtitle">
+      <span style="display:inline-flex;align-items:center;gap:6px;margin-right:14px;"><span class="status-dot blue"></span>${esc(p.status)}</span>
+      <span style="margin-right:14px;">Pokrok: ${p.progress}%</span>
+      <span>${'★'.repeat(p.rating||0)}</span>
+    </div>
+    <p style="color:var(--text-secondary);margin-bottom:18px;line-height:1.5;">${esc(p.description || '')}</p>
+    <div class="modal-grid">
+      <div class="modal-field">
+        <div class="modal-field-label">GitHub</div>
+        <div class="modal-field-value">${gh.url ? `<a href="${esc(gh.url)}" target="_blank">${esc(gh.url)}</a>` : '-'}</div>
+      </div>
+      <div class="modal-field">
+        <div class="modal-field-label">Branch</div>
+        <div class="modal-field-value">${esc(gh.branch || '-')}</div>
+      </div>
+      <div class="modal-field">
+        <div class="modal-field-label">Commitu</div>
+        <div class="modal-field-value">${gh.commit_count || '-'}</div>
+      </div>
+      <div class="modal-field">
+        <div class="modal-field-label">Posledni commit</div>
+        <div class="modal-field-value">${gh.last_commit ? new Date(gh.last_commit).toLocaleString('cs-CZ') : '-'}</div>
+      </div>
+      <div class="modal-field">
+        <div class="modal-field-label">Posledni zprava</div>
+        <div class="modal-field-value">${esc(gh.last_commit_message || '-')}</div>
+      </div>
+      <div class="modal-field">
+        <div class="modal-field-label">Tech Stack</div>
+        <div class="modal-field-value">${(p.tech_stack||[]).join(', ') || '-'}</div>
+      </div>
+      <div class="modal-field">
+        <div class="modal-field-label">Staveny cas</div>
+        <div class="modal-field-value">${p.time_spent ? p.time_spent + ' hodin' : '-'}</div>
+      </div>
+      <div class="modal-field">
+        <div class="modal-field-label">Zbyva casu</div>
+        <div class="modal-field-value">${p.time_remaining ? p.time_remaining + ' hodin' : '-'}</div>
+      </div>
+      <div class="modal-field">
+        <div class="modal-field-label">LLM naklady — utraceno</div>
+        <div class="modal-field-value">${totalCost} Kc</div>
+      </div>
+      <div class="modal-field">
+        <div class="modal-field-label">LLM naklady — odhad zbyva</div>
+        <div class="modal-field-value">${remainingCost} Kc</div>
+      </div>
+    </div>
+    ${p.works_in_progress && p.works_in_progress.length ? `
+    <div style="margin-bottom:16px;">
+      <strong style="font-size:0.9rem;">Rozpracovane:</strong>
+      ${p.works_in_progress.map(w => `<div style="color:var(--text-secondary);font-size:0.82rem;margin:4px 0 4px 12px;">• ${esc(w)}</div>`).join('')}
+    </div>` : ''}
+    <h4 style="margin:0 0 8px;font-size:0.9rem;">LLM naklady — detail</h4>
+    <table class="modal-cost-table">
+      <thead><tr><th>Datum</th><th>Model</th><th>Tokeny</th><th>Cena</th><th>Zdroj</th></tr></thead>
+      <tbody>${costRows}</tbody>
+    </table>
+  `;
+  document.getElementById('modal-overlay').classList.add('active');
+}
+
+function showWebsiteDetail(domain) {
+  const data = (analyticsData && analyticsData.websites) ? analyticsData.websites[domain] : null;
+  if (!data) {
+    alert('Analytics data nejsou k dispozici. Spust sync_analytics.py nebo nastav Google credentials.');
+    return;
+  }
+
+  const intervals = data.overview_intervals || {};
+  const isLive = analyticsData?.source === 'live';
+  const links = data.links || {};
+  let currentInterval = '14';
+
+  function renderWebsiteModal(intv) {
+    currentInterval = intv;
+    const overview = intervals[intv] || data.overview || {};
+    const hasData = overview.sessions != null && overview.sessions > 0;
+    const ads = analyticsData?.ads || {};
+
+    const intvBtns = ['28','14','7','3'].map(d =>
+      `<button onclick="switchInterval('${d}')" style="padding:6px 14px;border-radius:8px;border:1px solid var(--border);background:${currentInterval===d?'var(--accent)':'var(--surface)'};color:${currentInterval===d?'#fff':'var(--text-secondary)'};cursor:pointer;font-size:0.8rem;margin:0 4px;">${d} dnů</button>`
+    ).join('');
+
+    document.getElementById('modal-content').innerHTML = `
+    <div class="modal-title" style="display:flex;align-items:center;gap:12px;">
+      ${esc(domain)}
+      <span style="font-size:0.75rem;font-weight:400;">
+        <a href="${esc(links.ga4||'#')}" target="_blank" style="color:var(--accent);text-decoration:none;margin-right:8px;">GA4 ↗</a>
+        <a href="${esc(links.gtm||'#')}" target="_blank" style="color:var(--accent);text-decoration:none;margin-right:8px;">GTM ↗</a>
+        <a href="${esc(links.ads||'#')}" target="_blank" style="color:var(--accent);text-decoration:none;">Ads ↗</a>
+      </span>
+    </div>
+    <div class="modal-subtitle" style="display:flex;align-items:center;justify-content:space-between;">
+      <span>${isLive ? '<span style="color:#22c55e;">● Živá data</span>' : '<span style="color:#f59e0b;">⚠️ Credentials chybí</span>'} | GA4: ${esc(data.ga4_id||'-')} | Property: ${esc(data.property_id||'-')}</span>
+      <span id="interval-btns">${intvBtns}</span>
+    </div>
+    <div class="modal-grid">
+      <div class="modal-field"><div class="modal-field-label">Navštěvnici</div><div class="modal-field-value">${hasData ? (overview.totalUsers||0).toLocaleString('cs-CZ') : '-'}</div></div>
+      <div class="modal-field"><div class="modal-field-label">Noví</div><div class="modal-field-value">${hasData ? (overview.newUsers||0).toLocaleString('cs-CZ') : '-'}</div></div>
+      <div class="modal-field"><div class="modal-field-label">Sessions</div><div class="modal-field-value">${hasData ? (overview.sessions||0).toLocaleString('cs-CZ') : '-'}</div></div>
+      <div class="modal-field"><div class="modal-field-label">Page Views</div><div class="modal-field-value">${hasData ? (overview.pageViews||0).toLocaleString('cs-CZ') : '-'}</div></div>
+      <div class="modal-field"><div class="modal-field-label">Konverze</div><div class="modal-field-value">${hasData ? (overview.conversions||0).toLocaleString('cs-CZ') : '-'}</div></div>
+      <div class="modal-field"><div class="modal-field-label">Revenue</div><div class="modal-field-value">${hasData ? (overview.revenue||0) + ' Kč' : '-'}</div></div>
+      <div class="modal-field"><div class="modal-field-label">Bounce Rate</div><div class="modal-field-value">${hasData ? (overview.bounceRate||0) + '%' : '-'}</div></div>
+      <div class="modal-field"><div class="modal-field-label">Engagement Rate</div><div class="modal-field-value">${hasData ? (overview.engagementRate||0) + '%' : '-'}</div></div>
+      <div class="modal-field"><div class="modal-field-label">Engaged Sessions</div><div class="modal-field-value">${hasData ? (overview.engagedSessions||0).toLocaleString('cs-CZ') : '-'}</div></div>
+      <div class="modal-field"><div class="modal-field-label">Avg Duration</div><div class="modal-field-value">${hasData ? (overview.avgSessionDuration||0) + 's' : '-'}</div></div>
+    </div>
+
+    ${data.traffic_sources && data.traffic_sources.length > 0 ? `
+    <h4 style="margin:20px 0 8px;font-size:0.9rem;">Zdroje návštěvnosti (14d)</h4>
+    <table class="modal-cost-table">
+      <thead><tr><th>Kanál</th><th>Sessions</th><th>Users</th><th>Bounce</th><th>Konverze</th></tr></thead>
+      <tbody>${data.traffic_sources.slice(0,6).map(s => `
+        <tr><td>${esc(s.channel)}</td><td>${s.sessions}</td><td>${s.users}</td><td>${s.bounceRate}%</td><td>${s.conversions}</td></tr>
+      `).join('')}</tbody>
+    </table>` : ''}
+
+    ${data.top_pages && data.top_pages.length > 0 ? `
+    <h4 style="margin:20px 0 8px;font-size:0.9rem;">Top stránky (14d)</h4>
+    <table class="modal-cost-table">
+      <thead><tr><th>Stránka</th><th>Views</th><th>Sessions</th><th>Avg Duration</th></tr></thead>
+      <tbody>${data.top_pages.slice(0,8).map(p => `
+        <tr><td><a href="https://${domain}${esc(p.path)}" target="_blank" style="color:var(--accent);">${esc(p.title||p.path)}</a></td><td>${p.views}</td><td>${p.sessions}</td><td>${p.avgDuration}s</td></tr>
+      `).join('')}</tbody>
+    </table>` : ''}
+
+    ${data.devices && data.devices.length > 0 ? `
+    <h4 style="margin:20px 0 8px;font-size:0.9rem;">Zařízení (14d)</h4>
+    <table class="modal-cost-table">
+      <thead><tr><th>Zařízení</th><th>Sessions</th><th>Users</th><th>Bounce</th><th>Konverze</th></tr></thead>
+      <tbody>${data.devices.map(d => `
+        <tr><td>${d.device}</td><td>${d.sessions}</td><td>${d.users}</td><td>${d.bounceRate}%</td><td>${d.conversions}</td></tr>
+      `).join('')}</tbody>
+    </table>` : ''}
+
+    ${data.geo && data.geo.length > 0 ? `
+    <h4 style="margin:20px 0 8px;font-size:0.9rem;">Země (14d)</h4>
+    <table class="modal-cost-table">
+      <thead><tr><th>Země</th><th>Sessions</th><th>Users</th><th>Konverze</th></tr></thead>
+      <tbody>${data.geo.slice(0,8).map(g => `
+        <tr><td>${g.country}</td><td>${g.sessions}</td><td>${g.users}</td><td>${g.conversions}</td></tr>
+      `).join('')}</tbody>
+    </table>` : ''}
+
+    ${!hasData ? `<p style="color:var(--text-muted);margin-top:16px;">Pro živá data: spusť <code>python3 sync_analytics.py</code></p>` : ''}
+    `;
+  }
+
+  window._switchInterval = function(intv) {
+    renderWebsiteModal(intv);
+  };
+
+  // expose to inline onclick
+  window.switchInterval = function(intv) {
+    const data = (analyticsData && analyticsData.websites) ? analyticsData.websites[domain] : null;
+    if (!data) return;
+    const intervals = data.overview_intervals || {};
+    const overview = intervals[intv] || data.overview || {};
+
+    // Update only the metric values in the grid
+    const fields = document.querySelectorAll('#modal-content .modal-field-value');
+    const hasData = overview.sessions != null && overview.sessions > 0;
+    const vals = [
+      hasData ? (overview.totalUsers||0).toLocaleString('cs-CZ') : '-',
+      hasData ? (overview.newUsers||0).toLocaleString('cs-CZ') : '-',
+      hasData ? (overview.sessions||0).toLocaleString('cs-CZ') : '-',
+      hasData ? (overview.pageViews||0).toLocaleString('cs-CZ') : '-',
+      hasData ? (overview.conversions||0).toLocaleString('cs-CZ') : '-',
+      hasData ? (overview.revenue||0) + ' Kč' : '-',
+      hasData ? (overview.bounceRate||0) + '%' : '-',
+      hasData ? (overview.engagementRate||0) + '%' : '-',
+      hasData ? (overview.engagedSessions||0).toLocaleString('cs-CZ') : '-',
+      hasData ? (overview.avgSessionDuration||0) + 's' : '-',
+    ];
+    fields.forEach((el, i) => { if (vals[i] !== undefined) el.textContent = vals[i]; });
+
+    // Update button styles
+    document.querySelectorAll('#interval-btns button').forEach(b => {
+      b.style.background = b.textContent.trim().startsWith(intv) ? 'var(--accent)' : 'var(--surface)';
+      b.style.color = b.textContent.trim().startsWith(intv) ? '#fff' : 'var(--text-secondary)';
+    });
+  };
+
+  renderWebsiteModal('14');
+  document.getElementById('modal-overlay').classList.add('active');
+}
+
+function closeModal() {
+  document.getElementById('modal-overlay').classList.remove('active');
+}
+
+document.getElementById('modal-overlay').addEventListener('click', function(e) {
+  if (e.target === this) closeModal();
+});
+
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') closeModal();
+});
+
+function filterBy(tag) {
+  activeTag = tag === 'all' ? null : tag;
+  const q = document.getElementById('grid-search').value.toLowerCase();
+  document.querySelectorAll('.project-card').forEach(card => {
+    const tags = card.dataset.tags.toLowerCase();
+    const name = card.dataset.name;
+    const tagMatch = !activeTag || tags.includes(activeTag.toLowerCase());
+    const qMatch = !q || name.includes(q) || tags.includes(q);
+    card.classList.toggle('hidden', !(tagMatch && qMatch));
+  });
+  document.querySelectorAll('.tag-filter').forEach(b => {
+    b.classList.toggle('active', b.dataset.tag === activeTag);
+  });
+  document.querySelectorAll('.nav-list button.active').forEach(b => b.classList.remove('active'));
+}
+
+function showProgress(status) {
+  document.querySelectorAll('.project-card').forEach(card => {
+    card.classList.toggle('hidden', card.dataset.status !== status);
+  });
+  activeTag = null;
+}
+
+function showChanged() {
+  activeTag = null;
+  document.querySelectorAll('.project-card').forEach(card => {
+    const p = allProjects.find(x => x.name === card.dataset.name);
+    card.classList.toggle('hidden', !(p && p.changed_since_last));
+  });
+}
+
+function sortProjects(by) {
+  const grid = document.getElementById('grid');
+  const cards = Array.from(grid.querySelectorAll('.project-card'));
+  cards.sort((a,b) => {
+    const pa = parseInt(a.dataset.progress), pb = parseInt(b.dataset.progress);
+    const ra = parseInt(a.dataset.rating), rb = parseInt(b.dataset.rating);
+    const ca = allProjects.find(x => x.name === a.dataset.name);
+    const cb = allProjects.find(x => x.name === b.dataset.name);
+    const costa = ca ? (ca.total_cost_czk||0) : 0;
+    const costb = cb ? (cb.total_cost_czk||0) : 0;
+    if (by === 'progress-asc') return pa - pb;
+    if (by === 'rating-desc') return rb - ra;
+    if (by === 'name-asc') return a.dataset.name.localeCompare(b.dataset.name);
+    if (by === 'cost-desc') return costb - costa;
+    return pb - pa;
+  });
+  cards.forEach(c => grid.appendChild(c));
+}
+
+function scrollToSection(id) {
+  document.getElementById(id).scrollIntoView({behavior: 'smooth'});
+  document.querySelectorAll('.nav-list button').forEach(b => b.classList.remove('active'));
+}
+
+function updateNavBadges() {
+  document.getElementById('nb-almost').textContent = allProjects.filter(p => p.status === 'Před finišem').length;
+  document.getElementById('nb-active').textContent = allProjects.filter(p => p.status === 'Rozděláno').length;
+  document.getElementById('nb-changed').textContent = allProjects.filter(p => p.changed_since_last).length;
+}
+
+function toggleCostsView() {
+  const panel = document.getElementById('costs-grid');
+  const current = panel.style.display;
+  panel.style.display = current === 'none' ? 'grid' : 'none';
+}
+
+function createNewDashboard() {
+  const name = prompt('Nazev noveho dashboardu (napr. "webdo24-report"):');
+  if (!name) return;
+  const html = '<!DOCTYPE html><html lang="cs"><head><meta charset="UTF-8"><title>MiLO Dashboard: ' + name + '</title>'
+    + '<style>body{font-family:system-ui,sans-serif;background:#03040a;color:#f2f4f7;padding:32px;max-width:1100px;margin:0 auto;}'
+    + '.card{background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:14px;padding:18px;margin-bottom:14px;}'
+    + 'h1{font-size:1.8rem;margin-bottom:8px;}h2{font-size:1.2rem;margin:24px 0 12px;}'
+    + '.metric{display:inline-block;padding:10px 14px;background:rgba(0,0,0,0.2);border-radius:8px;margin:4px;text-align:center;}'
+    + '.val{font-size:1.4rem;font-weight:700;}.lbl{font-size:0.7rem;color:#888;text-transform:uppercase;}</style></head><body>'
+    + '<h1>MiLO Dashboard: ' + name + '</h1><p>Vytvoren ' + new Date().toLocaleString('cs-CZ') + '</p>'
+    + '<p style="color:#888;">Toto je prazdny dashboard. Uprav si ho podle potreby — pridej data z projects.json, costs.json nebo analytics.json.</p>'
+    + '<p style="color:#888;">Zakladni struktura je pripravena. Data muzes nacist fetch("projects.json") a vyrenderovat.</p>'
+    + '</body></html>';
+  const blob = new Blob([html], {type:'text/html'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href = url; a.download = name + '.html'; a.click(); URL.revokeObjectURL(url);
+  alert('Dashboard "' + name + '.html" byl stazen. Uloz ho do milo-os/ a uprav.');
+}
+
+function runScanner() {
+  alert('Scanner se spousti v terminalu:\n\npython3 /Users/mb/dev/milo-os/scanner.py\n\nSpust ho rucne nebo nastav cron.');
+}
+
+function runBackup() {
+  alert('Zaloha se spousti v terminalu:\n\npython3 /Users/mb/dev/milo-os/backup.py\n\nSpust ho rucne nebo nastav cron.');
+}
+
+function esc(s) {
+  if (!s) return '';
+  const div = document.createElement('div');
+  div.textContent = s;
+  return div.innerHTML;
+}
+
+document.getElementById('search').addEventListener('input', function() {
+  document.getElementById('grid-search').value = this.value;
+  filterBy(activeTag || 'all');
+});
+
+document.getElementById('grid-search').addEventListener('input', function() {
+  document.getElementById('search').value = this.value;
+  filterBy(activeTag || 'all');
+});
+
+// Init
+loadData();
+</script>
+</body>
+</html>

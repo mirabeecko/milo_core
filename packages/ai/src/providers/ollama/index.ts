@@ -38,7 +38,7 @@ export class OllamaProvider implements AiProvider {
       throw new Error(`Ollama error: ${response.statusText}`);
     }
 
-    const data = await response.json();
+    const data = (await response.json()) as { response?: string };
     const content = data.response ?? "";
 
     if (!content) {

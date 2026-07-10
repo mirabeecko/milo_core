@@ -1,214 +1,152 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { FileText, RefreshCw, Search, Tag, X } from "lucide-react";
-import { DashboardLayout } from "@/components/layout/dashboard-layout";
+import { BookOpen, Database, RefreshCw, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Card, CardContent } from "@/components/ui/card";
-import { PageHeader } from "@/components/common/page-header";
-import { LoadingState } from "@/components/common/loading-state";
-import { EmptyState } from "@/components/common/empty-state";
 import { Badge } from "@/components/ui/badge";
-import { getObsidianNotes, searchObsidian, getObsidianNote, reindexObsidian } from "@/lib/api/knowledge.api";
-import { Markdown } from "@/components/common/markdown";
-import { formatRelative } from "@/lib/format";
-import type { ObsidianNote } from "@/lib/types";
+import { Skeleton } from "@/components/ui/skeleton";
+import { PageHeader } from "@/components/common/page-header";
+import { EmptyState } from "@/components/common/empty-state";
+import { getObsidianNotes, getObsidianStatus, reindexObsidian } from "@/lib/api/knowledge.api";
+import type { ObsidianNote, ObsidianStatus } from "@/lib/types";
+import { cn } from "@/lib/utils";
 
-export default function KnowledgePage(): JSX.Element {
+export default function KnowledgePage() {
   const [notes, setNotes] = useState<ObsidianNote[]>([]);
-  const [query, setQuery] = useState("");
+  const [status, setStatus] = useState<ObsidianStatus | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [isSearching, setIsSearching] = useState(false);
   const [error, setError] = useState<Error | null>(null);
-  const [selectedNote, setSelectedNote] = useState<ObsidianNote | null>(null);
+  const [search, setSearch] = useState("");
+  const [reindexing, setReindexing] = useState(false);
 
-  const loadNotes = async (searchQuery?: string): Promise<void> => {
+  const load = async () => {
     try {
+      setIsLoading(true);
       setError(null);
-      const data = searchQuery
-        ? await searchObsidian(searchQuery)
-        : await getObsidianNotes();
-      setNotes(data);
+      const [noteData, statusData] = await Promise.all([
+        getObsidianNotes(),
+        getObsidianStatus(),
+      ]);
+      setNotes(noteData);
+      setStatus(statusData);
     } catch (err) {
-      setError(err instanceof Error ? err : new Error("Nepodařilo se načíst poznámky"));
+      setError(err instanceof Error ? err : new Error("Nepodařilo se načíst knowledge base"));
     } finally {
       setIsLoading(false);
-      setIsSearching(false);
     }
   };
 
-  useEffect(() => {
-    void loadNotes();
-  }, []);
+  useEffect(() => void load(), []);
 
-  const handleSearch = async (event: React.FormEvent): Promise<void> => {
-    event.preventDefault();
-    setIsSearching(true);
-    await loadNotes(query.trim() || undefined);
-  };
-
-  const handleReindex = async (): Promise<void> => {
-    setIsLoading(true);
+  const handleReindex = async () => {
+    setReindexing(true);
     try {
       await reindexObsidian();
-      await loadNotes(query.trim() || undefined);
-    } catch (err) {
-      setError(err instanceof Error ? err : new Error("Reindex selhal"));
+      await load();
+    } catch {
+      // ignore
     } finally {
-      setIsLoading(false);
+      setReindexing(false);
     }
   };
 
-  const handleSelectNote = async (id: string): Promise<void> => {
-    try {
-      const note = await getObsidianNote(id);
-      if (note) {
-        setSelectedNote(note);
-      }
-    } catch (err) {
-      console.error(err);
-    }
-  };
+  const filtered = search.trim()
+    ? notes.filter(
+        (n) =>
+          n.title.toLowerCase().includes(search.toLowerCase()) ||
+          n.content.toLowerCase().includes(search.toLowerCase()) ||
+          n.tags.some((t) => t.toLowerCase().includes(search.toLowerCase())),
+      )
+    : notes;
+
+  if (isLoading) {
+    return (
+      <div className="mx-auto max-w-7xl space-y-6">
+        <Skeleton className="h-10 w-1/3" />
+        <div className="space-y-3">
+          {Array.from({ length: 5 }).map((_, i) => (
+            <Skeleton key={i} className="h-28 w-full" />
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <EmptyState
+        variant="error"
+        title="Nepodařilo se načíst knowledge base"
+        description={error.message}
+        action={<Button onClick={() => void load()} className="gap-2"><RefreshCw className="h-4 w-4" /> Zkusit znovu</Button>}
+      />
+    );
+  }
 
   return (
-    <DashboardLayout>
-      <div className="mx-auto max-w-5xl space-y-6">
-        <PageHeader title="Knowledge" description="Poznámky a znalosti z Obsidianu.">
-          <Button variant="outline" onClick={() => void handleReindex()} className="gap-2">
-            <RefreshCw className="h-4 w-4" />
-            Reindexovat
-          </Button>
-        </PageHeader>
+    <div className="mx-auto max-w-7xl space-y-6">
+      <PageHeader title="Knowledge Base" description="Indexované poznámky z Obsidianu a vyhledávání">
+        <Button onClick={handleReindex} disabled={reindexing} variant="outline" className="gap-2">
+          <RefreshCw className={cn("h-4 w-4", reindexing && "animate-spin")} />
+          {reindexing ? "Indexuji..." : "Reindexovat"}
+        </Button>
+      </PageHeader>
 
-        <form onSubmit={(e) => void handleSearch(e)} className="relative">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <Input
-            value={query}
-            onChange={(event) => setQuery(event.target.value)}
-            placeholder="Hledat v názvech, obsahu a tagech..."
-            className="pl-9"
-          />
-        </form>
+      {status && (
+        <Card>
+          <CardHeader className="pb-3">
+            <div className="flex items-center gap-2">
+              <Database className="h-5 w-5 text-primary" />
+              <CardTitle className="text-base">Obsidian Vault</CardTitle>
+            </div>
+            <CardDescription>
+              {status.configured
+                ? `Vault: ${status.vaultPath} · ${status.noteCount} poznámek`
+                : "Obsidian není nakonfigurován"}
+            </CardDescription>
+          </CardHeader>
+        </Card>
+      )}
 
-        {isLoading || isSearching ? (
-          <LoadingState rows={4} />
-        ) : error ? (
-          <EmptyState
-            variant="error"
-            title="Nepodařilo se načíst poznámky"
-            description={error.message}
-            action={
-              <Button onClick={() => void loadNotes()} className="gap-2">
-                <RefreshCw className="h-4 w-4" />
-                Zkusit znovu
-              </Button>
-            }
-          />
-        ) : notes.length === 0 ? (
-          <EmptyState
-            title="Žádné poznámky"
-            description={
-              query
-                ? "Žádná poznámka neodpovídá hledanému výrazu."
-                : "Nastav cestu k Obsidian vaultu v nastavení a spusť reindex."
-            }
-          />
-        ) : (
-          <div className="space-y-3">
-            {notes.map((note) => (
-              <NoteCard key={note.id} note={note} onClick={() => void handleSelectNote(note.id)} />
-            ))}
-          </div>
-        )}
+      <div className="relative">
+        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+        <Input
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder="Hledat v poznámkách..."
+          className="pl-9"
+        />
       </div>
 
-      <NoteDialog note={selectedNote} onClose={() => setSelectedNote(null)} />
-    </DashboardLayout>
-  );
-}
-
-function NoteDialog({
-  note,
-  onClose,
-}: {
-  note: ObsidianNote | null;
-  onClose: () => void;
-}): JSX.Element | null {
-  if (!note) return null;
-
-  return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4"
-      onClick={onClose}
-    >
-      <Card
-        className="max-h-[80vh] w-full max-w-3xl overflow-y-auto"
-        onClick={(event) => event.stopPropagation()}
-      >
-        <CardContent className="space-y-4 p-6">
-          <div className="flex items-start justify-between gap-4">
-            <div>
-              <h2 className="text-xl font-semibold">{note.title}</h2>
-              <p className="text-sm text-muted-foreground">
-                {note.path} · {formatRelative(note.modifiedAt)}
-              </p>
-            </div>
-            <Button variant="ghost" size="icon" onClick={onClose}>
-              <X className="h-4 w-4" />
-            </Button>
-          </div>
-          {note.tags.length > 0 && (
-            <div className="flex flex-wrap gap-2">
-              {note.tags.map((tag) => (
-                <Badge key={tag} variant="secondary" className="text-xs">
-                  {tag}
-                </Badge>
-              ))}
-            </div>
-          )}
-          <Markdown content={note.content} />
-        </CardContent>
-      </Card>
+      {filtered.length === 0 ? (
+        <EmptyState title="Žádné poznámky" description={search ? "Zkuste upravit hledání." : "Zatím nejsou žádné poznámky."} />
+      ) : (
+        <div className="space-y-3">
+          {filtered.map((note) => (
+            <Card key={note.id} className="transition-colors hover:border-primary/20">
+              <CardContent className="flex items-start gap-4 p-4">
+                <div className="rounded-md bg-primary/10 p-2 text-primary">
+                  <BookOpen className="h-5 w-5" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <h3 className="font-medium">{note.title}</h3>
+                  <p className="mt-1 text-sm text-muted-foreground line-clamp-2">
+                    {note.content.replace(/#+ /g, "").replace(/\n/g, " ").slice(0, 200)}
+                  </p>
+                  <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+                    <span>{note.path}</span>
+                    {note.tags.map((tag) => (
+                      <span key={tag} className="rounded bg-muted px-1.5 py-0.5 font-mono">{tag}</span>
+                    ))}
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      )}
     </div>
   );
-}
-
-function NoteCard({ note, onClick }: { note: ObsidianNote; onClick: () => void }): JSX.Element {
-  return (
-    <Card
-      className="cursor-pointer transition-colors hover:border-primary/30"
-      onClick={onClick}
-    >
-      <CardContent className="flex items-start gap-4 p-4">
-        <div className="mt-1 text-muted-foreground">
-          <FileText className="h-5 w-5" />
-        </div>
-        <div className="flex-1 space-y-2">
-          <div className="flex items-center justify-between">
-            <h3 className="font-semibold">{note.title}</h3>
-            <span className="text-xs text-muted-foreground">
-              {formatRelative(note.modifiedAt)}
-            </span>
-          </div>
-          <p className="text-xs text-muted-foreground">{note.path}</p>
-          <p className="text-sm text-muted-foreground">{formatPreview(note.content)}...</p>
-          {note.tags.length > 0 && (
-            <div className="flex flex-wrap items-center gap-2">
-              {note.tags.slice(0, 8).map((tag) => (
-                <Badge key={tag} variant="secondary" className="text-xs">
-                  <Tag className="mr-1 h-3 w-3" />
-                  {tag}
-                </Badge>
-              ))}
-            </div>
-          )}
-        </div>
-      </CardContent>
-    </Card>
-  );
-}
-
-function formatPreview(content: string): string {
-  return content.replace(/#+ /g, "").replace(/\n/g, " ").slice(0, 180).trim();
 }

@@ -1,5 +1,13 @@
 import { OAuth2Client } from "google-auth-library";
 
+export type GoogleService = "calendar" | "email" | "drive";
+
+export interface GoogleTokens {
+  accessToken: string;
+  refreshToken?: string;
+  expiryDate?: number;
+}
+
 export interface GoogleOAuthConfig {
   clientId: string;
   clientSecret: string;

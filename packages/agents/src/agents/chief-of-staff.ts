@@ -5,8 +5,6 @@ import type { AgentDefinition, AgentTask } from "@milo/shared";
 export interface ChiefOfStaffState {
   activeTask?: AgentTask;
   taskProgress: number;
-  taskHistory: AgentTask[];
-  pendingQueue: AgentTask[];
   runningTimeMs: number;
   lastActivityAt?: string;
 }
@@ -14,8 +12,6 @@ export interface ChiefOfStaffState {
 export class ChiefOfStaffAgent extends AgentEntityImpl {
   private state: ChiefOfStaffState = {
     taskProgress: 0,
-    taskHistory: [],
-    pendingQueue: [],
     runningTimeMs: 0,
   };
 
@@ -44,13 +40,5 @@ export class ChiefOfStaffAgent extends AgentEntityImpl {
 
   getTaskProgress(): number {
     return this.state.taskProgress;
-  }
-
-  getTaskHistory(): AgentTask[] {
-    return this.state.taskHistory;
-  }
-
-  getPendingQueue(): AgentTask[] {
-    return this.state.pendingQueue;
   }
 }

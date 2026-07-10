@@ -36,7 +36,11 @@ export async function knowledgeRoutes(
         const { q, maxResults } = parsed.data;
         const notes = await knowledgeService.listObsidianNotes(maxResults, q);
         const demo = await knowledgeService.isDemo();
-        return reply.send({ notes, demo });
+        return reply.send({
+          notes,
+          demo,
+          ...(demo ? { message: "Obsidian vault není nakonfigurován. Nastavte OBSIDIAN_VAULT_PATH v .env." } : {}),
+        });
       } catch (error) {
         app.log.error(error);
         return reply.status(500).send({ error: "Failed to fetch Obsidian notes" });
@@ -84,7 +88,13 @@ export async function knowledgeRoutes(
 
       try {
         const notes = await knowledgeService.searchObsidian(q);
-        return reply.send({ notes, query: q });
+        const demo = await knowledgeService.isDemo();
+        return reply.send({
+          notes,
+          query: q,
+          demo,
+          ...(demo ? { message: "Obsidian vault není nakonfigurován. Nastavte OBSIDIAN_VAULT_PATH v .env." } : {}),
+        });
       } catch (error) {
         app.log.error(error);
         return reply.status(500).send({ error: "Failed to search Obsidian notes" });

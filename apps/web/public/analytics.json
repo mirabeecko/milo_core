@@ -1,0 +1,1370 @@
+{
+  "updated_at": "2026-07-06T21:48:20.649274",
+  "source": "live",
+  "mock_reason": "",
+  "websites": {
+    "sheskates.cz": {
+      "ga4_id": "G-KDMZ8KZC3F",
+      "property_id": "540216883",
+      "account_id": "540216883",
+      "links": {
+        "ga4": "https://analytics.google.com/analytics/web/#/p540216883/reports/reportinghub",
+        "gtm": "https://tagmanager.google.com/#/admin/accounts/540216883",
+        "ads": "https://ads.google.com/aw/campaigns"
+      },
+      "overview_intervals": {
+        "28": {
+          "sessions": 5,
+          "totalUsers": 1,
+          "newUsers": 0,
+          "bounceRate": 0.2,
+          "avgSessionDuration": 560.7,
+          "pageViews": 2,
+          "conversions": 1,
+          "revenue": 0.0,
+          "engagedSessions": 4,
+          "engagementRate": 80.0
+        },
+        "14": {
+          "sessions": 1,
+          "totalUsers": 1,
+          "newUsers": 0,
+          "bounceRate": 0.0,
+          "avgSessionDuration": 615.2,
+          "pageViews": 0,
+          "conversions": 0,
+          "revenue": 0.0,
+          "engagedSessions": 1,
+          "engagementRate": 100.0
+        },
+        "7": {},
+        "3": {}
+      },
+      "overview": {
+        "sessions": 1,
+        "totalUsers": 1,
+        "newUsers": 0,
+        "bounceRate": 0.0,
+        "avgSessionDuration": 615.2,
+        "pageViews": 0,
+        "conversions": 0,
+        "revenue": 0.0,
+        "engagedSessions": 1,
+        "engagementRate": 100.0
+      },
+      "daily_trend": [
+        {
+          "date": "20260609",
+          "sessions": 2,
+          "users": 1,
+          "pageViews": 2,
+          "conversions": 0,
+          "revenue": 0.0
+        },
+        {
+          "date": "20260610",
+          "sessions": 2,
+          "users": 1,
+          "pageViews": 0,
+          "conversions": 1,
+          "revenue": 0.0
+        },
+        {
+          "date": "20260623",
+          "sessions": 1,
+          "users": 1,
+          "pageViews": 0,
+          "conversions": 0,
+          "revenue": 0.0
+        }
+      ],
+      "today_vs_yesterday": {
+        "today": {
+          "sessions": 0,
+          "users": 0,
+          "pageViews": 0,
+          "conversions": 0
+        },
+        "yesterday": {
+          "sessions": 0,
+          "users": 0,
+          "pageViews": 0,
+          "conversions": 0
+        }
+      },
+      "traffic_sources": [
+        {
+          "channel": "Organic Shopping",
+          "sessions": 1,
+          "users": 1,
+          "bounceRate": 0.0,
+          "conversions": 0
+        }
+      ],
+      "top_pages": [
+        {
+          "title": "Objednávka — SheSkates.cz",
+          "path": "/checkout.html",
+          "views": 0,
+          "sessions": 1,
+          "avgDuration": 615.2
+        }
+      ],
+      "devices": [
+        {
+          "device": "desktop",
+          "sessions": 1,
+          "users": 1,
+          "bounceRate": 0.0,
+          "conversions": 0
+        }
+      ],
+      "geo": [
+        {
+          "country": "Czechia",
+          "sessions": 1,
+          "users": 1,
+          "conversions": 0
+        }
+      ]
+    },
+    "ninja-tyden.cz": {
+      "ga4_id": "G-GBBN7TXHSV",
+      "property_id": "539768933",
+      "account_id": "539768933",
+      "links": {
+        "ga4": "https://analytics.google.com/analytics/web/#/p539768933/reports/reportinghub",
+        "gtm": "https://tagmanager.google.com/#/admin/accounts/539768933",
+        "ads": "https://ads.google.com/aw/campaigns"
+      },
+      "overview_intervals": {
+        "28": {
+          "sessions": 260,
+          "totalUsers": 219,
+          "newUsers": 219,
+          "bounceRate": 0.81,
+          "avgSessionDuration": 65.0,
+          "pageViews": 300,
+          "conversions": 1,
+          "revenue": 3490.0,
+          "engagedSessions": 49,
+          "engagementRate": 18.85
+        },
+        "14": {
+          "sessions": 36,
+          "totalUsers": 26,
+          "newUsers": 23,
+          "bounceRate": 0.78,
+          "avgSessionDuration": 167.3,
+          "pageViews": 49,
+          "conversions": 1,
+          "revenue": 3490.0,
+          "engagedSessions": 8,
+          "engagementRate": 22.22
+        },
+        "7": {
+          "sessions": 10,
+          "totalUsers": 8,
+          "newUsers": 7,
+          "bounceRate": 1.0,
+          "avgSessionDuration": 0.0,
+          "pageViews": 9,
+          "conversions": 0,
+          "revenue": 0.0,
+          "engagedSessions": 0,
+          "engagementRate": 0.0
+        },
+        "3": {
+          "sessions": 3,
+          "totalUsers": 3,
+          "newUsers": 3,
+          "bounceRate": 1.0,
+          "avgSessionDuration": 0.0,
+          "pageViews": 3,
+          "conversions": 0,
+          "revenue": 0.0,
+          "engagedSessions": 0,
+          "engagementRate": 0.0
+        }
+      },
+      "overview": {
+        "sessions": 36,
+        "totalUsers": 26,
+        "newUsers": 23,
+        "bounceRate": 0.78,
+        "avgSessionDuration": 167.3,
+        "pageViews": 49,
+        "conversions": 1,
+        "revenue": 3490.0,
+        "engagedSessions": 8,
+        "engagementRate": 22.22
+      },
+      "daily_trend": [
+        {
+          "date": "20260610",
+          "sessions": 45,
+          "users": 38,
+          "pageViews": 56,
+          "conversions": 0,
+          "revenue": 0.0
+        },
+        {
+          "date": "20260611",
+          "sessions": 15,
+          "users": 15,
+          "pageViews": 15,
+          "conversions": 0,
+          "revenue": 0.0
+        },
+        {
+          "date": "20260612",
+          "sessions": 15,
+          "users": 15,
+          "pageViews": 15,
+          "conversions": 0,
+          "revenue": 0.0
+        },
+        {
+          "date": "20260613",
+          "sessions": 7,
+          "users": 7,
+          "pageViews": 7,
+          "conversions": 0,
+          "revenue": 0.0
+        },
+        {
+          "date": "20260614",
+          "sessions": 17,
+          "users": 17,
+          "pageViews": 18,
+          "conversions": 0,
+          "revenue": 0.0
+        },
+        {
+          "date": "20260615",
+          "sessions": 5,
+          "users": 4,
+          "pageViews": 6,
+          "conversions": 0,
+          "revenue": 0.0
+        },
+        {
+          "date": "20260616",
+          "sessions": 5,
+          "users": 3,
+          "pageViews": 6,
+          "conversions": 0,
+          "revenue": 0.0
+        },
+        {
+          "date": "20260617",
+          "sessions": 8,
+          "users": 7,
+          "pageViews": 6,
+          "conversions": 0,
+          "revenue": 0.0
+        },
+        {
+          "date": "20260618",
+          "sessions": 1,
+          "users": 1,
+          "pageViews": 1,
+          "conversions": 0,
+          "revenue": 0.0
+        },
+        {
+          "date": "20260619",
+          "sessions": 85,
+          "users": 84,
+          "pageViews": 99,
+          "conversions": 0,
+          "revenue": 0.0
+        },
+        {
+          "date": "20260620",
+          "sessions": 18,
+          "users": 16,
+          "pageViews": 20,
+          "conversions": 0,
+          "revenue": 0.0
+        },
+        {
+          "date": "20260621",
+          "sessions": 3,
+          "users": 3,
+          "pageViews": 2,
+          "conversions": 0,
+          "revenue": 0.0
+        },
+        {
+          "date": "20260622",
+          "sessions": 6,
+          "users": 5,
+          "pageViews": 17,
+          "conversions": 0,
+          "revenue": 0.0
+        },
+        {
+          "date": "20260623",
+          "sessions": 7,
+          "users": 5,
+          "pageViews": 10,
+          "conversions": 1,
+          "revenue": 3490.0
+        },
+        {
+          "date": "20260624",
+          "sessions": 1,
+          "users": 1,
+          "pageViews": 1,
+          "conversions": 0,
+          "revenue": 0.0
+        },
+        {
+          "date": "20260625",
+          "sessions": 2,
+          "users": 2,
+          "pageViews": 2,
+          "conversions": 0,
+          "revenue": 0.0
+        },
+        {
+          "date": "20260626",
+          "sessions": 7,
+          "users": 7,
+          "pageViews": 7,
+          "conversions": 0,
+          "revenue": 0.0
+        },
+        {
+          "date": "20260627",
+          "sessions": 1,
+          "users": 1,
+          "pageViews": 1,
+          "conversions": 0,
+          "revenue": 0.0
+        },
+        {
+          "date": "20260628",
+          "sessions": 2,
+          "users": 2,
+          "pageViews": 2,
+          "conversions": 0,
+          "revenue": 0.0
+        },
+        {
+          "date": "20260629",
+          "sessions": 3,
+          "users": 2,
+          "pageViews": 2,
+          "conversions": 0,
+          "revenue": 0.0
+        },
+        {
+          "date": "20260630",
+          "sessions": 2,
+          "users": 2,
+          "pageViews": 2,
+          "conversions": 0,
+          "revenue": 0.0
+        },
+        {
+          "date": "20260701",
+          "sessions": 1,
+          "users": 1,
+          "pageViews": 1,
+          "conversions": 0,
+          "revenue": 0.0
+        },
+        {
+          "date": "20260702",
+          "sessions": 1,
+          "users": 1,
+          "pageViews": 1,
+          "conversions": 0,
+          "revenue": 0.0
+        },
+        {
+          "date": "20260704",
+          "sessions": 1,
+          "users": 1,
+          "pageViews": 1,
+          "conversions": 0,
+          "revenue": 0.0
+        },
+        {
+          "date": "20260705",
+          "sessions": 1,
+          "users": 1,
+          "pageViews": 1,
+          "conversions": 0,
+          "revenue": 0.0
+        },
+        {
+          "date": "20260706",
+          "sessions": 1,
+          "users": 1,
+          "pageViews": 1,
+          "conversions": 0,
+          "revenue": 0.0
+        }
+      ],
+      "today_vs_yesterday": {
+        "today": {
+          "sessions": 0,
+          "users": 0,
+          "pageViews": 0,
+          "conversions": 0
+        },
+        "yesterday": {
+          "sessions": 0,
+          "users": 0,
+          "pageViews": 0,
+          "conversions": 0
+        }
+      },
+      "traffic_sources": [
+        {
+          "channel": "Direct",
+          "sessions": 23,
+          "users": 21,
+          "bounceRate": 0.83,
+          "conversions": 0
+        },
+        {
+          "channel": "Referral",
+          "sessions": 9,
+          "users": 1,
+          "bounceRate": 0.67,
+          "conversions": 1
+        },
+        {
+          "channel": "Display",
+          "sessions": 3,
+          "users": 3,
+          "bounceRate": 1.0,
+          "conversions": 0
+        },
+        {
+          "channel": "Organic Search",
+          "sessions": 1,
+          "users": 1,
+          "bounceRate": 0.0,
+          "conversions": 0
+        }
+      ],
+      "top_pages": [
+        {
+          "title": "Ninja Týden | Letní tábor pro děti 6–12 let",
+          "path": "/",
+          "views": 48,
+          "sessions": 36,
+          "avgDuration": 156.8
+        },
+        {
+          "title": "Registrace potvrzena | Ninja Týden",
+          "path": "/dekujeme.html",
+          "views": 1,
+          "sessions": 1,
+          "avgDuration": 375.0
+        }
+      ],
+      "devices": [
+        {
+          "device": "desktop",
+          "sessions": 26,
+          "users": 18,
+          "bounceRate": 0.85,
+          "conversions": 1
+        },
+        {
+          "device": "mobile",
+          "sessions": 9,
+          "users": 7,
+          "bounceRate": 0.56,
+          "conversions": 0
+        },
+        {
+          "device": "tablet",
+          "sessions": 1,
+          "users": 1,
+          "bounceRate": 1.0,
+          "conversions": 0
+        }
+      ],
+      "geo": [
+        {
+          "country": "Czechia",
+          "sessions": 16,
+          "users": 6,
+          "conversions": 1
+        },
+        {
+          "country": "United States",
+          "sessions": 16,
+          "users": 16,
+          "conversions": 0
+        },
+        {
+          "country": "Poland",
+          "sessions": 2,
+          "users": 2,
+          "conversions": 0
+        },
+        {
+          "country": "India",
+          "sessions": 1,
+          "users": 1,
+          "conversions": 0
+        },
+        {
+          "country": "Slovakia",
+          "sessions": 1,
+          "users": 1,
+          "conversions": 0
+        }
+      ]
+    },
+    "tjkrupka.cz": {
+      "ga4_id": "G-NM6R8S2X39",
+      "property_id": "511361257",
+      "account_id": "511361257",
+      "links": {
+        "ga4": "https://analytics.google.com/analytics/web/#/p511361257/reports/reportinghub",
+        "gtm": "https://tagmanager.google.com/#/admin/accounts/511361257",
+        "ads": "https://ads.google.com/aw/campaigns"
+      },
+      "overview_intervals": {
+        "28": {
+          "sessions": 84,
+          "totalUsers": 82,
+          "newUsers": 85,
+          "bounceRate": 0.75,
+          "avgSessionDuration": 14.6,
+          "pageViews": 104,
+          "conversions": 0,
+          "revenue": 0.0,
+          "engagedSessions": 21,
+          "engagementRate": 25.0
+        },
+        "14": {
+          "sessions": 22,
+          "totalUsers": 22,
+          "newUsers": 25,
+          "bounceRate": 0.59,
+          "avgSessionDuration": 33.3,
+          "pageViews": 33,
+          "conversions": 0,
+          "revenue": 0.0,
+          "engagedSessions": 9,
+          "engagementRate": 40.91
+        },
+        "7": {},
+        "3": {}
+      },
+      "overview": {
+        "sessions": 22,
+        "totalUsers": 22,
+        "newUsers": 25,
+        "bounceRate": 0.59,
+        "avgSessionDuration": 33.3,
+        "pageViews": 33,
+        "conversions": 0,
+        "revenue": 0.0,
+        "engagedSessions": 9,
+        "engagementRate": 40.91
+      },
+      "daily_trend": [
+        {
+          "date": "20260610",
+          "sessions": 1,
+          "users": 1,
+          "pageViews": 1,
+          "conversions": 0,
+          "revenue": 0.0
+        },
+        {
+          "date": "20260612",
+          "sessions": 4,
+          "users": 4,
+          "pageViews": 4,
+          "conversions": 0,
+          "revenue": 0.0
+        },
+        {
+          "date": "20260613",
+          "sessions": 4,
+          "users": 4,
+          "pageViews": 4,
+          "conversions": 0,
+          "revenue": 0.0
+        },
+        {
+          "date": "20260614",
+          "sessions": 2,
+          "users": 2,
+          "pageViews": 2,
+          "conversions": 0,
+          "revenue": 0.0
+        },
+        {
+          "date": "20260615",
+          "sessions": 25,
+          "users": 25,
+          "pageViews": 29,
+          "conversions": 0,
+          "revenue": 0.0
+        },
+        {
+          "date": "20260616",
+          "sessions": 20,
+          "users": 19,
+          "pageViews": 26,
+          "conversions": 0,
+          "revenue": 0.0
+        },
+        {
+          "date": "20260617",
+          "sessions": 3,
+          "users": 2,
+          "pageViews": 2,
+          "conversions": 0,
+          "revenue": 0.0
+        },
+        {
+          "date": "20260618",
+          "sessions": 1,
+          "users": 1,
+          "pageViews": 1,
+          "conversions": 0,
+          "revenue": 0.0
+        },
+        {
+          "date": "20260619",
+          "sessions": 1,
+          "users": 1,
+          "pageViews": 1,
+          "conversions": 0,
+          "revenue": 0.0
+        },
+        {
+          "date": "20260620",
+          "sessions": 1,
+          "users": 1,
+          "pageViews": 1,
+          "conversions": 0,
+          "revenue": 0.0
+        },
+        {
+          "date": "20260622",
+          "sessions": 2,
+          "users": 2,
+          "pageViews": 3,
+          "conversions": 0,
+          "revenue": 0.0
+        },
+        {
+          "date": "20260623",
+          "sessions": 17,
+          "users": 17,
+          "pageViews": 19,
+          "conversions": 0,
+          "revenue": 0.0
+        },
+        {
+          "date": "20260624",
+          "sessions": 1,
+          "users": 1,
+          "pageViews": 8,
+          "conversions": 0,
+          "revenue": 0.0
+        },
+        {
+          "date": "20260626",
+          "sessions": 1,
+          "users": 1,
+          "pageViews": 1,
+          "conversions": 0,
+          "revenue": 0.0
+        },
+        {
+          "date": "20260628",
+          "sessions": 1,
+          "users": 1,
+          "pageViews": 2,
+          "conversions": 0,
+          "revenue": 0.0
+        }
+      ],
+      "today_vs_yesterday": {
+        "today": {
+          "sessions": 0,
+          "users": 0,
+          "pageViews": 0,
+          "conversions": 0
+        },
+        "yesterday": {
+          "sessions": 0,
+          "users": 0,
+          "pageViews": 0,
+          "conversions": 0
+        }
+      },
+      "traffic_sources": [
+        {
+          "channel": "Direct",
+          "sessions": 20,
+          "users": 20,
+          "bounceRate": 0.6,
+          "conversions": 0
+        },
+        {
+          "channel": "Organic Search",
+          "sessions": 2,
+          "users": 2,
+          "bounceRate": 0.5,
+          "conversions": 0
+        }
+      ],
+      "top_pages": [
+        {
+          "title": "Tělovýchovná jednota Krupka z.s. | Komáří vížka",
+          "path": "/",
+          "views": 23,
+          "sessions": 21,
+          "avgDuration": 8.4
+        },
+        {
+          "title": "Naše služby | Tělovýchovná jednota Krupka | TJK Krupka",
+          "path": "/sluzby",
+          "views": 1,
+          "sessions": 1,
+          "avgDuration": 199.6
+        },
+        {
+          "title": "O nás - Tělovýchovná jednota Krupka z.s. | TJK Krupka",
+          "path": "/",
+          "views": 1,
+          "sessions": 1,
+          "avgDuration": 30.0
+        },
+        {
+          "title": "O nás - Tělovýchovná jednota Krupka z.s. | TJK Krupka",
+          "path": "/kontakt",
+          "views": 1,
+          "sessions": 1,
+          "avgDuration": 16.8
+        },
+        {
+          "title": "O nás - Tělovýchovná jednota Krupka z.s. | TJK Krupka",
+          "path": "/o-nas",
+          "views": 1,
+          "sessions": 1,
+          "avgDuration": 114.9
+        },
+        {
+          "title": "O nás - Tělovýchovná jednota Krupka z.s. | TJK Krupka",
+          "path": "/ubytovani",
+          "views": 1,
+          "sessions": 1,
+          "avgDuration": 41.4
+        },
+        {
+          "title": "Tělovýchovná jednota Krupka z.s. | Komáří vížka",
+          "path": "/dobrovolnici",
+          "views": 1,
+          "sessions": 1,
+          "avgDuration": 5.1
+        },
+        {
+          "title": "Tělovýchovná jednota Krupka z.s. | Komáří vížka",
+          "path": "/kontakt",
+          "views": 1,
+          "sessions": 1,
+          "avgDuration": 29.1
+        },
+        {
+          "title": "Tělovýchovná jednota Krupka z.s. | Komáří vížka",
+          "path": "/snowkiting-kurzy",
+          "views": 1,
+          "sessions": 3,
+          "avgDuration": 11.3
+        },
+        {
+          "title": "Zapojte se – Dobrovolníci & Partneři | TJK Krupka",
+          "path": "/dobrovolnici",
+          "views": 1,
+          "sessions": 2,
+          "avgDuration": 24.5
+        }
+      ],
+      "devices": [
+        {
+          "device": "desktop",
+          "sessions": 16,
+          "users": 16,
+          "bounceRate": 0.5,
+          "conversions": 0
+        },
+        {
+          "device": "mobile",
+          "sessions": 7,
+          "users": 7,
+          "bounceRate": 0.71,
+          "conversions": 0
+        }
+      ],
+      "geo": [
+        {
+          "country": "United States",
+          "sessions": 12,
+          "users": 12,
+          "conversions": 0
+        },
+        {
+          "country": "Czechia",
+          "sessions": 3,
+          "users": 3,
+          "conversions": 0
+        },
+        {
+          "country": "Canada",
+          "sessions": 2,
+          "users": 2,
+          "conversions": 0
+        },
+        {
+          "country": "Poland",
+          "sessions": 2,
+          "users": 2,
+          "conversions": 0
+        },
+        {
+          "country": "(not set)",
+          "sessions": 1,
+          "users": 1,
+          "conversions": 0
+        },
+        {
+          "country": "France",
+          "sessions": 1,
+          "users": 1,
+          "conversions": 0
+        },
+        {
+          "country": "Germany",
+          "sessions": 1,
+          "users": 1,
+          "conversions": 0
+        },
+        {
+          "country": "Türkiye",
+          "sessions": 1,
+          "users": 1,
+          "conversions": 0
+        }
+      ]
+    },
+    "webdo24.cz": {
+      "ga4_id": "G-815XCLCGY8",
+      "property_id": "530284583",
+      "account_id": "530284583",
+      "links": {
+        "ga4": "https://analytics.google.com/analytics/web/#/p530284583/reports/reportinghub",
+        "gtm": "https://tagmanager.google.com/#/admin/accounts/530284583",
+        "ads": "https://ads.google.com/aw/campaigns"
+      },
+      "overview_intervals": {
+        "28": {
+          "sessions": 622,
+          "totalUsers": 530,
+          "newUsers": 529,
+          "bounceRate": 0.8,
+          "avgSessionDuration": 34.9,
+          "pageViews": 729,
+          "conversions": 28,
+          "revenue": 0.0,
+          "engagedSessions": 127,
+          "engagementRate": 20.42
+        },
+        "14": {
+          "sessions": 192,
+          "totalUsers": 162,
+          "newUsers": 147,
+          "bounceRate": 0.82,
+          "avgSessionDuration": 24.9,
+          "pageViews": 213,
+          "conversions": 2,
+          "revenue": 0.0,
+          "engagedSessions": 34,
+          "engagementRate": 17.71
+        },
+        "7": {
+          "sessions": 63,
+          "totalUsers": 54,
+          "newUsers": 50,
+          "bounceRate": 0.75,
+          "avgSessionDuration": 26.5,
+          "pageViews": 75,
+          "conversions": 0,
+          "revenue": 0.0,
+          "engagedSessions": 16,
+          "engagementRate": 25.4
+        },
+        "3": {
+          "sessions": 9,
+          "totalUsers": 6,
+          "newUsers": 3,
+          "bounceRate": 1.0,
+          "avgSessionDuration": 1.2,
+          "pageViews": 9,
+          "conversions": 0,
+          "revenue": 0.0,
+          "engagedSessions": 0,
+          "engagementRate": 0.0
+        }
+      },
+      "overview": {
+        "sessions": 192,
+        "totalUsers": 162,
+        "newUsers": 147,
+        "bounceRate": 0.82,
+        "avgSessionDuration": 24.9,
+        "pageViews": 213,
+        "conversions": 2,
+        "revenue": 0.0,
+        "engagedSessions": 34,
+        "engagementRate": 17.71
+      },
+      "daily_trend": [
+        {
+          "date": "20260608",
+          "sessions": 1,
+          "users": 1,
+          "pageViews": 1,
+          "conversions": 0,
+          "revenue": 0.0
+        },
+        {
+          "date": "20260609",
+          "sessions": 11,
+          "users": 11,
+          "pageViews": 13,
+          "conversions": 1,
+          "revenue": 0.0
+        },
+        {
+          "date": "20260610",
+          "sessions": 28,
+          "users": 27,
+          "pageViews": 28,
+          "conversions": 0,
+          "revenue": 0.0
+        },
+        {
+          "date": "20260611",
+          "sessions": 36,
+          "users": 35,
+          "pageViews": 45,
+          "conversions": 1,
+          "revenue": 0.0
+        },
+        {
+          "date": "20260612",
+          "sessions": 27,
+          "users": 26,
+          "pageViews": 32,
+          "conversions": 2,
+          "revenue": 0.0
+        },
+        {
+          "date": "20260613",
+          "sessions": 57,
+          "users": 53,
+          "pageViews": 65,
+          "conversions": 2,
+          "revenue": 0.0
+        },
+        {
+          "date": "20260614",
+          "sessions": 70,
+          "users": 64,
+          "pageViews": 81,
+          "conversions": 1,
+          "revenue": 0.0
+        },
+        {
+          "date": "20260615",
+          "sessions": 21,
+          "users": 20,
+          "pageViews": 33,
+          "conversions": 5,
+          "revenue": 0.0
+        },
+        {
+          "date": "20260616",
+          "sessions": 11,
+          "users": 7,
+          "pageViews": 13,
+          "conversions": 0,
+          "revenue": 0.0
+        },
+        {
+          "date": "20260617",
+          "sessions": 4,
+          "users": 3,
+          "pageViews": 6,
+          "conversions": 0,
+          "revenue": 0.0
+        },
+        {
+          "date": "20260618",
+          "sessions": 13,
+          "users": 11,
+          "pageViews": 20,
+          "conversions": 7,
+          "revenue": 0.0
+        },
+        {
+          "date": "20260619",
+          "sessions": 49,
+          "users": 45,
+          "pageViews": 62,
+          "conversions": 3,
+          "revenue": 0.0
+        },
+        {
+          "date": "20260620",
+          "sessions": 14,
+          "users": 14,
+          "pageViews": 19,
+          "conversions": 1,
+          "revenue": 0.0
+        },
+        {
+          "date": "20260621",
+          "sessions": 88,
+          "users": 86,
+          "pageViews": 98,
+          "conversions": 3,
+          "revenue": 0.0
+        },
+        {
+          "date": "20260622",
+          "sessions": 45,
+          "users": 36,
+          "pageViews": 48,
+          "conversions": 0,
+          "revenue": 0.0
+        },
+        {
+          "date": "20260623",
+          "sessions": 2,
+          "users": 2,
+          "pageViews": 2,
+          "conversions": 0,
+          "revenue": 0.0
+        },
+        {
+          "date": "20260624",
+          "sessions": 2,
+          "users": 2,
+          "pageViews": 2,
+          "conversions": 0,
+          "revenue": 0.0
+        },
+        {
+          "date": "20260625",
+          "sessions": 8,
+          "users": 7,
+          "pageViews": 8,
+          "conversions": 0,
+          "revenue": 0.0
+        },
+        {
+          "date": "20260626",
+          "sessions": 3,
+          "users": 3,
+          "pageViews": 2,
+          "conversions": 0,
+          "revenue": 0.0
+        },
+        {
+          "date": "20260627",
+          "sessions": 33,
+          "users": 32,
+          "pageViews": 36,
+          "conversions": 0,
+          "revenue": 0.0
+        },
+        {
+          "date": "20260628",
+          "sessions": 37,
+          "users": 32,
+          "pageViews": 40,
+          "conversions": 2,
+          "revenue": 0.0
+        },
+        {
+          "date": "20260629",
+          "sessions": 30,
+          "users": 29,
+          "pageViews": 35,
+          "conversions": 0,
+          "revenue": 0.0
+        },
+        {
+          "date": "20260630",
+          "sessions": 20,
+          "users": 19,
+          "pageViews": 27,
+          "conversions": 0,
+          "revenue": 0.0
+        },
+        {
+          "date": "20260701",
+          "sessions": 2,
+          "users": 2,
+          "pageViews": 2,
+          "conversions": 0,
+          "revenue": 0.0
+        },
+        {
+          "date": "20260702",
+          "sessions": 2,
+          "users": 2,
+          "pageViews": 2,
+          "conversions": 0,
+          "revenue": 0.0
+        },
+        {
+          "date": "20260703",
+          "sessions": 3,
+          "users": 3,
+          "pageViews": 3,
+          "conversions": 0,
+          "revenue": 0.0
+        },
+        {
+          "date": "20260704",
+          "sessions": 5,
+          "users": 4,
+          "pageViews": 5,
+          "conversions": 0,
+          "revenue": 0.0
+        },
+        {
+          "date": "20260705",
+          "sessions": 1,
+          "users": 1,
+          "pageViews": 1,
+          "conversions": 0,
+          "revenue": 0.0
+        }
+      ],
+      "today_vs_yesterday": {
+        "today": {
+          "sessions": 0,
+          "users": 0,
+          "pageViews": 0,
+          "conversions": 0
+        },
+        "yesterday": {
+          "sessions": 0,
+          "users": 0,
+          "pageViews": 0,
+          "conversions": 0
+        }
+      },
+      "traffic_sources": [
+        {
+          "channel": "Display",
+          "sessions": 160,
+          "users": 136,
+          "bounceRate": 0.82,
+          "conversions": 2
+        },
+        {
+          "channel": "Direct",
+          "sessions": 19,
+          "users": 17,
+          "bounceRate": 0.84,
+          "conversions": 0
+        },
+        {
+          "channel": "Paid Search",
+          "sessions": 8,
+          "users": 6,
+          "bounceRate": 0.88,
+          "conversions": 0
+        },
+        {
+          "channel": "Cross-network",
+          "sessions": 3,
+          "users": 3,
+          "bounceRate": 0.33,
+          "conversions": 0
+        },
+        {
+          "channel": "Referral",
+          "sessions": 2,
+          "users": 1,
+          "bounceRate": 1.0,
+          "conversions": 0
+        }
+      ],
+      "top_pages": [
+        {
+          "title": "Model Start · 14 900 Kč · Web do 24 hodin | WebDo24.cz",
+          "path": "/model-start.html",
+          "views": 95,
+          "sessions": 84,
+          "avgDuration": 33.0
+        },
+        {
+          "title": "Model Automation · 59 900 Kč · Plně automatizovaný obchodní systém | WebDo24.cz",
+          "path": "/model-automation.html",
+          "views": 37,
+          "sessions": 34,
+          "avgDuration": 14.0
+        },
+        {
+          "title": "Model Start · 14 900 Kč · Moderní web do 24 hodin | WebDo24.cz",
+          "path": "/model-start.html",
+          "views": 34,
+          "sessions": 31,
+          "avgDuration": 10.0
+        },
+        {
+          "title": "Model Business · 29 900 Kč · Web s AI automatizací | WebDo24.cz",
+          "path": "/model-business.html",
+          "views": 23,
+          "sessions": 23,
+          "avgDuration": 15.0
+        },
+        {
+          "title": "WebDo24.cz | Web, který vám přinese zákazníky do 24 hodin",
+          "path": "/",
+          "views": 10,
+          "sessions": 10,
+          "avgDuration": 1.4
+        },
+        {
+          "title": "Model Automation · 59 900 Kč · Automatizovaný online obchodní systém | WebDo24.cz",
+          "path": "/model-automation.html",
+          "views": 5,
+          "sessions": 5,
+          "avgDuration": 24.5
+        },
+        {
+          "title": "WebDo24.cz | Spustíme váš online business do 24 hodin",
+          "path": "/",
+          "views": 5,
+          "sessions": 6,
+          "avgDuration": 90.0
+        },
+        {
+          "title": "Objednat web — WebDo24.cz",
+          "path": "/objednat.html",
+          "views": 2,
+          "sessions": 2,
+          "avgDuration": 96.4
+        },
+        {
+          "title": "WebDo24.cz | Web, který vám přinese zákazníky do 24 hodin",
+          "path": "/index.html",
+          "views": 2,
+          "sessions": 2,
+          "avgDuration": 2.6
+        }
+      ],
+      "devices": [
+        {
+          "device": "mobile",
+          "sessions": 179,
+          "users": 150,
+          "bounceRate": 0.82,
+          "conversions": 2
+        },
+        {
+          "device": "desktop",
+          "sessions": 12,
+          "users": 11,
+          "bounceRate": 0.92,
+          "conversions": 0
+        },
+        {
+          "device": "tablet",
+          "sessions": 1,
+          "users": 1,
+          "bounceRate": 1.0,
+          "conversions": 0
+        }
+      ],
+      "geo": [
+        {
+          "country": "Czechia",
+          "sessions": 177,
+          "users": 148,
+          "conversions": 2
+        },
+        {
+          "country": "Netherlands",
+          "sessions": 5,
+          "users": 5,
+          "conversions": 0
+        },
+        {
+          "country": "United States",
+          "sessions": 4,
+          "users": 4,
+          "conversions": 0
+        },
+        {
+          "country": "(not set)",
+          "sessions": 1,
+          "users": 1,
+          "conversions": 0
+        },
+        {
+          "country": "Canada",
+          "sessions": 1,
+          "users": 1,
+          "conversions": 0
+        },
+        {
+          "country": "Germany",
+          "sessions": 1,
+          "users": 1,
+          "conversions": 0
+        },
+        {
+          "country": "Monaco",
+          "sessions": 1,
+          "users": 1,
+          "conversions": 0
+        },
+        {
+          "country": "Montenegro",
+          "sessions": 1,
+          "users": 1,
+          "conversions": 0
+        },
+        {
+          "country": "New Zealand",
+          "sessions": 1,
+          "users": 1,
+          "conversions": 0
+        }
+      ]
+    }
+  },
+  "ads": {
+    "campaigns": [],
+    "alerts": [],
+    "total_cost_kc": 0,
+    "total_clicks": 0,
+    "total_conversions": 0,
+    "active_count": 0
+  }
+}

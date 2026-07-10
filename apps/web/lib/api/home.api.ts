@@ -1,6 +1,16 @@
 import { apiClient } from "./client";
 import type { ApiResponse } from "./types";
-import type { CalendarEvent, Email } from "@/lib/types";
+import type {
+  CalendarEvent,
+  Email,
+  PriorityItem,
+  DecisionItem,
+  BriefingSnapshot,
+  AiSummary,
+  SystemRecommendation,
+  WeatherData,
+  ActivityLogItem,
+} from "@/lib/types";
 
 export interface HomeMeeting {
   id: string;
@@ -70,23 +80,68 @@ export interface HomeActivity {
   type: "task" | "error" | "info" | "warning";
 }
 
-export interface HomeData {
-  meetings: HomeMeeting[];
-  criticalDeadlines: HomeCriticalDeadline[];
-  tasks: HomeTask[];
-  pendingDecisions: HomePendingDecision[];
-  unreadImportantEmails: Email[];
-  calendarConflicts: CalendarEvent[];
-  missingResponses: Email[];
-  overloadedProjects: HomeOverloadedProject[];
-  agents: HomeAgent[];
-  services: HomeService[];
-  activity: HomeActivity[];
-  calendarConnected: boolean;
-  emailConnected: boolean;
+export interface CalendarDay {
+  today: Array<{ id: string; summary: string; start: string; end: string; location?: string }>;
+  tomorrow: Array<{ id: string; summary: string; start: string; end: string; location?: string }>;
+  week: Array<{ id: string; summary: string; start: string; end: string; location?: string }>;
 }
 
-export async function getHomeData(): Promise<ApiResponse<HomeData>> {
-  const response = await apiClient<ApiResponse<HomeData>>("/home");
-  return response;
+export interface HomeData {
+  meetings?: HomeMeeting[];
+  criticalDeadlines?: HomeCriticalDeadline[];
+  tasks?: HomeTask[];
+  pendingDecisions?: HomePendingDecision[];
+  unreadImportantEmails?: Email[];
+  calendarConflicts?: CalendarEvent[];
+  missingResponses?: Email[];
+  overloadedProjects?: HomeOverloadedProject[];
+  agents?: HomeAgent[];
+  services?: HomeService[];
+  activity?: HomeActivity[];
+  calendarConnected?: boolean;
+  emailConnected?: boolean;
+  priorities: PriorityItem[];
+  decisions: DecisionItem[];
+  snapshot: BriefingSnapshot;
+  aiSummary: AiSummary;
+  recommendation: SystemRecommendation | null;
+  weather: WeatherData;
+  activityLog: ActivityLogItem[];
+  calendar: CalendarDay;
+  isDemo?: boolean;
+  dataSource?: "live" | "demo" | "partial";
+  connectedServices?: { name: string; connected: boolean; label: string }[];
+  todayEvents?: CalendarEvent[];
+}
+
+export async function getHomeData(): Promise<HomeData> {
+  const raw = await apiClient<Record<string, unknown>>("/home");
+  const data = (raw || {}) as Record<string, unknown>;
+  
+  return {
+    priorities: (data.priorities as PriorityItem[]) || [],
+    decisions: (data.decisions as DecisionItem[]) || [],
+    snapshot: (data.snapshot as BriefingSnapshot) || { unreadEmails: 0, upcomingMeetings: 0, newDocuments: 0, openTasks: 0, activeAgents: 0 },
+    activityLog: (data.activityLog as ActivityLogItem[]) || [],
+    recommendation: (data.recommendation as SystemRecommendation | null) || null,
+    weather: (data.weather as WeatherData) || { location: "Neznámá", condition: "clear", temperature: 0, feelsLike: 0, humidity: 0, windSpeed: 0, forecast: [] },
+    aiSummary: (data.aiSummary as AiSummary) || { unreadEmails: 0, emailSenders: [], siteVisits: [], totalVisits: 0, insight: "" },
+    calendar: (data.calendar as CalendarDay) || { today: [], tomorrow: [], week: [] },
+    
+    meetings: [],
+    criticalDeadlines: [],
+    tasks: [],
+    pendingDecisions: [],
+    unreadImportantEmails: [],
+    calendarConflicts: [],
+    missingResponses: [],
+    overloadedProjects: [],
+    agents: [],
+    services: [],
+    activity: [],
+    calendarConnected: false,
+    emailConnected: false,
+    connectedServices: [],
+    todayEvents: ((data.calendar as CalendarDay)?.today || []) as CalendarEvent[],
+  };
 }

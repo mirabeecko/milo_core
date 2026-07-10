@@ -1,40 +1,76 @@
-import { getProjects } from "./service.js";
+import { writeFileSync } from "fs";
+import { join, resolve } from "path";
+import { dirname } from "node:path";
+import { fileURLToPath } from "node:url";
+import { getProjects, createProject, saveProjects } from "./service.js";
 import { scanProjects } from "./scan.js";
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
+const DATA_DIR = resolve(__dirname, "../../../data");
+import type { Project } from "./service.js";
 
 export async function refreshProjects(): Promise<void> {
   const scanned = await scanProjects();
   const existing = getProjects();
-  
-  // Merge scanned with existing (preserve manual edits)
-  const merged = existing.map((existing) => {
-    const scanned = scanned.find((s) => s.name === existing.name);
-    if (!scanned) return existing;
-    
-    return {
-      ...existing,
-      ...scanned,
-      // Don't overwrite manual fields
-      goal: existing.goal ?? scanned.goal,
-      status: existing.status ?? scanned.status,
-      done_summary: existing.done_summary ?? scanned.done_summary,
-      remaining_summary: existing.remaining_summary ?? scanned.remaining_summary,
-      time_spent_hours: existing.time_spent_hours ?? scanned.time_spent_hours,
-      time_estimate_hours: existing.time_estimate_hours ?? scanned.time_estimate_hours,
-      cost_spent: existing.cost_spent ?? scanned.cost_spent,
-      cost_estimate: existing.cost_estimate ?? scanned.cost_estimate,
-      last_updated: new Date().toISOString(),
-    };
-  });
 
-  // Add new scanned projects
-  for (const scanned of scanned) {
-    if (!existing.find((e) => e.name === scanned.name)) {
-      merged.push(scanned);
+  const merged: Project[] = [];
+
+  for (const scannedProject of scanned) {
+    const existingProject = existing.find(
+      (e) => e.name === scannedProject.name || e.path === scannedProject.path,
+    );
+
+    if (existingProject) {
+      merged.push({
+        ...existingProject,
+        github_url: scannedProject.github_url ?? existingProject.github_url,
+        last_commit: scannedProject.last_commit ?? existingProject.last_commit,
+        commit_count: scannedProject.commit_count,
+        last_updated: new Date().toISOString(),
+        goal: existingProject.goal || scannedProject.goal,
+        status: existingProject.status || scannedProject.status,
+        done_summary: existingProject.done_summary || scannedProject.done_summary,
+        remaining_summary: existingProject.remaining_summary || scannedProject.remaining_summary,
+        time_spent_hours: existingProject.time_spent_hours || scannedProject.time_spent_hours,
+        time_estimate_hours: existingProject.time_estimate_hours || scannedProject.time_estimate_hours,
+        cost_spent: existingProject.cost_spent || scannedProject.cost_spent,
+        cost_estimate: existingProject.cost_estimate || scannedProject.cost_estimate,
+      });
+    } else {
+      const newProject = await createProject({
+        name: scannedProject.name,
+        path: scannedProject.path,
+        github_url: scannedProject.github_url,
+        last_commit: scannedProject.last_commit,
+        commit_count: scannedProject.commit_count,
+        goal: scannedProject.goal,
+        status: scannedProject.status,
+        done_summary: scannedProject.done_summary,
+        remaining_summary: scannedProject.remaining_summary,
+        time_spent_hours: scannedProject.time_spent_hours,
+        time_estimate_hours: scannedProject.time_estimate_hours,
+        cost_spent: scannedProject.cost_spent,
+        cost_estimate: scannedProject.cost_estimate,
+        description: scannedProject.description,
+        priority: scannedProject.priority,
+        last_updated: scannedProject.last_updated,
+      });
+      merged.push(newProject);
     }
   }
 
-  // Save back
-  const data = { projects: merged };
-  const projectsFile = require("path").join(process.cwd(), "apps/api/data/projects.json");
-  require("fs").writeFileSync(projectsFile, JSON.stringify(data, null, 2));
+  for (const existingProject of existing) {
+    if (!merged.find((m) => m.name === existingProject.name)) {
+      merged.push(existingProject);
+    }
+  }
+
+  saveProjects(merged);
+
+  const projectsFile = join(DATA_DIR, "projects.json");
+  try {
+    writeFileSync(projectsFile, JSON.stringify({ projects: Object.fromEntries(merged.map((p) => [p.name, p])) }, null, 2));
+  } catch (error) {
+    console.error(`Failed to save projects to ${projectsFile}:`, error);
+  }
 }

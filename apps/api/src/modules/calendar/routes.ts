@@ -2,6 +2,7 @@ import { FastifyInstance, FastifyPluginOptions } from "fastify";
 import { z } from "zod";
 import { CalendarService } from "./service.js";
 import { AuthenticatedRequest, authMiddleware } from "../auth/middleware.js";
+import { getGoogleTokens, setGoogleTokens } from "../../config/google-tokens.js";
 
 const connectSchema = z.object({
   code: z.string(),
@@ -27,7 +28,11 @@ export async function calendarRoutes(
         return reply.status(503).send({ error: "Google OAuth is not configured" });
       }
 
-      const url = calendarService.getAuthorizationUrl(request.user?.id);
+      const state = JSON.stringify({
+        userId: request.user?.id,
+        service: "calendar",
+      });
+      const url = calendarService.getAuthorizationUrl(state);
       return reply.send({ url });
     },
   );
@@ -47,7 +52,8 @@ export async function calendarRoutes(
       }
 
       try {
-        await calendarService.exchangeCode(parsed.data.code);
+        const tokens = await calendarService.exchangeCode(parsed.data.code);
+        await setGoogleTokens(request.user?.id ?? "", "calendar", tokens);
         return reply.send({ connected: true });
       } catch (error) {
         request.log.error(error);
@@ -61,16 +67,24 @@ export async function calendarRoutes(
     { preHandler: authMiddleware },
     async (request: AuthenticatedRequest, reply) => {
       if (!calendarService) {
-        return reply.send({ events: new CalendarService().generateDemoEvents() });
+        return reply.send({
+          events: [],
+          demo: true,
+          message: "Google Calendar není připojen. Připojte účet pro zobrazení událostí.",
+        });
       }
 
       try {
-        const demoAccessToken = "";
-        if (!demoAccessToken) {
-          return reply.send({ events: calendarService.generateDemoEvents() });
+        const tokens = await getGoogleTokens(request.user?.id ?? "", "calendar");
+        if (!tokens) {
+          return reply.send({
+            events: [],
+            demo: true,
+            message: "Google Calendar není připojen. Připojte účet pro zobrazení událostí.",
+          });
         }
 
-        const events = await calendarService.listEvents(demoAccessToken);
+        const events = await calendarService.listEvents(request.user?.id ?? "", tokens.accessToken, tokens.refreshToken);
         return reply.send({ events });
       } catch (error) {
         request.log.error(error);

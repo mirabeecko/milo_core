@@ -56,7 +56,7 @@ export async function documentsRoutes(
     async (request: AuthenticatedRequest, reply) => {
       try {
         if (documentsService.isDemo()) {
-          return reply.send({ files: documentsService.generateDemoFiles(), demo: true });
+          return reply.send({ files: [], demo: true, message: "Google Drive není připojen. Připojte účet pro zobrazení souborů." });
         }
 
         const accessToken = "";

@@ -1,0 +1,285 @@
+{
+  "$schema": "./organization-registry.schema.json",
+  "meta": {
+    "version": "1.0.0",
+    "generated": "2026-07-08T00:00:00Z",
+    "authority": "AUTHORITATIVE — tento JSON je zdrojem pravdy pro organizační strukturu MiLO. TypeScript definice v packages/agents/src/registry/executive-agents.ts jsou z tohoto souboru odvozené.",
+    "maintainer": "ARCH Department",
+    "update_policy": "Změny pouze přes ADR schválené Executive Boardem."
+  },
+  "departments": {
+    "OC": {
+      "id": "OC",
+      "name": "Office of the Chief",
+      "mission": "Strategie, koordinace, rozhraní k Vlastníkovi",
+      "lead_agent_id": "chief-orchestrator",
+      "dependencies": [],
+      "status": "active",
+      "active_missions": [],
+      "available_tools": [
+        "board:schedule_meeting",
+        "board:allocate_budget",
+        "board:resolve_conflict",
+        "board:escalate_to_owner",
+        "org:list_departments",
+        "org:get_department_status",
+        "mission:create_strategic",
+        "decision:record"
+      ],
+      "memory_scope": [
+        "constitution",
+        "organizational-constitution",
+        "executive-backlog",
+        "department-charters"
+      ],
+      "version": "1.0.0"
+    },
+    "ARCH": {
+      "id": "ARCH",
+      "name": "Architecture",
+      "mission": "Systémový návrh, ADR, technické standardy",
+      "lead_agent_id": "chief-architect",
+      "dependencies": ["KNOW"],
+      "status": "active",
+      "active_missions": [],
+      "available_tools": [
+        "adr:create",
+        "adr:review",
+        "adr:approve",
+        "adr:list",
+        "tech:select_provider",
+        "tech:evaluate_alternative",
+        "org:propose_standard"
+      ],
+      "memory_scope": [
+        "constitution",
+        "architectural-spec",
+        "adr-registry",
+        "conceptual-model"
+      ],
+      "version": "1.0.0"
+    },
+    "ENG": {
+      "id": "ENG",
+      "name": "Engineering",
+      "mission": "Vývoj, údržba, nasazení softwaru",
+      "lead_agent_id": "chief-engineer",
+      "dependencies": ["ARCH", "OPS", "QA"],
+      "status": "ready",
+      "active_missions": [],
+      "available_tools": [
+        "code:implement",
+        "code:review",
+        "code:test",
+        "ci:trigger_build",
+        "ci:deploy",
+        "dep:check_update",
+        "dep:update"
+      ],
+      "memory_scope": [
+        "architecture-spec",
+        "coding-standards",
+        "adr-registry"
+      ],
+      "version": "1.0.0"
+    },
+    "KNOW": {
+      "id": "KNOW",
+      "name": "Knowledge",
+      "mission": "Paměť, učení, dokumenty, vyhledávání",
+      "lead_agent_id": "chief-knowledge-officer",
+      "dependencies": [],
+      "status": "active",
+      "active_missions": [
+        {
+          "id": "M-KNOW-001",
+          "name": "Zaindexovat a katalogizovat všechny dokumenty",
+          "status": "pending",
+          "assigned": "2026-07-08"
+        }
+      ],
+      "available_tools": [
+        "knowledge:index",
+        "knowledge:search",
+        "knowledge:classify",
+        "knowledge:export",
+        "knowledge:lessons_learned",
+        "memory:read",
+        "memory:write"
+      ],
+      "memory_scope": [
+        "conceptual-model",
+        "constitution",
+        "organizational-constitution",
+        "all-documents"
+      ],
+      "version": "1.0.0"
+    },
+    "COMM": {
+      "id": "COMM",
+      "name": "Communications",
+      "mission": "Externí kanály, zprávy, notifikace",
+      "lead_agent_id": "chief-communications-officer",
+      "dependencies": [],
+      "status": "active",
+      "active_missions": [
+        {
+          "id": "M-COMM-001",
+          "name": "Audit existujících Telegram implementací",
+          "status": "pending",
+          "assigned": "2026-07-08"
+        }
+      ],
+      "available_tools": [
+        "channel:send_message",
+        "channel:read_inbox",
+        "channel:route_message",
+        "style:apply",
+        "rule:validate",
+        "voice:transcribe",
+        "voice:respond"
+      ],
+      "memory_scope": [
+        "communication-styles",
+        "communication-rules",
+        "constitution-ethics"
+      ],
+      "version": "1.0.0"
+    },
+    "OPS": {
+      "id": "OPS",
+      "name": "Operations",
+      "mission": "Infrastruktura, monitoring, zálohování",
+      "lead_agent_id": "chief-operations-officer",
+      "dependencies": ["ENG"],
+      "status": "ready",
+      "active_missions": [],
+      "available_tools": [
+        "infra:health_check",
+        "infra:restart_component",
+        "infra:backup",
+        "infra:restore",
+        "infra:deploy",
+        "infra:monitor",
+        "incident:declare",
+        "incident:resolve"
+      ],
+      "memory_scope": [
+        "infrastructure-config",
+        "deployment-targets",
+        "backup-schedule"
+      ],
+      "version": "1.0.0"
+    },
+    "QA": {
+      "id": "QA",
+      "name": "Quality",
+      "mission": "Testování, revize, metrika, standardy",
+      "lead_agent_id": "chief-quality-officer",
+      "dependencies": ["ENG"],
+      "status": "ready",
+      "active_missions": [],
+      "available_tools": [
+        "qa:run_tests",
+        "qa:review_code",
+        "qa:audit_security",
+        "qa:measure_metrics",
+        "qa:block_deployment",
+        "qa:approve_deployment",
+        "qa:lessons_learned"
+      ],
+      "memory_scope": [
+        "testing-strategy",
+        "coding-standards",
+        "constitution-safety"
+      ],
+      "version": "1.0.0"
+    }
+  },
+  "agents": {
+    "chief-orchestrator": {
+      "id": "chief-orchestrator",
+      "department": "OC",
+      "name": "Chief Orchestrator",
+      "role": "chief",
+      "status": "active",
+      "priority": "critical",
+      "default_autonomy": 3,
+      "max_autonomy": 3,
+      "can_create_specialists": true,
+      "can_create_workers": false
+    },
+    "chief-architect": {
+      "id": "chief-architect",
+      "department": "ARCH",
+      "name": "Chief Architect",
+      "role": "architect",
+      "status": "active",
+      "priority": "high",
+      "default_autonomy": 2,
+      "max_autonomy": 3,
+      "can_create_specialists": true,
+      "can_create_workers": false
+    },
+    "chief-engineer": {
+      "id": "chief-engineer",
+      "department": "ENG",
+      "name": "Chief Engineer",
+      "role": "engineer",
+      "status": "ready",
+      "priority": "high",
+      "default_autonomy": 2,
+      "max_autonomy": 3,
+      "can_create_specialists": true,
+      "can_create_workers": true
+    },
+    "chief-knowledge-officer": {
+      "id": "chief-knowledge-officer",
+      "department": "KNOW",
+      "name": "Chief Knowledge Officer",
+      "role": "knowledge-manager",
+      "status": "active",
+      "priority": "high",
+      "default_autonomy": 2,
+      "max_autonomy": 3,
+      "can_create_specialists": true,
+      "can_create_workers": false
+    },
+    "chief-communications-officer": {
+      "id": "chief-communications-officer",
+      "department": "COMM",
+      "name": "Chief Communications Officer",
+      "role": "communications-manager",
+      "status": "active",
+      "priority": "high",
+      "default_autonomy": 2,
+      "max_autonomy": 3,
+      "can_create_specialists": true,
+      "can_create_workers": false
+    },
+    "chief-operations-officer": {
+      "id": "chief-operations-officer",
+      "department": "OPS",
+      "name": "Chief Operations Officer",
+      "role": "operations-manager",
+      "status": "ready",
+      "priority": "high",
+      "default_autonomy": 3,
+      "max_autonomy": 3,
+      "can_create_specialists": true,
+      "can_create_workers": false
+    },
+    "chief-quality-officer": {
+      "id": "chief-quality-officer",
+      "department": "QA",
+      "name": "Chief Quality Officer",
+      "role": "quality-manager",
+      "status": "ready",
+      "priority": "high",
+      "default_autonomy": 2,
+      "max_autonomy": 3,
+      "can_create_specialists": true,
+      "can_create_workers": false
+    }
+  }
+}

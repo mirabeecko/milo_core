@@ -3,9 +3,6 @@ import type { AgentEntityDeps } from "../agent.js";
 import type { AgentDefinition, AgentTask } from "@milo/shared";
 
 export class ResearchAgent extends AgentEntityImpl {
-  private taskHistory: AgentTask[] = [];
-  private pendingQueue: AgentTask[] = [];
-
   constructor(definition: AgentDefinition, deps: AgentEntityDeps) {
     super(definition, deps);
   }
@@ -31,13 +28,5 @@ export class ResearchAgent extends AgentEntityImpl {
 
   getTaskProgress(): number {
     return super.getTaskProgress();
-  }
-
-  getTaskHistory(): AgentTask[] {
-    return this.taskHistory;
-  }
-
-  getPendingQueue(): AgentTask[] {
-    return this.pendingQueue;
   }
 }

@@ -1,0 +1,831 @@
+{
+  "/Users/mb/dev/1 ORGANIZACE M4 PRO": {
+    "hash": "0e980c72984d4e03d615ceb56d1716d6e139ca71df1fb709fd42eeb73ea5f7d5",
+    "progress": 31,
+    "rating": 3,
+    "status": "Rozd\u011bl\u00e1no",
+    "tags": [],
+    "description": "",
+    "time_spent": 0,
+    "time_remaining": 0,
+    "total_cost_czk": 0,
+    "estimated_remaining_cost_czk": 0,
+    "works_in_progress": [
+      "Zm\u011bny detekov\u00e1ny \u2014 dopl\u0148 o co jde"
+    ]
+  },
+  "/Users/mb/dev/1 publikovan\u00e9": {
+    "hash": "d96fd24e552aa73effdb0cc0dc2e1b426d82684236e6d17ff3787dc5c7aec3e7",
+    "progress": 31,
+    "rating": 3,
+    "status": "Rozd\u011bl\u00e1no",
+    "tags": [],
+    "description": "",
+    "time_spent": 0,
+    "time_remaining": 0,
+    "total_cost_czk": 0,
+    "estimated_remaining_cost_czk": 0,
+    "works_in_progress": [
+      "Zm\u011bny detekov\u00e1ny \u2014 dopl\u0148 o co jde"
+    ]
+  },
+  "/Users/mb/dev/CLAUDE": {
+    "hash": "deef36f885b7a270bfb3c3214198cd45abe2dcc67d49ec16753d84ddb5bc2c68",
+    "progress": 84,
+    "rating": 3,
+    "status": "Dokon\u010deno",
+    "tags": [
+      "ai"
+    ],
+    "description": "Pravidla a pokyny pro AI asistenty (Claude) \u2014 preference opatrnosti, jednoduchosti a ov\u011b\u0159iteln\u00fdch c\u00edl\u016f p\u0159ed rychlost\u00ed.",
+    "time_spent": 0,
+    "time_remaining": 0,
+    "total_cost_czk": 0,
+    "estimated_remaining_cost_czk": 0,
+    "works_in_progress": [
+      "Zm\u011bny detekov\u00e1ny \u2014 dopl\u0148 o co jde"
+    ]
+  },
+  "/Users/mb/dev/CrewAI_OS": {
+    "hash": "ae74b4cbd907c3aaa459955263bcabbad13a5f1c172ebfbf55ad42525c873a76",
+    "progress": 31,
+    "rating": 3,
+    "status": "Rozd\u011bl\u00e1no",
+    "tags": [],
+    "description": "",
+    "time_spent": 0,
+    "time_remaining": 0,
+    "total_cost_czk": 0,
+    "estimated_remaining_cost_czk": 0,
+    "works_in_progress": [
+      "Zm\u011bny detekov\u00e1ny \u2014 dopl\u0148 o co jde"
+    ]
+  },
+  "/Users/mb/dev/LettaOS": {
+    "hash": "7d739c8698739b6381f0cfa6cb441228769ffd7bf9b1cc4831147ed819070011",
+    "progress": 31,
+    "rating": 3,
+    "status": "Rozd\u011bl\u00e1no",
+    "tags": [],
+    "description": "",
+    "time_spent": 0,
+    "time_remaining": 0,
+    "total_cost_czk": 0,
+    "estimated_remaining_cost_czk": 0,
+    "works_in_progress": [
+      "Zm\u011bny detekov\u00e1ny \u2014 dopl\u0148 o co jde"
+    ]
+  },
+  "/Users/mb/dev/MiLO_Agent": {
+    "hash": "b40e6d9d9f89ccfd9e3e2c30b1b85b0477f42cb50e0941bd934ac856a4f58cb1",
+    "progress": 31,
+    "rating": 4,
+    "status": "Rozd\u011bl\u00e1no",
+    "tags": [
+      "agent",
+      "ai",
+      "api"
+    ],
+    "description": "MiLO_Agent je produk\u010dn\u00ed MVP osobn\u00edho AI komunika\u010dn\u00edho agenta ovl\u00e1dan\u00e9ho p\u0159es Telegram. U\u017eivatel v Telegramu zad\u00e1v\u00e1 mise, agent je rozparsuje, p\u0159\u00edpadn\u011b si vy\u017e\u00e1d\u00e1 up\u0159esn\u011bn\u00ed, po potvrzen\u00ed je aktivuje a e",
+    "time_spent": 70,
+    "time_remaining": 100,
+    "total_cost_czk": 180,
+    "estimated_remaining_cost_czk": 500,
+    "works_in_progress": [
+      "Zm\u011bny detekov\u00e1ny \u2014 dopl\u0148 o co jde"
+    ]
+  },
+  "/Users/mb/dev/MiLO_Core": {
+    "hash": "8691ef76a2087738fcfb329af58058996c80c6ba6b3109886bcfeb8b14f2aaa7",
+    "progress": 31,
+    "rating": 3,
+    "status": "Rozd\u011bl\u00e1no",
+    "tags": [
+      "agent"
+    ],
+    "description": "> M\u016fj osobn\u00ed opera\u010dn\u00ed syst\u00e9m.",
+    "time_spent": 120,
+    "time_remaining": 200,
+    "total_cost_czk": 320,
+    "estimated_remaining_cost_czk": 2000,
+    "works_in_progress": [
+      "Zm\u011bny detekov\u00e1ny \u2014 dopl\u0148 o co jde"
+    ]
+  },
+  "/Users/mb/dev/MiLO_ISDS_MCP": {
+    "hash": "540afdb2a9cc1fee8402468d17577980d34ca91e913c8a7501efd38adca5e5e7",
+    "progress": 31,
+    "rating": 3,
+    "status": "Rozd\u011bl\u00e1no",
+    "tags": [
+      "api"
+    ],
+    "description": "MiLO ISDS MCP",
+    "time_spent": 0,
+    "time_remaining": 0,
+    "total_cost_czk": 0,
+    "estimated_remaining_cost_czk": 0,
+    "works_in_progress": [
+      "Zm\u011bny detekov\u00e1ny \u2014 dopl\u0148 o co jde"
+    ]
+  },
+  "/Users/mb/dev/OBSIDIAN MUYLAYF_06_2026": {
+    "hash": "ca6f906d86278d97dfbbe6432bc0e4a1d32b0b0f2f6ff79a1f9efb58e5e8b366",
+    "progress": 50,
+    "rating": 3,
+    "status": "Rozd\u011bl\u00e1no",
+    "tags": [],
+    "description": "Obsidian vault s osobn\u00edmi pozn\u00e1mkami a znalostn\u00ed b\u00e1z\u00ed MUYLAYF (\u010derven 2026).",
+    "time_spent": 0,
+    "time_remaining": 0,
+    "total_cost_czk": 0,
+    "estimated_remaining_cost_czk": 0,
+    "works_in_progress": [
+      "Zm\u011bny detekov\u00e1ny \u2014 dopl\u0148 o co jde"
+    ]
+  },
+  "/Users/mb/dev/aaa HTML": {
+    "hash": "c6a7d1eeb2ce66b23df771d8e296dfd86ce50f58fa6dc9ee59cecd286f169c3e",
+    "progress": 31,
+    "rating": 3,
+    "status": "Rozd\u011bl\u00e1no",
+    "tags": [],
+    "description": "",
+    "time_spent": 0,
+    "time_remaining": 0,
+    "total_cost_czk": 0,
+    "estimated_remaining_cost_czk": 0,
+    "works_in_progress": [
+      "Zm\u011bny detekov\u00e1ny \u2014 dopl\u0148 o co jde"
+    ]
+  },
+  "/Users/mb/dev/accountant24": {
+    "hash": "7ad14c59274ce9ad13be5e30f5ce0a8fffa92548bb6d31e649dc6625a624eb25",
+    "progress": 31,
+    "rating": 3,
+    "status": "Rozd\u011bl\u00e1no",
+    "tags": [],
+    "description": "Accountant24 - Free, local-first AI agent for personal finance",
+    "time_spent": 0,
+    "time_remaining": 0,
+    "total_cost_czk": 0,
+    "estimated_remaining_cost_czk": 0,
+    "works_in_progress": [
+      "Zm\u011bny detekov\u00e1ny \u2014 dopl\u0148 o co jde"
+    ]
+  },
+  "/Users/mb/dev/airbags": {
+    "hash": "4af3e23cc16356531f872aa7a809abd7f982f44bd8341b73249fc04b885b3d6c",
+    "progress": 51,
+    "rating": 3,
+    "status": "Rozd\u011bl\u00e1no",
+    "tags": [],
+    "description": "AirBags | Nafukovac\u00ed atrakce pro akce a are\u00e1ly.\n\n\ud83d\udd17 GitHub: https://github.com/mirabeecko/airbags",
+    "time_spent": 0,
+    "time_remaining": 0,
+    "total_cost_czk": 0,
+    "estimated_remaining_cost_czk": 0,
+    "works_in_progress": [
+      "Zm\u011bny detekov\u00e1ny \u2014 dopl\u0148 o co jde"
+    ]
+  },
+  "/Users/mb/dev/brozek24": {
+    "hash": "1296a2833593d677d136789cb51c30a04f72b9aa2e8da867af0d0690d8010a79",
+    "progress": 30,
+    "rating": 3,
+    "status": "N\u00e1pad / koncept",
+    "tags": [
+      "marketing"
+    ],
+    "description": "Miroslav Bro\u017eek \u2014 Emergency Digital Marketing | Praha \u00b7 735 847 185.\n\n\ud83d\udd17 GitHub: http://github.com/mirabeecko/brozek24.git",
+    "time_spent": 0,
+    "time_remaining": 0,
+    "total_cost_czk": 0,
+    "estimated_remaining_cost_czk": 0,
+    "works_in_progress": [
+      "Zm\u011bny detekov\u00e1ny \u2014 dopl\u0148 o co jde"
+    ]
+  },
+  "/Users/mb/dev/brozek24-0": {
+    "hash": "643c25735ffaa0ce5c27b9c254230793eec98c0fccf717e7e2e1e40bcc3f60e4",
+    "progress": 48,
+    "rating": 3,
+    "status": "Rozd\u011bl\u00e1no",
+    "tags": [
+      "marketing",
+      "web"
+    ],
+    "description": "Varianta prezenta\u010dn\u00edho webu / profilu Miroslava Bro\u017eka (Emergency Digital Marketing).",
+    "time_spent": 0,
+    "time_remaining": 0,
+    "total_cost_czk": 0,
+    "estimated_remaining_cost_czk": 0,
+    "works_in_progress": [
+      "Zm\u011bny detekov\u00e1ny \u2014 dopl\u0148 o co jde"
+    ]
+  },
+  "/Users/mb/dev/dashboards and agents": {
+    "hash": "86bb62402b79fdec507491f50ae345094189c486678f9a2ddfd3736cb4f817c2",
+    "progress": 31,
+    "rating": 3,
+    "status": "Rozd\u011bl\u00e1no",
+    "tags": [],
+    "description": "",
+    "time_spent": 0,
+    "time_remaining": 0,
+    "total_cost_czk": 0,
+    "estimated_remaining_cost_czk": 0,
+    "works_in_progress": [
+      "Zm\u011bny detekov\u00e1ny \u2014 dopl\u0148 o co jde"
+    ]
+  },
+  "/Users/mb/dev/dashboards and agents/SPOL_OS": {
+    "hash": "2a428f2f11946537ddc8f21ab036e073eaaec6b07e6498b3136c16dba0213773",
+    "progress": 31,
+    "rating": 3,
+    "status": "Rozd\u011bl\u00e1no",
+    "tags": [],
+    "description": "EmotionOS \u2014 Kompletn\u00ed produktov\u00e1 dokumentace",
+    "time_spent": 90,
+    "time_remaining": 120,
+    "total_cost_czk": 380,
+    "estimated_remaining_cost_czk": 800,
+    "works_in_progress": [
+      "Zm\u011bny detekov\u00e1ny \u2014 dopl\u0148 o co jde"
+    ]
+  },
+  "/Users/mb/dev/dashboards and agents/TJ_KRUPKA_LEGAL_OS": {
+    "hash": "39e7537a179db948bc3225d92ce994ee8cfc7400d1887d6d526bc6943b9c6b06",
+    "progress": 31,
+    "rating": 3,
+    "status": "Rozd\u011bl\u00e1no",
+    "tags": [],
+    "description": "",
+    "time_spent": 0,
+    "time_remaining": 0,
+    "total_cost_czk": 0,
+    "estimated_remaining_cost_czk": 0,
+    "works_in_progress": [
+      "Zm\u011bny detekov\u00e1ny \u2014 dopl\u0148 o co jde"
+    ]
+  },
+  "/Users/mb/dev/dashboards and agents/ads-live-dashboard": {
+    "hash": "c6e09501be28e4e728ca412d4ca95df60dc3eca5368e659dc54502bc0168e66c",
+    "progress": 31,
+    "rating": 3,
+    "status": "Rozd\u011bl\u00e1no",
+    "tags": [],
+    "description": "Ads Live Dashboard",
+    "time_spent": 0,
+    "time_remaining": 0,
+    "total_cost_czk": 0,
+    "estimated_remaining_cost_czk": 0,
+    "works_in_progress": [
+      "Zm\u011bny detekov\u00e1ny \u2014 dopl\u0148 o co jde"
+    ]
+  },
+  "/Users/mb/dev/dashboards and agents/ai-project-manager": {
+    "hash": "2b37d92aaeee09f764e01607a1d57b1bbdcf0b46e9041be406c45bda87985dd7",
+    "progress": 31,
+    "rating": 3,
+    "status": "Rozd\u011bl\u00e1no",
+    "tags": [],
+    "description": "\ud83e\udd16 AI Project Manager",
+    "time_spent": 0,
+    "time_remaining": 0,
+    "total_cost_czk": 0,
+    "estimated_remaining_cost_czk": 0,
+    "works_in_progress": [
+      "Zm\u011bny detekov\u00e1ny \u2014 dopl\u0148 o co jde"
+    ]
+  },
+  "/Users/mb/dev/dashboards and agents/all_dashboard": {
+    "hash": "4a646c50e7a043c5af342cfd249d339709b5c1436a45a290bd8f0206f83fbf60",
+    "progress": 31,
+    "rating": 3,
+    "status": "Rozd\u011bl\u00e1no",
+    "tags": [],
+    "description": "",
+    "time_spent": 0,
+    "time_remaining": 0,
+    "total_cost_czk": 0,
+    "estimated_remaining_cost_czk": 0,
+    "works_in_progress": [
+      "Zm\u011bny detekov\u00e1ny \u2014 dopl\u0148 o co jde"
+    ]
+  },
+  "/Users/mb/dev/dashboards and agents/android_mac_ai_agent": {
+    "hash": "1f77ca07f38da6538a8de07ca499dcb0d775ae1b947f36a0157ab57d92782890",
+    "progress": 31,
+    "rating": 3,
+    "status": "Rozd\u011bl\u00e1no",
+    "tags": [],
+    "description": "Android \u2192 AI \u2192 macOS Calendar / Terminal",
+    "time_spent": 0,
+    "time_remaining": 0,
+    "total_cost_czk": 0,
+    "estimated_remaining_cost_czk": 0,
+    "works_in_progress": [
+      "Zm\u011bny detekov\u00e1ny \u2014 dopl\u0148 o co jde"
+    ]
+  },
+  "/Users/mb/dev/dashboards and agents/dashboard": {
+    "hash": "64a6c0aa619681d39cd42b257b1e17abade358b7bc75e7457fed6a4247c86f01",
+    "progress": 31,
+    "rating": 3,
+    "status": "Rozd\u011bl\u00e1no",
+    "tags": [],
+    "description": "Analytics Hub \u2014 Multi-site GA4 Dashboard",
+    "time_spent": 0,
+    "time_remaining": 0,
+    "total_cost_czk": 0,
+    "estimated_remaining_cost_czk": 0,
+    "works_in_progress": [
+      "Zm\u011bny detekov\u00e1ny \u2014 dopl\u0148 o co jde"
+    ]
+  },
+  "/Users/mb/dev/dashboards and agents/dashboards and assistants": {
+    "hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "progress": 31,
+    "rating": 3,
+    "status": "Rozd\u011bl\u00e1no",
+    "tags": [],
+    "description": "",
+    "time_spent": 0,
+    "time_remaining": 0,
+    "total_cost_czk": 0,
+    "estimated_remaining_cost_czk": 0,
+    "works_in_progress": [
+      "Zm\u011bny detekov\u00e1ny \u2014 dopl\u0148 o co jde"
+    ]
+  },
+  "/Users/mb/dev/dashboards and agents/executive-ai": {
+    "hash": "0be5dc98dbba3808471f87cd24114e899573051bfdc2357013bc2f4f10525f49",
+    "progress": 31,
+    "rating": 3,
+    "status": "Rozd\u011bl\u00e1no",
+    "tags": [],
+    "description": "\ud83e\udd16 Osobn\u00ed \u0159editel (Executive AI)",
+    "time_spent": 80,
+    "time_remaining": 15,
+    "total_cost_czk": 450,
+    "estimated_remaining_cost_czk": 200,
+    "works_in_progress": [
+      "Zm\u011bny detekov\u00e1ny \u2014 dopl\u0148 o co jde"
+    ]
+  },
+  "/Users/mb/dev/dashboards and agents/gif-maker": {
+    "hash": "56ff35001b59983831b6863eea5ed6751e2c18f573a7534e5537ccebf4b25467",
+    "progress": 31,
+    "rating": 3,
+    "status": "Rozd\u011bl\u00e1no",
+    "tags": [],
+    "description": "This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).",
+    "time_spent": 0,
+    "time_remaining": 0,
+    "total_cost_czk": 0,
+    "estimated_remaining_cost_czk": 0,
+    "works_in_progress": [
+      "Zm\u011bny detekov\u00e1ny \u2014 dopl\u0148 o co jde"
+    ]
+  },
+  "/Users/mb/dev/dashboards and agents/google-docs-mcp": {
+    "hash": "317b8e1ad3e47d95306d2ab3c2c945f27f7de8ff3e2d95fad2d86dbbe9cf5b60",
+    "progress": 31,
+    "rating": 3,
+    "status": "Rozd\u011bl\u00e1no",
+    "tags": [],
+    "description": "Google Docs, Sheets, Drive, Gmail & Calendar MCP Server",
+    "time_spent": 0,
+    "time_remaining": 0,
+    "total_cost_czk": 0,
+    "estimated_remaining_cost_czk": 0,
+    "works_in_progress": [
+      "Zm\u011bny detekov\u00e1ny \u2014 dopl\u0148 o co jde"
+    ]
+  },
+  "/Users/mb/dev/dashboards and agents/hermes-workspace": {
+    "hash": "49ffc33f5a0ab3f4c66e51b45fc7d1642afccb0db453e8c6178d225354a5736f",
+    "progress": 31,
+    "rating": 3,
+    "status": "Rozd\u011bl\u00e1no",
+    "tags": [],
+    "description": "AGENTS.md \u2013 Pravidla pro Hermes Agent",
+    "time_spent": 0,
+    "time_remaining": 0,
+    "total_cost_czk": 0,
+    "estimated_remaining_cost_czk": 0,
+    "works_in_progress": [
+      "Zm\u011bny detekov\u00e1ny \u2014 dopl\u0148 o co jde"
+    ]
+  },
+  "/Users/mb/dev/dashboards and agents/hermes_agent": {
+    "hash": "8564237a8afdd04f19c4eb79bc68bcc6502c3effe852ff46f0520cc8a8fd1b17",
+    "progress": 31,
+    "rating": 3,
+    "status": "Rozd\u011bl\u00e1no",
+    "tags": [],
+    "description": "hermes_agent",
+    "time_spent": 0,
+    "time_remaining": 0,
+    "total_cost_czk": 0,
+    "estimated_remaining_cost_czk": 0,
+    "works_in_progress": [
+      "Zm\u011bny detekov\u00e1ny \u2014 dopl\u0148 o co jde"
+    ]
+  },
+  "/Users/mb/dev/dashboards and agents/htmler": {
+    "hash": "768bb737e66313bd6da85de95a35ff5593bb1faae9276b4c459d7bc05b53b90e",
+    "progress": 31,
+    "rating": 3,
+    "status": "Rozd\u011bl\u00e1no",
+    "tags": [],
+    "description": "",
+    "time_spent": 0,
+    "time_remaining": 0,
+    "total_cost_czk": 0,
+    "estimated_remaining_cost_czk": 0,
+    "works_in_progress": [
+      "Zm\u011bny detekov\u00e1ny \u2014 dopl\u0148 o co jde"
+    ]
+  },
+  "/Users/mb/dev/dashboards and agents/komarka_app": {
+    "hash": "f7573086823e64699b1220d50f3b296d7df4e44999e800fb515753ea5ec67770",
+    "progress": 31,
+    "rating": 3,
+    "status": "Rozd\u011bl\u00e1no",
+    "tags": [],
+    "description": "Komarka Guest",
+    "time_spent": 0,
+    "time_remaining": 0,
+    "total_cost_czk": 0,
+    "estimated_remaining_cost_czk": 0,
+    "works_in_progress": [
+      "Zm\u011bny detekov\u00e1ny \u2014 dopl\u0148 o co jde"
+    ]
+  },
+  "/Users/mb/dev/dashboards and agents/mac_voice_ai_agent": {
+    "hash": "990f794d2fd823cdabd08000a527c24d50ab3dcdf08f1a6a0e4823464041135e",
+    "progress": 31,
+    "rating": 3,
+    "status": "Rozd\u011bl\u00e1no",
+    "tags": [],
+    "description": "Mac Voice AI Agent",
+    "time_spent": 0,
+    "time_remaining": 0,
+    "total_cost_czk": 0,
+    "estimated_remaining_cost_czk": 0,
+    "works_in_progress": [
+      "Zm\u011bny detekov\u00e1ny \u2014 dopl\u0148 o co jde"
+    ]
+  },
+  "/Users/mb/dev/dashboards and agents/mbrozek-ai": {
+    "hash": "9249e28fbc1233e2598b6ecb736b2df55fc41259ebe384cff61f10efca72ae0a",
+    "progress": 31,
+    "rating": 3,
+    "status": "Rozd\u011bl\u00e1no",
+    "tags": [],
+    "description": "\ud83e\udde0 Miroslav Bro\u017eek \u2014 Personal AI System",
+    "time_spent": 60,
+    "time_remaining": 90,
+    "total_cost_czk": 200,
+    "estimated_remaining_cost_czk": 600,
+    "works_in_progress": [
+      "Zm\u011bny detekov\u00e1ny \u2014 dopl\u0148 o co jde"
+    ]
+  },
+  "/Users/mb/dev/dashboards and agents/obcanai": {
+    "hash": "0b9bb2749188d2e7d57cdd79b6a0582bc9fe75868a0f849e83918048d4a15881",
+    "progress": 31,
+    "rating": 3,
+    "status": "Rozd\u011bl\u00e1no",
+    "tags": [],
+    "description": "**Osobn\u00ed pr\u016fvodce pr\u00e1vy ob\u010dana.**",
+    "time_spent": 100,
+    "time_remaining": 20,
+    "total_cost_czk": 350,
+    "estimated_remaining_cost_czk": 100,
+    "works_in_progress": [
+      "Zm\u011bny detekov\u00e1ny \u2014 dopl\u0148 o co jde"
+    ]
+  },
+  "/Users/mb/dev/dashboards and agents/pro-ubytovane-apk": {
+    "hash": "fd775430335a3bbca03818965f2de443fb4479ead295c894898a74cff99ef39e",
+    "progress": 31,
+    "rating": 3,
+    "status": "Rozd\u011bl\u00e1no",
+    "tags": [],
+    "description": "Kom\u00e1rka Guest",
+    "time_spent": 0,
+    "time_remaining": 0,
+    "total_cost_czk": 0,
+    "estimated_remaining_cost_czk": 0,
+    "works_in_progress": [
+      "Zm\u011bny detekov\u00e1ny \u2014 dopl\u0148 o co jde"
+    ]
+  },
+  "/Users/mb/dev/dashboards and agents/project-dashboard": {
+    "hash": "0774a6cf34a783aef0f79d35420f76b0b54d2170929f91d7ded876f68f416758",
+    "progress": 31,
+    "rating": 3,
+    "status": "Rozd\u011bl\u00e1no",
+    "tags": [],
+    "description": "",
+    "time_spent": 0,
+    "time_remaining": 0,
+    "total_cost_czk": 0,
+    "estimated_remaining_cost_czk": 0,
+    "works_in_progress": [
+      "Zm\u011bny detekov\u00e1ny \u2014 dopl\u0148 o co jde"
+    ]
+  },
+  "/Users/mb/dev/dashboards and agents/vehicles_app": {
+    "hash": "6bf2301e8f22700b2f1d78675b6fccab704a05a7e0ed865d07b7b62697b8b631",
+    "progress": 31,
+    "rating": 3,
+    "status": "Rozd\u011bl\u00e1no",
+    "tags": [],
+    "description": "",
+    "time_spent": 0,
+    "time_remaining": 0,
+    "total_cost_czk": 0,
+    "estimated_remaining_cost_czk": 0,
+    "works_in_progress": [
+      "Zm\u011bny detekov\u00e1ny \u2014 dopl\u0148 o co jde"
+    ]
+  },
+  "/Users/mb/dev/dashboards and agents/voice-ai-terminal": {
+    "hash": "a317bee6090cd88dd68b4e5b95b1e1864521c88c04263bd499543a7b06b7e754",
+    "progress": 31,
+    "rating": 3,
+    "status": "Rozd\u011bl\u00e1no",
+    "tags": [],
+    "description": "Voice AI Terminal",
+    "time_spent": 55,
+    "time_remaining": 35,
+    "total_cost_czk": 160,
+    "estimated_remaining_cost_czk": 250,
+    "works_in_progress": [
+      "Zm\u011bny detekov\u00e1ny \u2014 dopl\u0148 o co jde"
+    ]
+  },
+  "/Users/mb/dev/dashboards and agents/voice-ai-terminal-backup": {
+    "hash": "82c8c3195330ad7c9d0d9410fc6c291f8810e3406021c86bc0a38a6daba44f53",
+    "progress": 31,
+    "rating": 3,
+    "status": "Rozd\u011bl\u00e1no",
+    "tags": [],
+    "description": "Voice AI Terminal",
+    "time_spent": 0,
+    "time_remaining": 0,
+    "total_cost_czk": 0,
+    "estimated_remaining_cost_czk": 0,
+    "works_in_progress": [
+      "Zm\u011bny detekov\u00e1ny \u2014 dopl\u0148 o co jde"
+    ]
+  },
+  "/Users/mb/dev/deepseek_env": {
+    "hash": "5e57805350856fdd074572ec0283ce85923a6fbdb1abcdce20fb99b9649d3264",
+    "progress": 31,
+    "rating": 3,
+    "status": "Rozd\u011bl\u00e1no",
+    "tags": [],
+    "description": "Projekt deepseek_env.",
+    "time_spent": 0,
+    "time_remaining": 0,
+    "total_cost_czk": 0,
+    "estimated_remaining_cost_czk": 0,
+    "works_in_progress": [
+      "Zm\u011bny detekov\u00e1ny \u2014 dopl\u0148 o co jde"
+    ]
+  },
+  "/Users/mb/dev/design-agent": {
+    "hash": "7b248afa55cbe980388716cc44eca0a5f683a71729f350f19f563affaec838d3",
+    "progress": 51,
+    "rating": 4,
+    "status": "Rozd\u011bl\u00e1no",
+    "tags": [
+      "agent",
+      "ai",
+      "design"
+    ],
+    "description": "Design Agent",
+    "time_spent": 40,
+    "time_remaining": 30,
+    "total_cost_czk": 90,
+    "estimated_remaining_cost_czk": 150,
+    "works_in_progress": [
+      "Zm\u011bny detekov\u00e1ny \u2014 dopl\u0148 o co jde"
+    ]
+  },
+  "/Users/mb/dev/free-claude-code": {
+    "hash": "758c123cdb4f1f59054662536ad69d6bedd3579e303e9264d6a08d376c3242af",
+    "progress": 31,
+    "rating": 3,
+    "status": "Rozd\u011bl\u00e1no",
+    "tags": [],
+    "description": "<div align=\"center\">",
+    "time_spent": 0,
+    "time_remaining": 0,
+    "total_cost_czk": 0,
+    "estimated_remaining_cost_czk": 0,
+    "works_in_progress": [
+      "Zm\u011bny detekov\u00e1ny \u2014 dopl\u0148 o co jde"
+    ]
+  },
+  "/Users/mb/dev/kauza-weby": {
+    "hash": "7007e53372f5190861e147f10502d28e546e3b3a0176e36adfa2f82c99459ef2",
+    "progress": 42,
+    "rating": 3,
+    "status": "Rozd\u011bl\u00e1no",
+    "tags": [
+      "web"
+    ],
+    "description": "Skupina webov\u00fdch prezentac\u00ed souvisej\u00edc\u00edch s kauzou (kauza-edit-clone, kauza2, kauzatjkrupka.cz).",
+    "time_spent": 0,
+    "time_remaining": 0,
+    "total_cost_czk": 0,
+    "estimated_remaining_cost_czk": 0,
+    "works_in_progress": [
+      "Zm\u011bny detekov\u00e1ny \u2014 dopl\u0148 o co jde"
+    ]
+  },
+  "/Users/mb/dev/kauza-weby/kauza-edit-clone": {
+    "hash": "6bc2f202b68ac901e965580a5010fb4946443c2f4c982c20e23c3b5ca486b665",
+    "progress": 31,
+    "rating": 3,
+    "status": "Rozd\u011bl\u00e1no",
+    "tags": [],
+    "description": "Kauza T\u011blov\u00fdchovn\u00e1 jednota Krupka z.s.",
+    "time_spent": 0,
+    "time_remaining": 0,
+    "total_cost_czk": 0,
+    "estimated_remaining_cost_czk": 0,
+    "works_in_progress": [
+      "Zm\u011bny detekov\u00e1ny \u2014 dopl\u0148 o co jde"
+    ]
+  },
+  "/Users/mb/dev/kauza-weby/kauza2": {
+    "hash": "ee7ee5171b95a9f6df87f9a017f4db5c570271126f19ce325d496d98d43da361",
+    "progress": 31,
+    "rating": 3,
+    "status": "Rozd\u011bl\u00e1no",
+    "tags": [],
+    "description": "Kauza TJ Krupka z.s.",
+    "time_spent": 0,
+    "time_remaining": 0,
+    "total_cost_czk": 0,
+    "estimated_remaining_cost_czk": 0,
+    "works_in_progress": [
+      "Zm\u011bny detekov\u00e1ny \u2014 dopl\u0148 o co jde"
+    ]
+  },
+  "/Users/mb/dev/kauza-weby/kauzatjkrupka.cz": {
+    "hash": "7384ea493da6a421f9fee310445e0f6af85c26ac7bd87dd67ddad5096b25ea30",
+    "progress": 31,
+    "rating": 3,
+    "status": "Rozd\u011bl\u00e1no",
+    "tags": [],
+    "description": "Kauza T\u011blov\u00fdchovn\u00e1 jednota Krupka z.s.",
+    "time_spent": 0,
+    "time_remaining": 0,
+    "total_cost_czk": 0,
+    "estimated_remaining_cost_czk": 0,
+    "works_in_progress": [
+      "Zm\u011bny detekov\u00e1ny \u2014 dopl\u0148 o co jde"
+    ]
+  },
+  "/Users/mb/dev/kimi-webdo24": {
+    "hash": "50b167f93cefdf0ee43c8922eb4ef3b6256092c80f09ebe1443829cc4ad044a7",
+    "progress": 48,
+    "rating": 4,
+    "status": "Rozd\u011bl\u00e1no",
+    "tags": [
+      "analytics",
+      "web"
+    ],
+    "description": "Automatick\u00e1 tvorba konverzn\u00edch anal\u00fdz web\u016f v HTML\n\n\ud83d\udd17 GitHub: https://github.com/mirabeecko/webdo24.git\n\n\ud83d\udcca M\u011b\u0159en\u00ed: GA4 G-815XCLCGY8",
+    "time_spent": 0,
+    "time_remaining": 0,
+    "total_cost_czk": 0,
+    "estimated_remaining_cost_czk": 0,
+    "works_in_progress": [
+      "Zm\u011bny detekov\u00e1ny \u2014 dopl\u0148 o co jde"
+    ]
+  },
+  "/Users/mb/dev/marketing_agent": {
+    "hash": "01c07e39abeef3d9d524caad7b85f037445ea96fac52dd0afa009ff9f4319582",
+    "progress": 48,
+    "rating": 4,
+    "status": "Rozd\u011bl\u00e1no",
+    "tags": [
+      "agent",
+      "automation"
+    ],
+    "description": "Marketing Agent \u2014 Meta Ads + Stripe + AI report",
+    "time_spent": 35,
+    "time_remaining": 30,
+    "total_cost_czk": 110,
+    "estimated_remaining_cost_czk": 200,
+    "works_in_progress": [
+      "Zm\u011bny detekov\u00e1ny \u2014 dopl\u0148 o co jde"
+    ]
+  },
+  "/Users/mb/dev/mestokrupka": {
+    "hash": "213c90b2e0443132f2e790f2de41d6c4d18149d2cd0ef172b1cf822edb812ccc",
+    "progress": 31,
+    "rating": 3,
+    "status": "Rozd\u011bl\u00e1no",
+    "tags": [],
+    "description": "Projekt mestokrupka.\n\n\ud83d\udd17 GitHub: https://github.com/mirabeecko/mestokrupka.git",
+    "time_spent": 0,
+    "time_remaining": 0,
+    "total_cost_czk": 0,
+    "estimated_remaining_cost_czk": 0,
+    "works_in_progress": [
+      "Zm\u011bny detekov\u00e1ny \u2014 dopl\u0148 o co jde"
+    ]
+  },
+  "/Users/mb/dev/myinvoice": {
+    "hash": "4acba44b918980c88006d7a782677f9382c2829cca72743654ee4a44ffb84088",
+    "progress": 31,
+    "rating": 3,
+    "status": "Rozd\u011bl\u00e1no",
+    "tags": [],
+    "description": "MyInvoice.cz",
+    "time_spent": 0,
+    "time_remaining": 0,
+    "total_cost_czk": 0,
+    "estimated_remaining_cost_czk": 0,
+    "works_in_progress": [
+      "Zm\u011bny detekov\u00e1ny \u2014 dopl\u0148 o co jde"
+    ]
+  },
+  "/Users/mb/dev/n8n": {
+    "hash": "d09b4348217d377d7d44f17c6bb01ddc998f2f4ffb5ef395e33c304974c0a023",
+    "progress": 65,
+    "rating": 4,
+    "status": "Nasazeno / testov\u00e1n\u00ed",
+    "tags": [
+      "automation",
+      "web"
+    ],
+    "description": "Konfigurace Docker containeru pro n8n workflow automatizaci (webhook URL: n8n.webdo24.cz).",
+    "time_spent": 20,
+    "time_remaining": 5,
+    "total_cost_czk": 50,
+    "estimated_remaining_cost_czk": 30,
+    "works_in_progress": [
+      "Zm\u011bny detekov\u00e1ny \u2014 dopl\u0148 o co jde"
+    ]
+  },
+  "/Users/mb/dev/open-webui": {
+    "hash": "aa97d71e26d65dd59578493d02b04d29e886c1b70099f078e4dc91184e02e505",
+    "progress": 31,
+    "rating": 3,
+    "status": "Rozd\u011bl\u00e1no",
+    "tags": [],
+    "description": "Open WebUI \ud83d\udc4b",
+    "time_spent": 0,
+    "time_remaining": 0,
+    "total_cost_czk": 0,
+    "estimated_remaining_cost_czk": 0,
+    "works_in_progress": [
+      "Zm\u011bny detekov\u00e1ny \u2014 dopl\u0148 o co jde"
+    ]
+  },
+  "/Users/mb/dev/riders_app": {
+    "hash": "1390353d12060e69cfcf3cbc1e833fd1823da86c88b82cbbdef04bf9a5eda482",
+    "progress": 49,
+    "rating": 3,
+    "status": "Rozd\u011bl\u00e1no",
+    "tags": [
+      "app",
+      "database"
+    ],
+    "description": "Here are your Instructions",
+    "time_spent": 0,
+    "time_remaining": 0,
+    "total_cost_czk": 0,
+    "estimated_remaining_cost_czk": 0,
+    "works_in_progress": [
+      "Zm\u011bny detekov\u00e1ny \u2014 dopl\u0148 o co jde"
+    ]
+  },
+  "/Users/mb/dev/veterina-live-new": {
+    "hash": "46b5a25b451f33dcf3a68c5759fa122e44dd8a807256cdc994ac6b3925ef1744",
+    "progress": 31,
+    "rating": 3,
+    "status": "N\u00e1pad / koncept",
+    "tags": [],
+    "description": "Veterin\u00e1rn\u00ed klinika LIVE | Litom\u011b\u0159ice.\n\n\ud83d\udd17 GitHub: https://github.com/mirabeecko/live-vet.git",
+    "time_spent": 0,
+    "time_remaining": 0,
+    "total_cost_czk": 0,
+    "estimated_remaining_cost_czk": 0,
+    "works_in_progress": [
+      "Zm\u011bny detekov\u00e1ny \u2014 dopl\u0148 o co jde"
+    ]
+  },
+  "last_scan": "2026-07-06T21:49:26.519460"
+}

@@ -51,46 +51,12 @@ export class DocumentsService {
   }
 
   async listFiles(_accessToken: string, maxResults = 20): Promise<DriveFile[]> {
+    // Google Drive není připojen — vracejí se prázdná data
     if (this.isDemo()) {
-      return this.generateDemoFiles();
+      return [];
     }
 
     const client = new DriveClient({ accessToken: _accessToken });
     return client.listFiles({ maxResults });
-  }
-
-  generateDemoFiles(): DriveFile[] {
-    return [
-      {
-        id: "demo-drive-1",
-        name: "MiLO Roadmap 2026",
-        mimeType: "application/vnd.google-apps.document",
-        webViewLink: "#",
-        modifiedAt: new Date(),
-        size: null,
-        owners: ["Demo User"],
-        isFolder: false,
-      },
-      {
-        id: "demo-drive-2",
-        name: "Architecture Decisions",
-        mimeType: "application/vnd.google-apps.document",
-        webViewLink: "#",
-        modifiedAt: new Date(Date.now() - 86400_000),
-        size: null,
-        owners: ["Demo User"],
-        isFolder: false,
-      },
-      {
-        id: "demo-drive-3",
-        name: "Finance",
-        mimeType: "application/vnd.google-apps.folder",
-        webViewLink: "#",
-        modifiedAt: new Date(Date.now() - 172800_000),
-        size: null,
-        owners: ["Demo User"],
-        isFolder: true,
-      },
-    ];
   }
 }

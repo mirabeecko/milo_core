@@ -30,35 +30,21 @@ export interface GitHubIssue {
 
 export class GitHubRepoTool implements Tool<z.infer<typeof githubRepoSchema>, GitHubRepoInfo> {
   readonly id = "github:repo";
-  readonly description = "Get information about a GitHub repository";
+  readonly description = "GitHub provider není nakonfigurován";
   readonly parameters = githubRepoSchema;
 
   async execute(input: z.infer<typeof githubRepoSchema>): Promise<GitHubRepoInfo> {
-    return {
-      owner: input.owner,
-      repo: input.repo,
-      stars: 0,
-      forks: 0,
-      openIssues: 0,
-      description: "Mock GitHub repository info. Replace with real GitHub API client.",
-    };
+    throw new Error("GitHub provider není nakonfigurován. Nastavte GitHub token pro reálná data.");
   }
 }
 
 export class GitHubIssuesTool implements Tool<z.infer<typeof githubIssuesSchema>, GitHubIssue[]> {
   readonly id = "github:issues";
-  readonly description = "List issues in a GitHub repository";
+  readonly description = "GitHub provider není nakonfigurován";
   readonly parameters = githubIssuesSchema;
 
   async execute(input: z.infer<typeof githubIssuesSchema>): Promise<GitHubIssue[]> {
-    return [
-      {
-        number: 1,
-        title: `Mock issue in ${input.owner}/${input.repo}`,
-        state: input.state ?? "open",
-        url: `https://github.com/${input.owner}/${input.repo}/issues/1`,
-      },
-    ];
+    throw new Error("GitHub provider není nakonfigurován. Nastavte GitHub token pro reálná data.");
   }
 }
 

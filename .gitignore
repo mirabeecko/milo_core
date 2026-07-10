@@ -41,3 +41,4 @@ Thumbs.db
 apps/api/data/tasks.json
 apps/api/data/missions.json
 apps/data/
+.aider*

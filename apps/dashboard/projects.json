@@ -1,0 +1,1425 @@
+{
+  "updated_at": "2026-07-06T21:49:26.520644",
+  "total_projects": 53,
+  "changed_projects": [],
+  "projects": [
+    {
+      "name": "CLAUDE",
+      "path": "/Users/mb/dev/CLAUDE",
+      "type": "project",
+      "status": "Dokončeno",
+      "progress": 84,
+      "rating": 3,
+      "description": "Pravidla a pokyny pro AI asistenty (Claude) — preference opatrnosti, jednoduchosti a ověřitelných cílů před rychlostí.",
+      "tags": [
+        "ai"
+      ],
+      "github": null,
+      "tech_stack": [],
+      "time_spent": 0,
+      "time_remaining": 0,
+      "llm_costs": [],
+      "total_cost_czk": 0,
+      "estimated_remaining_cost_czk": 0,
+      "changed_since_last": false,
+      "works_in_progress": [
+        "Změny detekovány — doplň o co jde"
+      ],
+      "hash": "deef36f885b7a270bfb3c3214198cd45abe2dcc67d49ec16753d84ddb5bc2c68"
+    },
+    {
+      "name": "n8n",
+      "path": "/Users/mb/dev/n8n",
+      "type": "project",
+      "status": "Nasazeno / testování",
+      "progress": 65,
+      "rating": 4,
+      "description": "Konfigurace Docker containeru pro n8n workflow automatizaci (webhook URL: n8n.webdo24.cz).",
+      "tags": [
+        "automation",
+        "web"
+      ],
+      "github": null,
+      "tech_stack": [],
+      "time_spent": 20,
+      "time_remaining": 5,
+      "llm_costs": [],
+      "total_cost_czk": 50,
+      "estimated_remaining_cost_czk": 30,
+      "changed_since_last": false,
+      "works_in_progress": [
+        "Změny detekovány — doplň o co jde"
+      ],
+      "hash": "d09b4348217d377d7d44f17c6bb01ddc998f2f4ffb5ef395e33c304974c0a023"
+    },
+    {
+      "name": "airbags",
+      "path": "/Users/mb/dev/airbags",
+      "type": "project",
+      "status": "Rozděláno",
+      "progress": 51,
+      "rating": 3,
+      "description": "AirBags | Nafukovací atrakce pro akce a areály.\n\n🔗 GitHub: https://github.com/mirabeecko/airbags",
+      "tags": [],
+      "github": {
+        "url": "https://github.com/mirabeecko/airbags",
+        "branch": "main",
+        "commit_count": 1,
+        "last_commit": "2026-02-23T04:15:34+01:00",
+        "last_commit_message": "Initial commit"
+      },
+      "tech_stack": [
+        "HTML"
+      ],
+      "time_spent": 0,
+      "time_remaining": 0,
+      "llm_costs": [],
+      "total_cost_czk": 0,
+      "estimated_remaining_cost_czk": 0,
+      "changed_since_last": false,
+      "works_in_progress": [
+        "Změny detekovány — doplň o co jde"
+      ],
+      "hash": "4af3e23cc16356531f872aa7a809abd7f982f44bd8341b73249fc04b885b3d6c"
+    },
+    {
+      "name": "design-agent",
+      "path": "/Users/mb/dev/design-agent",
+      "type": "project",
+      "status": "Rozděláno",
+      "progress": 51,
+      "rating": 4,
+      "description": "Design Agent",
+      "tags": [
+        "agent",
+        "ai",
+        "design"
+      ],
+      "github": null,
+      "tech_stack": [
+        "Python"
+      ],
+      "time_spent": 40,
+      "time_remaining": 30,
+      "llm_costs": [],
+      "total_cost_czk": 90,
+      "estimated_remaining_cost_czk": 150,
+      "changed_since_last": false,
+      "works_in_progress": [
+        "Změny detekovány — doplň o co jde"
+      ],
+      "hash": "7b248afa55cbe980388716cc44eca0a5f683a71729f350f19f563affaec838d3"
+    },
+    {
+      "name": "OBSIDIAN MUYLAYF_06_2026",
+      "path": "/Users/mb/dev/OBSIDIAN MUYLAYF_06_2026",
+      "type": "project",
+      "status": "Rozděláno",
+      "progress": 50,
+      "rating": 3,
+      "description": "Obsidian vault s osobními poznámkami a znalostní bází MUYLAYF (červen 2026).",
+      "tags": [],
+      "github": null,
+      "tech_stack": [],
+      "time_spent": 0,
+      "time_remaining": 0,
+      "llm_costs": [],
+      "total_cost_czk": 0,
+      "estimated_remaining_cost_czk": 0,
+      "changed_since_last": false,
+      "works_in_progress": [
+        "Změny detekovány — doplň o co jde"
+      ],
+      "hash": "ca6f906d86278d97dfbbe6432bc0e4a1d32b0b0f2f6ff79a1f9efb58e5e8b366"
+    },
+    {
+      "name": "riders_app",
+      "path": "/Users/mb/dev/riders_app",
+      "type": "project",
+      "status": "Rozděláno",
+      "progress": 49,
+      "rating": 3,
+      "description": "Here are your Instructions",
+      "tags": [
+        "app",
+        "database"
+      ],
+      "github": {
+        "url": "https://github.com/mirabeecko/riders_app.git",
+        "branch": "main",
+        "commit_count": 3,
+        "last_commit": "2026-05-28T20:37:08Z",
+        "last_commit_message": "Auto-generated changes"
+      },
+      "tech_stack": [],
+      "time_spent": 0,
+      "time_remaining": 0,
+      "llm_costs": [],
+      "total_cost_czk": 0,
+      "estimated_remaining_cost_czk": 0,
+      "changed_since_last": false,
+      "works_in_progress": [
+        "Změny detekovány — doplň o co jde"
+      ],
+      "hash": "1390353d12060e69cfcf3cbc1e833fd1823da86c88b82cbbdef04bf9a5eda482"
+    },
+    {
+      "name": "brozek24-0",
+      "path": "/Users/mb/dev/brozek24-0",
+      "type": "project",
+      "status": "Rozděláno",
+      "progress": 48,
+      "rating": 3,
+      "description": "Varianta prezentačního webu / profilu Miroslava Brožka (Emergency Digital Marketing).",
+      "tags": [
+        "marketing",
+        "web"
+      ],
+      "github": {
+        "url": "git@github.com:mirabeecko/brozek24.git",
+        "branch": "main",
+        "commit_count": 1,
+        "last_commit": "2026-04-16T02:22:58+02:00",
+        "last_commit_message": "Initial commit"
+      },
+      "tech_stack": [],
+      "time_spent": 0,
+      "time_remaining": 0,
+      "llm_costs": [],
+      "total_cost_czk": 0,
+      "estimated_remaining_cost_czk": 0,
+      "changed_since_last": false,
+      "works_in_progress": [
+        "Změny detekovány — doplň o co jde"
+      ],
+      "hash": "643c25735ffaa0ce5c27b9c254230793eec98c0fccf717e7e2e1e40bcc3f60e4"
+    },
+    {
+      "name": "kimi-webdo24",
+      "path": "/Users/mb/dev/kimi-webdo24",
+      "type": "project",
+      "status": "Rozděláno",
+      "progress": 48,
+      "rating": 4,
+      "description": "Automatická tvorba konverzních analýz webů v HTML\n\n🔗 GitHub: https://github.com/mirabeecko/webdo24.git\n\n📊 Měření: GA4 G-815XCLCGY8",
+      "tags": [
+        "analytics",
+        "web"
+      ],
+      "github": {
+        "url": "git@github.com:mirabeecko/webdo24.git",
+        "branch": "main",
+        "commit_count": 70,
+        "last_commit": "2026-06-16T18:34:43+02:00",
+        "last_commit_message": "feat: add /web-do-24-hodin-v2 (improved conversion LP)"
+      },
+      "tech_stack": [
+        "Node.js",
+        "HTML"
+      ],
+      "time_spent": 0,
+      "time_remaining": 0,
+      "llm_costs": [],
+      "total_cost_czk": 0,
+      "estimated_remaining_cost_czk": 0,
+      "changed_since_last": false,
+      "works_in_progress": [
+        "Změny detekovány — doplň o co jde"
+      ],
+      "hash": "50b167f93cefdf0ee43c8922eb4ef3b6256092c80f09ebe1443829cc4ad044a7"
+    },
+    {
+      "name": "marketing_agent",
+      "path": "/Users/mb/dev/marketing_agent",
+      "type": "project",
+      "status": "Rozděláno",
+      "progress": 48,
+      "rating": 4,
+      "description": "Marketing Agent — Meta Ads + Stripe + AI report",
+      "tags": [
+        "agent",
+        "automation"
+      ],
+      "github": null,
+      "tech_stack": [
+        "Python"
+      ],
+      "time_spent": 35,
+      "time_remaining": 30,
+      "llm_costs": [],
+      "total_cost_czk": 110,
+      "estimated_remaining_cost_czk": 200,
+      "changed_since_last": false,
+      "works_in_progress": [
+        "Změny detekovány — doplň o co jde"
+      ],
+      "hash": "01c07e39abeef3d9d524caad7b85f037445ea96fac52dd0afa009ff9f4319582"
+    },
+    {
+      "name": "kauza-weby",
+      "path": "/Users/mb/dev/kauza-weby",
+      "type": "project",
+      "status": "Rozděláno",
+      "progress": 42,
+      "rating": 3,
+      "description": "Skupina webových prezentací souvisejících s kauzou (kauza-edit-clone, kauza2, kauzatjkrupka.cz).",
+      "tags": [
+        "web"
+      ],
+      "github": null,
+      "tech_stack": [],
+      "time_spent": 0,
+      "time_remaining": 0,
+      "llm_costs": [],
+      "total_cost_czk": 0,
+      "estimated_remaining_cost_czk": 0,
+      "changed_since_last": false,
+      "works_in_progress": [
+        "Změny detekovány — doplň o co jde"
+      ],
+      "hash": "7007e53372f5190861e147f10502d28e546e3b3a0176e36adfa2f82c99459ef2"
+    },
+    {
+      "name": "1 ORGANIZACE M4 PRO",
+      "path": "/Users/mb/dev/1 ORGANIZACE M4 PRO",
+      "type": "project",
+      "status": "Rozděláno",
+      "progress": 31,
+      "rating": 3,
+      "description": "",
+      "tags": [],
+      "github": null,
+      "tech_stack": [],
+      "time_spent": 0,
+      "time_remaining": 0,
+      "llm_costs": [],
+      "total_cost_czk": 0,
+      "estimated_remaining_cost_czk": 0,
+      "changed_since_last": false,
+      "works_in_progress": [
+        "Změny detekovány — doplň o co jde"
+      ],
+      "hash": "0e980c72984d4e03d615ceb56d1716d6e139ca71df1fb709fd42eeb73ea5f7d5"
+    },
+    {
+      "name": "1 publikované",
+      "path": "/Users/mb/dev/1 publikované",
+      "type": "project",
+      "status": "Rozděláno",
+      "progress": 31,
+      "rating": 3,
+      "description": "",
+      "tags": [],
+      "github": null,
+      "tech_stack": [],
+      "time_spent": 0,
+      "time_remaining": 0,
+      "llm_costs": [],
+      "total_cost_czk": 0,
+      "estimated_remaining_cost_czk": 0,
+      "changed_since_last": false,
+      "works_in_progress": [
+        "Změny detekovány — doplň o co jde"
+      ],
+      "hash": "d96fd24e552aa73effdb0cc0dc2e1b426d82684236e6d17ff3787dc5c7aec3e7"
+    },
+    {
+      "name": "aaa HTML",
+      "path": "/Users/mb/dev/aaa HTML",
+      "type": "project",
+      "status": "Rozděláno",
+      "progress": 31,
+      "rating": 3,
+      "description": "",
+      "tags": [],
+      "github": null,
+      "tech_stack": [
+        "HTML"
+      ],
+      "time_spent": 0,
+      "time_remaining": 0,
+      "llm_costs": [],
+      "total_cost_czk": 0,
+      "estimated_remaining_cost_czk": 0,
+      "changed_since_last": false,
+      "works_in_progress": [
+        "Změny detekovány — doplň o co jde"
+      ],
+      "hash": "c6a7d1eeb2ce66b23df771d8e296dfd86ce50f58fa6dc9ee59cecd286f169c3e"
+    },
+    {
+      "name": "accountant24",
+      "path": "/Users/mb/dev/accountant24",
+      "type": "project",
+      "status": "Rozděláno",
+      "progress": 31,
+      "rating": 3,
+      "description": "Accountant24 - Free, local-first AI agent for personal finance",
+      "tags": [],
+      "github": {
+        "url": "https://github.com/machulav/accountant24.git",
+        "branch": "main",
+        "commit_count": 179,
+        "last_commit": "2026-06-22T17:46:52+02:00",
+        "last_commit_message": "docs: add JSON-LD structured data for site, app, and FAQ"
+      },
+      "tech_stack": [
+        "Node.js",
+        "TypeScript"
+      ],
+      "time_spent": 0,
+      "time_remaining": 0,
+      "llm_costs": [],
+      "total_cost_czk": 0,
+      "estimated_remaining_cost_czk": 0,
+      "changed_since_last": false,
+      "works_in_progress": [
+        "Změny detekovány — doplň o co jde"
+      ],
+      "hash": "7ad14c59274ce9ad13be5e30f5ce0a8fffa92548bb6d31e649dc6625a624eb25"
+    },
+    {
+      "name": "ads-live-dashboard",
+      "path": "/Users/mb/dev/dashboards and agents/ads-live-dashboard",
+      "type": "project",
+      "status": "Rozděláno",
+      "progress": 31,
+      "rating": 3,
+      "description": "Ads Live Dashboard",
+      "tags": [],
+      "github": null,
+      "tech_stack": [
+        "Node.js",
+        "TypeScript"
+      ],
+      "time_spent": 0,
+      "time_remaining": 0,
+      "llm_costs": [],
+      "total_cost_czk": 0,
+      "estimated_remaining_cost_czk": 0,
+      "changed_since_last": false,
+      "works_in_progress": [
+        "Změny detekovány — doplň o co jde"
+      ],
+      "hash": "c6e09501be28e4e728ca412d4ca95df60dc3eca5368e659dc54502bc0168e66c"
+    },
+    {
+      "name": "ai-project-manager",
+      "path": "/Users/mb/dev/dashboards and agents/ai-project-manager",
+      "type": "project",
+      "status": "Rozděláno",
+      "progress": 31,
+      "rating": 3,
+      "description": "🤖 AI Project Manager",
+      "tags": [],
+      "github": null,
+      "tech_stack": [
+        "Docker"
+      ],
+      "time_spent": 0,
+      "time_remaining": 0,
+      "llm_costs": [],
+      "total_cost_czk": 0,
+      "estimated_remaining_cost_czk": 0,
+      "changed_since_last": false,
+      "works_in_progress": [
+        "Změny detekovány — doplň o co jde"
+      ],
+      "hash": "2b37d92aaeee09f764e01607a1d57b1bbdcf0b46e9041be406c45bda87985dd7"
+    },
+    {
+      "name": "all_dashboard",
+      "path": "/Users/mb/dev/dashboards and agents/all_dashboard",
+      "type": "project",
+      "status": "Rozděláno",
+      "progress": 31,
+      "rating": 3,
+      "description": "",
+      "tags": [],
+      "github": null,
+      "tech_stack": [
+        "Node.js",
+        "HTML"
+      ],
+      "time_spent": 0,
+      "time_remaining": 0,
+      "llm_costs": [],
+      "total_cost_czk": 0,
+      "estimated_remaining_cost_czk": 0,
+      "changed_since_last": false,
+      "works_in_progress": [
+        "Změny detekovány — doplň o co jde"
+      ],
+      "hash": "4a646c50e7a043c5af342cfd249d339709b5c1436a45a290bd8f0206f83fbf60"
+    },
+    {
+      "name": "android_mac_ai_agent",
+      "path": "/Users/mb/dev/dashboards and agents/android_mac_ai_agent",
+      "type": "project",
+      "status": "Rozděláno",
+      "progress": 31,
+      "rating": 3,
+      "description": "Android → AI → macOS Calendar / Terminal",
+      "tags": [],
+      "github": null,
+      "tech_stack": [
+        "Python"
+      ],
+      "time_spent": 0,
+      "time_remaining": 0,
+      "llm_costs": [],
+      "total_cost_czk": 0,
+      "estimated_remaining_cost_czk": 0,
+      "changed_since_last": false,
+      "works_in_progress": [
+        "Změny detekovány — doplň o co jde"
+      ],
+      "hash": "1f77ca07f38da6538a8de07ca499dcb0d775ae1b947f36a0157ab57d92782890"
+    },
+    {
+      "name": "CrewAI_OS",
+      "path": "/Users/mb/dev/CrewAI_OS",
+      "type": "project",
+      "status": "Rozděláno",
+      "progress": 31,
+      "rating": 3,
+      "description": "",
+      "tags": [],
+      "github": null,
+      "tech_stack": [
+        "Python"
+      ],
+      "time_spent": 0,
+      "time_remaining": 0,
+      "llm_costs": [],
+      "total_cost_czk": 0,
+      "estimated_remaining_cost_czk": 0,
+      "changed_since_last": false,
+      "works_in_progress": [
+        "Změny detekovány — doplň o co jde"
+      ],
+      "hash": "ae74b4cbd907c3aaa459955263bcabbad13a5f1c172ebfbf55ad42525c873a76"
+    },
+    {
+      "name": "dashboard",
+      "path": "/Users/mb/dev/dashboards and agents/dashboard",
+      "type": "project",
+      "status": "Rozděláno",
+      "progress": 31,
+      "rating": 3,
+      "description": "Analytics Hub — Multi-site GA4 Dashboard",
+      "tags": [],
+      "github": {
+        "url": "https://github.com/mirabeecko/analytics-hub.git",
+        "branch": "main",
+        "commit_count": 10,
+        "last_commit": "2026-06-29T15:21:49+02:00",
+        "last_commit_message": "feat: add Google Ads diagnostic test endpoint"
+      },
+      "tech_stack": [
+        "Node.js",
+        "Next.js",
+        "React",
+        "TypeScript"
+      ],
+      "time_spent": 0,
+      "time_remaining": 0,
+      "llm_costs": [],
+      "total_cost_czk": 0,
+      "estimated_remaining_cost_czk": 0,
+      "changed_since_last": false,
+      "works_in_progress": [
+        "Změny detekovány — doplň o co jde"
+      ],
+      "hash": "64a6c0aa619681d39cd42b257b1e17abade358b7bc75e7457fed6a4247c86f01"
+    },
+    {
+      "name": "dashboards and agents",
+      "path": "/Users/mb/dev/dashboards and agents",
+      "type": "project",
+      "status": "Rozděláno",
+      "progress": 31,
+      "rating": 3,
+      "description": "",
+      "tags": [],
+      "github": null,
+      "tech_stack": [],
+      "time_spent": 0,
+      "time_remaining": 0,
+      "llm_costs": [],
+      "total_cost_czk": 0,
+      "estimated_remaining_cost_czk": 0,
+      "changed_since_last": false,
+      "works_in_progress": [
+        "Změny detekovány — doplň o co jde"
+      ],
+      "hash": "86bb62402b79fdec507491f50ae345094189c486678f9a2ddfd3736cb4f817c2"
+    },
+    {
+      "name": "dashboards and assistants",
+      "path": "/Users/mb/dev/dashboards and agents/dashboards and assistants",
+      "type": "project",
+      "status": "Rozděláno",
+      "progress": 31,
+      "rating": 3,
+      "description": "",
+      "tags": [],
+      "github": null,
+      "tech_stack": [],
+      "time_spent": 0,
+      "time_remaining": 0,
+      "llm_costs": [],
+      "total_cost_czk": 0,
+      "estimated_remaining_cost_czk": 0,
+      "changed_since_last": false,
+      "works_in_progress": [
+        "Změny detekovány — doplň o co jde"
+      ],
+      "hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "deepseek_env",
+      "path": "/Users/mb/dev/deepseek_env",
+      "type": "project",
+      "status": "Rozděláno",
+      "progress": 31,
+      "rating": 3,
+      "description": "Projekt deepseek_env.",
+      "tags": [],
+      "github": null,
+      "tech_stack": [],
+      "time_spent": 0,
+      "time_remaining": 0,
+      "llm_costs": [],
+      "total_cost_czk": 0,
+      "estimated_remaining_cost_czk": 0,
+      "changed_since_last": false,
+      "works_in_progress": [
+        "Změny detekovány — doplň o co jde"
+      ],
+      "hash": "5e57805350856fdd074572ec0283ce85923a6fbdb1abcdce20fb99b9649d3264"
+    },
+    {
+      "name": "executive-ai",
+      "path": "/Users/mb/dev/dashboards and agents/executive-ai",
+      "type": "project",
+      "status": "Rozděláno",
+      "progress": 31,
+      "rating": 3,
+      "description": "🤖 Osobní ředitel (Executive AI)",
+      "tags": [],
+      "github": {
+        "url": "https://github.com/mirabeecko/executive-ai.git",
+        "branch": "main",
+        "commit_count": 1,
+        "last_commit": "2026-06-08T22:42:23+02:00",
+        "last_commit_message": "feat: Executive AI bot - Telegram agent for project management"
+      },
+      "tech_stack": [
+        "Node.js",
+        "Docker",
+        "TypeScript"
+      ],
+      "time_spent": 80,
+      "time_remaining": 15,
+      "llm_costs": [],
+      "total_cost_czk": 450,
+      "estimated_remaining_cost_czk": 200,
+      "changed_since_last": false,
+      "works_in_progress": [
+        "Změny detekovány — doplň o co jde"
+      ],
+      "hash": "0be5dc98dbba3808471f87cd24114e899573051bfdc2357013bc2f4f10525f49"
+    },
+    {
+      "name": "free-claude-code",
+      "path": "/Users/mb/dev/free-claude-code",
+      "type": "project",
+      "status": "Rozděláno",
+      "progress": 31,
+      "rating": 3,
+      "description": "<div align=\"center\">",
+      "tags": [],
+      "github": {
+        "url": "https://github.com/Alishahryar1/free-claude-code.git",
+        "branch": "main",
+        "commit_count": 554,
+        "last_commit": "2026-04-30T16:10:27-07:00",
+        "last_commit_message": "Updated README"
+      },
+      "tech_stack": [
+        "Python"
+      ],
+      "time_spent": 0,
+      "time_remaining": 0,
+      "llm_costs": [],
+      "total_cost_czk": 0,
+      "estimated_remaining_cost_czk": 0,
+      "changed_since_last": false,
+      "works_in_progress": [
+        "Změny detekovány — doplň o co jde"
+      ],
+      "hash": "758c123cdb4f1f59054662536ad69d6bedd3579e303e9264d6a08d376c3242af"
+    },
+    {
+      "name": "gif-maker",
+      "path": "/Users/mb/dev/dashboards and agents/gif-maker",
+      "type": "project",
+      "status": "Rozděláno",
+      "progress": 31,
+      "rating": 3,
+      "description": "This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).",
+      "tags": [],
+      "github": null,
+      "tech_stack": [
+        "Node.js",
+        "TypeScript"
+      ],
+      "time_spent": 0,
+      "time_remaining": 0,
+      "llm_costs": [],
+      "total_cost_czk": 0,
+      "estimated_remaining_cost_czk": 0,
+      "changed_since_last": false,
+      "works_in_progress": [
+        "Změny detekovány — doplň o co jde"
+      ],
+      "hash": "56ff35001b59983831b6863eea5ed6751e2c18f573a7534e5537ccebf4b25467"
+    },
+    {
+      "name": "google-docs-mcp",
+      "path": "/Users/mb/dev/dashboards and agents/google-docs-mcp",
+      "type": "project",
+      "status": "Rozděláno",
+      "progress": 31,
+      "rating": 3,
+      "description": "Google Docs, Sheets, Drive, Gmail & Calendar MCP Server",
+      "tags": [],
+      "github": {
+        "url": "https://github.com/a-bonus/google-docs-mcp",
+        "branch": "main",
+        "commit_count": 272,
+        "last_commit": "2026-06-01T11:34:46-04:00",
+        "last_commit_message": "Merge pull request #138 from morgan35543/main"
+      },
+      "tech_stack": [
+        "Node.js",
+        "Docker",
+        "TypeScript"
+      ],
+      "time_spent": 0,
+      "time_remaining": 0,
+      "llm_costs": [],
+      "total_cost_czk": 0,
+      "estimated_remaining_cost_czk": 0,
+      "changed_since_last": false,
+      "works_in_progress": [
+        "Změny detekovány — doplň o co jde"
+      ],
+      "hash": "317b8e1ad3e47d95306d2ab3c2c945f27f7de8ff3e2d95fad2d86dbbe9cf5b60"
+    },
+    {
+      "name": "hermes-workspace",
+      "path": "/Users/mb/dev/dashboards and agents/hermes-workspace",
+      "type": "project",
+      "status": "Rozděláno",
+      "progress": 31,
+      "rating": 3,
+      "description": "AGENTS.md – Pravidla pro Hermes Agent",
+      "tags": [],
+      "github": null,
+      "tech_stack": [],
+      "time_spent": 0,
+      "time_remaining": 0,
+      "llm_costs": [],
+      "total_cost_czk": 0,
+      "estimated_remaining_cost_czk": 0,
+      "changed_since_last": false,
+      "works_in_progress": [
+        "Změny detekovány — doplň o co jde"
+      ],
+      "hash": "49ffc33f5a0ab3f4c66e51b45fc7d1642afccb0db453e8c6178d225354a5736f"
+    },
+    {
+      "name": "hermes_agent",
+      "path": "/Users/mb/dev/dashboards and agents/hermes_agent",
+      "type": "project",
+      "status": "Rozděláno",
+      "progress": 31,
+      "rating": 3,
+      "description": "hermes_agent",
+      "tags": [],
+      "github": {
+        "url": "https://github.com/mirabeecko/hermes_agent.git",
+        "branch": "main",
+        "commit_count": 1,
+        "last_commit": "2026-06-02T03:01:28+02:00",
+        "last_commit_message": "first commit"
+      },
+      "tech_stack": [],
+      "time_spent": 0,
+      "time_remaining": 0,
+      "llm_costs": [],
+      "total_cost_czk": 0,
+      "estimated_remaining_cost_czk": 0,
+      "changed_since_last": false,
+      "works_in_progress": [
+        "Změny detekovány — doplň o co jde"
+      ],
+      "hash": "8564237a8afdd04f19c4eb79bc68bcc6502c3effe852ff46f0520cc8a8fd1b17"
+    },
+    {
+      "name": "htmler",
+      "path": "/Users/mb/dev/dashboards and agents/htmler",
+      "type": "project",
+      "status": "Rozděláno",
+      "progress": 31,
+      "rating": 3,
+      "description": "",
+      "tags": [],
+      "github": null,
+      "tech_stack": [
+        "HTML"
+      ],
+      "time_spent": 0,
+      "time_remaining": 0,
+      "llm_costs": [],
+      "total_cost_czk": 0,
+      "estimated_remaining_cost_czk": 0,
+      "changed_since_last": false,
+      "works_in_progress": [
+        "Změny detekovány — doplň o co jde"
+      ],
+      "hash": "768bb737e66313bd6da85de95a35ff5593bb1faae9276b4c459d7bc05b53b90e"
+    },
+    {
+      "name": "kauza-edit-clone",
+      "path": "/Users/mb/dev/kauza-weby/kauza-edit-clone",
+      "type": "project",
+      "status": "Rozděláno",
+      "progress": 31,
+      "rating": 3,
+      "description": "Kauza Tělovýchovná jednota Krupka z.s.",
+      "tags": [],
+      "github": {
+        "url": "https://github.com/mirabeecko/kauza-edit.git",
+        "branch": "main",
+        "commit_count": 50,
+        "last_commit": "2025-12-27T18:02:58+01:00",
+        "last_commit_message": "Odstranění tématu Soudní řízení a všech odkazů"
+      },
+      "tech_stack": [
+        "Node.js",
+        "TypeScript"
+      ],
+      "time_spent": 0,
+      "time_remaining": 0,
+      "llm_costs": [],
+      "total_cost_czk": 0,
+      "estimated_remaining_cost_czk": 0,
+      "changed_since_last": false,
+      "works_in_progress": [
+        "Změny detekovány — doplň o co jde"
+      ],
+      "hash": "6bc2f202b68ac901e965580a5010fb4946443c2f4c982c20e23c3b5ca486b665"
+    },
+    {
+      "name": "kauza2",
+      "path": "/Users/mb/dev/kauza-weby/kauza2",
+      "type": "project",
+      "status": "Rozděláno",
+      "progress": 31,
+      "rating": 3,
+      "description": "Kauza TJ Krupka z.s.",
+      "tags": [],
+      "github": null,
+      "tech_stack": [
+        "Node.js",
+        "TypeScript"
+      ],
+      "time_spent": 0,
+      "time_remaining": 0,
+      "llm_costs": [],
+      "total_cost_czk": 0,
+      "estimated_remaining_cost_czk": 0,
+      "changed_since_last": false,
+      "works_in_progress": [
+        "Změny detekovány — doplň o co jde"
+      ],
+      "hash": "ee7ee5171b95a9f6df87f9a017f4db5c570271126f19ce325d496d98d43da361"
+    },
+    {
+      "name": "kauzatjkrupka.cz",
+      "path": "/Users/mb/dev/kauza-weby/kauzatjkrupka.cz",
+      "type": "project",
+      "status": "Rozděláno",
+      "progress": 31,
+      "rating": 3,
+      "description": "Kauza Tělovýchovná jednota Krupka z.s.",
+      "tags": [],
+      "github": {
+        "url": "https://github.com/mirabeecko/kauza-edit.git",
+        "branch": "stara-grafika-nova-struktura",
+        "commit_count": 54,
+        "last_commit": "2026-06-30T20:34:04+02:00",
+        "last_commit_message": "stara-grafika-nova-struktura: apply old colorful style to new dossier structure"
+      },
+      "tech_stack": [
+        "Node.js",
+        "TypeScript"
+      ],
+      "time_spent": 0,
+      "time_remaining": 0,
+      "llm_costs": [],
+      "total_cost_czk": 0,
+      "estimated_remaining_cost_czk": 0,
+      "changed_since_last": false,
+      "works_in_progress": [
+        "Změny detekovány — doplň o co jde"
+      ],
+      "hash": "7384ea493da6a421f9fee310445e0f6af85c26ac7bd87dd67ddad5096b25ea30"
+    },
+    {
+      "name": "komarka_app",
+      "path": "/Users/mb/dev/dashboards and agents/komarka_app",
+      "type": "project",
+      "status": "Rozděláno",
+      "progress": 31,
+      "rating": 3,
+      "description": "Komarka Guest",
+      "tags": [],
+      "github": null,
+      "tech_stack": [
+        "Node.js",
+        "TypeScript"
+      ],
+      "time_spent": 0,
+      "time_remaining": 0,
+      "llm_costs": [],
+      "total_cost_czk": 0,
+      "estimated_remaining_cost_czk": 0,
+      "changed_since_last": false,
+      "works_in_progress": [
+        "Změny detekovány — doplň o co jde"
+      ],
+      "hash": "f7573086823e64699b1220d50f3b296d7df4e44999e800fb515753ea5ec67770"
+    },
+    {
+      "name": "LettaOS",
+      "path": "/Users/mb/dev/LettaOS",
+      "type": "project",
+      "status": "Rozděláno",
+      "progress": 31,
+      "rating": 3,
+      "description": "",
+      "tags": [],
+      "github": null,
+      "tech_stack": [],
+      "time_spent": 0,
+      "time_remaining": 0,
+      "llm_costs": [],
+      "total_cost_czk": 0,
+      "estimated_remaining_cost_czk": 0,
+      "changed_since_last": false,
+      "works_in_progress": [
+        "Změny detekovány — doplň o co jde"
+      ],
+      "hash": "7d739c8698739b6381f0cfa6cb441228769ffd7bf9b1cc4831147ed819070011"
+    },
+    {
+      "name": "mac_voice_ai_agent",
+      "path": "/Users/mb/dev/dashboards and agents/mac_voice_ai_agent",
+      "type": "project",
+      "status": "Rozděláno",
+      "progress": 31,
+      "rating": 3,
+      "description": "Mac Voice AI Agent",
+      "tags": [],
+      "github": null,
+      "tech_stack": [
+        "Python"
+      ],
+      "time_spent": 0,
+      "time_remaining": 0,
+      "llm_costs": [],
+      "total_cost_czk": 0,
+      "estimated_remaining_cost_czk": 0,
+      "changed_since_last": false,
+      "works_in_progress": [
+        "Změny detekovány — doplň o co jde"
+      ],
+      "hash": "990f794d2fd823cdabd08000a527c24d50ab3dcdf08f1a6a0e4823464041135e"
+    },
+    {
+      "name": "mbrozek-ai",
+      "path": "/Users/mb/dev/dashboards and agents/mbrozek-ai",
+      "type": "project",
+      "status": "Rozděláno",
+      "progress": 31,
+      "rating": 3,
+      "description": "🧠 Miroslav Brožek — Personal AI System",
+      "tags": [],
+      "github": null,
+      "tech_stack": [
+        "Docker"
+      ],
+      "time_spent": 60,
+      "time_remaining": 90,
+      "llm_costs": [],
+      "total_cost_czk": 200,
+      "estimated_remaining_cost_czk": 600,
+      "changed_since_last": false,
+      "works_in_progress": [
+        "Změny detekovány — doplň o co jde"
+      ],
+      "hash": "9249e28fbc1233e2598b6ecb736b2df55fc41259ebe384cff61f10efca72ae0a"
+    },
+    {
+      "name": "mestokrupka",
+      "path": "/Users/mb/dev/mestokrupka",
+      "type": "project",
+      "status": "Rozděláno",
+      "progress": 31,
+      "rating": 3,
+      "description": "Projekt mestokrupka.\n\n🔗 GitHub: https://github.com/mirabeecko/mestokrupka.git",
+      "tags": [],
+      "github": {
+        "url": "https://github.com/mirabeecko/mestokrupka.git",
+        "branch": "main",
+        "commit_count": 30,
+        "last_commit": "2026-07-05T07:26:51+02:00",
+        "last_commit_message": "v_GDPR"
+      },
+      "tech_stack": [
+        "Node.js",
+        "TypeScript"
+      ],
+      "time_spent": 0,
+      "time_remaining": 0,
+      "llm_costs": [],
+      "total_cost_czk": 0,
+      "estimated_remaining_cost_czk": 0,
+      "changed_since_last": false,
+      "works_in_progress": [
+        "Změny detekovány — doplň o co jde"
+      ],
+      "hash": "213c90b2e0443132f2e790f2de41d6c4d18149d2cd0ef172b1cf822edb812ccc"
+    },
+    {
+      "name": "MiLO_Agent",
+      "path": "/Users/mb/dev/MiLO_Agent",
+      "type": "project",
+      "status": "Rozděláno",
+      "progress": 31,
+      "rating": 4,
+      "description": "MiLO_Agent je produkční MVP osobního AI komunikačního agenta ovládaného přes Telegram. Uživatel v Telegramu zadává mise, agent je rozparsuje, případně si vyžádá upřesnění, po potvrzení je aktivuje a e",
+      "tags": [
+        "agent",
+        "ai",
+        "api"
+      ],
+      "github": null,
+      "tech_stack": [
+        "Python",
+        "Docker"
+      ],
+      "time_spent": 70,
+      "time_remaining": 100,
+      "llm_costs": [],
+      "total_cost_czk": 180,
+      "estimated_remaining_cost_czk": 500,
+      "changed_since_last": false,
+      "works_in_progress": [
+        "Změny detekovány — doplň o co jde"
+      ],
+      "hash": "b40e6d9d9f89ccfd9e3e2c30b1b85b0477f42cb50e0941bd934ac856a4f58cb1"
+    },
+    {
+      "name": "MiLO_Core",
+      "path": "/Users/mb/dev/MiLO_Core",
+      "type": "project",
+      "status": "Rozděláno",
+      "progress": 31,
+      "rating": 3,
+      "description": "> Můj osobní operační systém.",
+      "tags": [
+        "agent"
+      ],
+      "github": {
+        "url": "https://github.com/mirabeecko/milo_core.git",
+        "branch": "main",
+        "commit_count": 39,
+        "last_commit": "2026-07-06T12:57:05+02:00",
+        "last_commit_message": "feat: přidat scanner, cost tracking a Ollama provider"
+      },
+      "tech_stack": [
+        "Node.js",
+        "Docker"
+      ],
+      "time_spent": 120,
+      "time_remaining": 200,
+      "llm_costs": [],
+      "total_cost_czk": 320,
+      "estimated_remaining_cost_czk": 2000,
+      "changed_since_last": false,
+      "works_in_progress": [
+        "Změny detekovány — doplň o co jde"
+      ],
+      "hash": "8691ef76a2087738fcfb329af58058996c80c6ba6b3109886bcfeb8b14f2aaa7"
+    },
+    {
+      "name": "MiLO_ISDS_MCP",
+      "path": "/Users/mb/dev/MiLO_ISDS_MCP",
+      "type": "project",
+      "status": "Rozděláno",
+      "progress": 31,
+      "rating": 3,
+      "description": "MiLO ISDS MCP",
+      "tags": [
+        "api"
+      ],
+      "github": null,
+      "tech_stack": [
+        "Python"
+      ],
+      "time_spent": 0,
+      "time_remaining": 0,
+      "llm_costs": [],
+      "total_cost_czk": 0,
+      "estimated_remaining_cost_czk": 0,
+      "changed_since_last": false,
+      "works_in_progress": [
+        "Změny detekovány — doplň o co jde"
+      ],
+      "hash": "540afdb2a9cc1fee8402468d17577980d34ca91e913c8a7501efd38adca5e5e7"
+    },
+    {
+      "name": "myinvoice",
+      "path": "/Users/mb/dev/myinvoice",
+      "type": "project",
+      "status": "Rozděláno",
+      "progress": 31,
+      "rating": 3,
+      "description": "MyInvoice.cz",
+      "tags": [],
+      "github": {
+        "url": "https://github.com/radekhulan/myinvoice.git",
+        "branch": "master",
+        "commit_count": 855,
+        "last_commit": "2026-07-01T15:15:49+02:00",
+        "last_commit_message": "fix(signing): revert chybného JOINu na neexistující sloupec signing_credentials.usage"
+      },
+      "tech_stack": [
+        "Docker"
+      ],
+      "time_spent": 0,
+      "time_remaining": 0,
+      "llm_costs": [],
+      "total_cost_czk": 0,
+      "estimated_remaining_cost_czk": 0,
+      "changed_since_last": false,
+      "works_in_progress": [
+        "Změny detekovány — doplň o co jde"
+      ],
+      "hash": "4acba44b918980c88006d7a782677f9382c2829cca72743654ee4a44ffb84088"
+    },
+    {
+      "name": "obcanai",
+      "path": "/Users/mb/dev/dashboards and agents/obcanai",
+      "type": "project",
+      "status": "Rozděláno",
+      "progress": 31,
+      "rating": 3,
+      "description": "**Osobní průvodce právy občana.**",
+      "tags": [],
+      "github": null,
+      "tech_stack": [
+        "Node.js",
+        "TypeScript"
+      ],
+      "time_spent": 100,
+      "time_remaining": 20,
+      "llm_costs": [],
+      "total_cost_czk": 350,
+      "estimated_remaining_cost_czk": 100,
+      "changed_since_last": false,
+      "works_in_progress": [
+        "Změny detekovány — doplň o co jde"
+      ],
+      "hash": "0b9bb2749188d2e7d57cdd79b6a0582bc9fe75868a0f849e83918048d4a15881"
+    },
+    {
+      "name": "open-webui",
+      "path": "/Users/mb/dev/open-webui",
+      "type": "project",
+      "status": "Rozděláno",
+      "progress": 31,
+      "rating": 3,
+      "description": "Open WebUI 👋",
+      "tags": [],
+      "github": {
+        "url": "https://github.com/open-webui/open-webui",
+        "branch": "main",
+        "commit_count": 17201,
+        "last_commit": "2026-07-01T03:40:54-05:00",
+        "last_commit_message": "0.10.2 (#26642)"
+      },
+      "tech_stack": [
+        "Node.js",
+        "Python",
+        "Docker",
+        "TypeScript"
+      ],
+      "time_spent": 0,
+      "time_remaining": 0,
+      "llm_costs": [],
+      "total_cost_czk": 0,
+      "estimated_remaining_cost_czk": 0,
+      "changed_since_last": false,
+      "works_in_progress": [
+        "Změny detekovány — doplň o co jde"
+      ],
+      "hash": "aa97d71e26d65dd59578493d02b04d29e886c1b70099f078e4dc91184e02e505"
+    },
+    {
+      "name": "pro-ubytovane-apk",
+      "path": "/Users/mb/dev/dashboards and agents/pro-ubytovane-apk",
+      "type": "project",
+      "status": "Rozděláno",
+      "progress": 31,
+      "rating": 3,
+      "description": "Komárka Guest",
+      "tags": [],
+      "github": null,
+      "tech_stack": [
+        "Node.js",
+        "TypeScript"
+      ],
+      "time_spent": 0,
+      "time_remaining": 0,
+      "llm_costs": [],
+      "total_cost_czk": 0,
+      "estimated_remaining_cost_czk": 0,
+      "changed_since_last": false,
+      "works_in_progress": [
+        "Změny detekovány — doplň o co jde"
+      ],
+      "hash": "fd775430335a3bbca03818965f2de443fb4479ead295c894898a74cff99ef39e"
+    },
+    {
+      "name": "project-dashboard",
+      "path": "/Users/mb/dev/dashboards and agents/project-dashboard",
+      "type": "project",
+      "status": "Rozděláno",
+      "progress": 31,
+      "rating": 3,
+      "description": "",
+      "tags": [],
+      "github": {
+        "url": "https://github.com/mirabeecko/dev-dashboard.git",
+        "branch": "main",
+        "commit_count": 1,
+        "last_commit": "2026-06-05T15:41:43+02:00",
+        "last_commit_message": "Initial commit"
+      },
+      "tech_stack": [
+        "HTML"
+      ],
+      "time_spent": 0,
+      "time_remaining": 0,
+      "llm_costs": [],
+      "total_cost_czk": 0,
+      "estimated_remaining_cost_czk": 0,
+      "changed_since_last": false,
+      "works_in_progress": [
+        "Změny detekovány — doplň o co jde"
+      ],
+      "hash": "0774a6cf34a783aef0f79d35420f76b0b54d2170929f91d7ded876f68f416758"
+    },
+    {
+      "name": "SPOL_OS",
+      "path": "/Users/mb/dev/dashboards and agents/SPOL_OS",
+      "type": "project",
+      "status": "Rozděláno",
+      "progress": 31,
+      "rating": 3,
+      "description": "EmotionOS — Kompletní produktová dokumentace",
+      "tags": [],
+      "github": null,
+      "tech_stack": [
+        "Node.js",
+        "TypeScript"
+      ],
+      "time_spent": 90,
+      "time_remaining": 120,
+      "llm_costs": [],
+      "total_cost_czk": 380,
+      "estimated_remaining_cost_czk": 800,
+      "changed_since_last": false,
+      "works_in_progress": [
+        "Změny detekovány — doplň o co jde"
+      ],
+      "hash": "2a428f2f11946537ddc8f21ab036e073eaaec6b07e6498b3136c16dba0213773"
+    },
+    {
+      "name": "TJ_KRUPKA_LEGAL_OS",
+      "path": "/Users/mb/dev/dashboards and agents/TJ_KRUPKA_LEGAL_OS",
+      "type": "project",
+      "status": "Rozděláno",
+      "progress": 31,
+      "rating": 3,
+      "description": "",
+      "tags": [],
+      "github": null,
+      "tech_stack": [],
+      "time_spent": 0,
+      "time_remaining": 0,
+      "llm_costs": [],
+      "total_cost_czk": 0,
+      "estimated_remaining_cost_czk": 0,
+      "changed_since_last": false,
+      "works_in_progress": [
+        "Změny detekovány — doplň o co jde"
+      ],
+      "hash": "39e7537a179db948bc3225d92ce994ee8cfc7400d1887d6d526bc6943b9c6b06"
+    },
+    {
+      "name": "vehicles_app",
+      "path": "/Users/mb/dev/dashboards and agents/vehicles_app",
+      "type": "project",
+      "status": "Rozděláno",
+      "progress": 31,
+      "rating": 3,
+      "description": "",
+      "tags": [],
+      "github": {
+        "url": "https://github.com/mirabeecko/vehicles_app.git",
+        "branch": "main",
+        "commit_count": 1,
+        "last_commit": "2026-05-30T11:42:59+02:00",
+        "last_commit_message": "Initial commit"
+      },
+      "tech_stack": [
+        "HTML"
+      ],
+      "time_spent": 0,
+      "time_remaining": 0,
+      "llm_costs": [],
+      "total_cost_czk": 0,
+      "estimated_remaining_cost_czk": 0,
+      "changed_since_last": false,
+      "works_in_progress": [
+        "Změny detekovány — doplň o co jde"
+      ],
+      "hash": "6bf2301e8f22700b2f1d78675b6fccab704a05a7e0ed865d07b7b62697b8b631"
+    },
+    {
+      "name": "veterina-live-new",
+      "path": "/Users/mb/dev/veterina-live-new",
+      "type": "project",
+      "status": "Nápad / koncept",
+      "progress": 31,
+      "rating": 3,
+      "description": "Veterinární klinika LIVE | Litoměřice.\n\n🔗 GitHub: https://github.com/mirabeecko/live-vet.git",
+      "tags": [],
+      "github": {
+        "url": "https://github.com/mirabeecko/live-vet.git",
+        "branch": "main",
+        "commit_count": 1,
+        "last_commit": "2026-06-05T14:43:02+02:00",
+        "last_commit_message": "Initial commit: Premium veterinary clinic website for LIVE VET s.r.o."
+      },
+      "tech_stack": [
+        "HTML"
+      ],
+      "time_spent": 0,
+      "time_remaining": 0,
+      "llm_costs": [],
+      "total_cost_czk": 0,
+      "estimated_remaining_cost_czk": 0,
+      "changed_since_last": false,
+      "works_in_progress": [
+        "Změny detekovány — doplň o co jde"
+      ],
+      "hash": "46b5a25b451f33dcf3a68c5759fa122e44dd8a807256cdc994ac6b3925ef1744"
+    },
+    {
+      "name": "voice-ai-terminal",
+      "path": "/Users/mb/dev/dashboards and agents/voice-ai-terminal",
+      "type": "project",
+      "status": "Rozděláno",
+      "progress": 31,
+      "rating": 3,
+      "description": "Voice AI Terminal",
+      "tags": [],
+      "github": null,
+      "tech_stack": [
+        "Python"
+      ],
+      "time_spent": 55,
+      "time_remaining": 35,
+      "llm_costs": [],
+      "total_cost_czk": 160,
+      "estimated_remaining_cost_czk": 250,
+      "changed_since_last": false,
+      "works_in_progress": [
+        "Změny detekovány — doplň o co jde"
+      ],
+      "hash": "a317bee6090cd88dd68b4e5b95b1e1864521c88c04263bd499543a7b06b7e754"
+    },
+    {
+      "name": "voice-ai-terminal-backup",
+      "path": "/Users/mb/dev/dashboards and agents/voice-ai-terminal-backup",
+      "type": "project",
+      "status": "Rozděláno",
+      "progress": 31,
+      "rating": 3,
+      "description": "Voice AI Terminal",
+      "tags": [],
+      "github": null,
+      "tech_stack": [],
+      "time_spent": 0,
+      "time_remaining": 0,
+      "llm_costs": [],
+      "total_cost_czk": 0,
+      "estimated_remaining_cost_czk": 0,
+      "changed_since_last": false,
+      "works_in_progress": [
+        "Změny detekovány — doplň o co jde"
+      ],
+      "hash": "82c8c3195330ad7c9d0d9410fc6c291f8810e3406021c86bc0a38a6daba44f53"
+    },
+    {
+      "name": "brozek24",
+      "path": "/Users/mb/dev/brozek24",
+      "type": "project",
+      "status": "Nápad / koncept",
+      "progress": 30,
+      "rating": 3,
+      "description": "Miroslav Brožek — Emergency Digital Marketing | Praha · 735 847 185.\n\n🔗 GitHub: http://github.com/mirabeecko/brozek24.git",
+      "tags": [
+        "marketing"
+      ],
+      "github": {
+        "url": "http://github.com/mirabeecko/brozek24.git",
+        "branch": "main",
+        "commit_count": 8,
+        "last_commit": "2026-04-26T10:07:09+02:00",
+        "last_commit_message": "Clean up: remove public/, v2/, v3/ — single index.html at root"
+      },
+      "tech_stack": [
+        "HTML"
+      ],
+      "time_spent": 0,
+      "time_remaining": 0,
+      "llm_costs": [],
+      "total_cost_czk": 0,
+      "estimated_remaining_cost_czk": 0,
+      "changed_since_last": false,
+      "works_in_progress": [
+        "Změny detekovány — doplň o co jde"
+      ],
+      "hash": "1296a2833593d677d136789cb51c30a04f72b9aa2e8da867af0d0690d8010a79"
+    }
+  ]
+}

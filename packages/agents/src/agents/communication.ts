@@ -1,13 +1,16 @@
 import type { AgentDefinition, AgentStatus, AgentTask, LiveWorkExplanation } from "@milo/shared";
+import { GmailClient } from "@milo/tools";
 import { AgentEntityImpl } from "../agent.js";
 import { AgentStateMachine } from "../runtime/agent-state-machine.js";
 import type { AgentEntityDeps } from "../agent.js";
 import {
   DefaultCommunicationService,
+  GoogleGmailProvider,
   MockGmailProvider,
   MockWhatsAppProvider,
 } from "../services/communication/index.js";
 import type {
+  CommunicationProvider,
   Contact,
   DraftReply,
   Message,
@@ -16,7 +19,7 @@ import type {
   CommunicationStats,
 } from "../services/communication/types.js";
 
-export interface CommunicationAgentState {
+export interface SecretaryAgentState {
   messages: Message[];
   threads: Thread[];
   contacts: Contact[];
@@ -29,9 +32,10 @@ export interface CommunicationAgentState {
   activeTask?: AgentTask;
   taskHistory: AgentTask[];
   pendingQueue: AgentTask[];
+  isDemoData?: boolean;
 }
 
-export interface CommunicationSimulationStep {
+export interface SecretarySimulationStep {
   status: AgentStatus;
   progress: number;
   activity: string;
@@ -51,7 +55,7 @@ export interface CommunicationSimulationStep {
   logs: string[];
 }
 
-export class CommunicationAgent extends AgentEntityImpl {
+export class SecretaryAgent extends AgentEntityImpl {
   private simulationInterval?: ReturnType<typeof setInterval>;
   private runningTick?: Promise<void>;
   private currentStepIndex = 0;
@@ -59,7 +63,8 @@ export class CommunicationAgent extends AgentEntityImpl {
     new MockGmailProvider(),
     new MockWhatsAppProvider(),
   ]);
-  private state: CommunicationAgentState = {
+  private isDemoData = true;
+  private state: SecretaryAgentState = {
     messages: [],
     threads: [],
     contacts: [],
@@ -86,7 +91,7 @@ export class CommunicationAgent extends AgentEntityImpl {
       description: "Načíst nové zprávy ze všech kanálů.",
       priority: "high",
       status: "pending",
-      ownerId: "communication",
+      ownerId: "secretary",
       ownerType: "agent",
       source: "schedule",
       log: [],
@@ -100,7 +105,7 @@ export class CommunicationAgent extends AgentEntityImpl {
       description: "Roztřídit zprávy podle priority a potřeby odpovědi.",
       priority: "high",
       status: "pending",
-      ownerId: "communication",
+      ownerId: "secretary",
       ownerType: "agent",
       source: "dashboard",
       log: [],
@@ -114,7 +119,7 @@ export class CommunicationAgent extends AgentEntityImpl {
       description: "Shrnovat klíčové body, termíny a úkoly z důležitých zpráv.",
       priority: "normal",
       status: "pending",
-      ownerId: "communication",
+      ownerId: "secretary",
       ownerType: "agent",
       source: "system",
       log: [],
@@ -128,7 +133,7 @@ export class CommunicationAgent extends AgentEntityImpl {
       description: "Vygenerovat koncepty odpovědí pro zprávy čekající na reakci.",
       priority: "normal",
       status: "pending",
-      ownerId: "communication",
+      ownerId: "secretary",
       ownerType: "agent",
       source: "dashboard",
       log: [],
@@ -139,7 +144,7 @@ export class CommunicationAgent extends AgentEntityImpl {
     },
   ];
 
-  private readonly steps: CommunicationSimulationStep[] = [
+  private readonly steps: SecretarySimulationStep[] = [
     {
       status: "loading_messages",
       progress: 15,
@@ -266,7 +271,11 @@ export class CommunicationAgent extends AgentEntityImpl {
 
   async start(): Promise<void> {
     await super.start();
-    await this.syncCommunication();
+    try {
+      await this.syncSecretary();
+    } catch (err) {
+      console.warn({ err }, "Initial communication sync failed, using mock provider");
+    }
     this.startSimulation();
   }
 
@@ -291,19 +300,56 @@ export class CommunicationAgent extends AgentEntityImpl {
   }
 
   getTaskHistory(): AgentTask[] {
-    return this.state.taskHistory;
+    return [...this.state.taskHistory, ...this.taskHistory];
   }
 
   getPendingQueue(): AgentTask[] {
-    return this.state.pendingQueue;
+    return [...this.state.pendingQueue, ...this.pendingQueue];
   }
 
-  getCommunicationState(): CommunicationAgentState {
-    return this.state;
+  getSecretaryState(): SecretaryAgentState {
+    return { ...this.state, isDemoData: this.isDemoData };
   }
 
-  async syncCommunication(): Promise<void> {
-    await this.communicationService.sync();
+  private async resolveProviders(): Promise<CommunicationProvider[]> {
+    const googleAuth = this.deps.googleAuth;
+    if (googleAuth?.isConfigured) {
+      const tokens = await googleAuth.getTokens("email");
+      if (tokens) {
+        const client = new GmailClient({
+          accessToken: tokens.accessToken,
+          refreshToken: tokens.refreshToken,
+          clientId: googleAuth.clientId,
+          clientSecret: googleAuth.clientSecret,
+          onTokensRefreshed: (refreshed) => void googleAuth.saveTokens("email", refreshed),
+        });
+        this.isDemoData = false;
+        return [new GoogleGmailProvider(client), new MockWhatsAppProvider()];
+      }
+    }
+    this.isDemoData = true;
+    return [new MockGmailProvider(), new MockWhatsAppProvider()];
+  }
+
+  async syncSecretary(): Promise<void> {
+    try {
+      this.communicationService = new DefaultCommunicationService(
+        this.isDemoData ? [new MockGmailProvider(), new MockWhatsAppProvider()] : await this.resolveProviders(),
+      );
+      await this.communicationService.sync();
+    } catch (err) {
+      if (!this.isDemoData) {
+        console.warn("Communication sync failed, falling back to mock provider:", err);
+        this.isDemoData = true;
+        this.communicationService = new DefaultCommunicationService([
+          new MockGmailProvider(),
+          new MockWhatsAppProvider(),
+        ]);
+        await this.communicationService.sync();
+      } else {
+        throw err;
+      }
+    }
     this.state.messages = await this.communicationService.getMessages();
     this.state.threads = await this.communicationService.getThreads();
     this.state.contacts = await this.communicationService.getContacts();
@@ -338,10 +384,18 @@ export class CommunicationAgent extends AgentEntityImpl {
     if (this.stopped) return;
 
     this.simulationInterval = setInterval(() => {
-      this.runningTick = this.simulateTick().finally(() => { this.runningTick = undefined; });
+      this.runningTick = this.simulateTick()
+        .catch((err) => {
+          console.error({ err }, "Communication simulation tick failed");
+        })
+        .finally(() => { this.runningTick = undefined; });
     }, 4000 + Math.random() * 4000);
 
-    this.runningTick = this.simulateTick().finally(() => { this.runningTick = undefined; });
+    this.runningTick = this.simulateTick()
+      .catch((err) => {
+        console.error({ err }, "Communication simulation tick failed");
+      })
+      .finally(() => { this.runningTick = undefined; });
   }
 
   private stopSimulation(): void {
@@ -370,7 +424,7 @@ export class CommunicationAgent extends AgentEntityImpl {
     }
 
     if (this.currentStepIndex === 0) {
-      await this.syncCommunication();
+    await this.syncSecretary();
     }
 
     await this.applyStep(step, activeTask);
@@ -387,12 +441,12 @@ export class CommunicationAgent extends AgentEntityImpl {
 
     return {
       ...template,
-      id: `com-task-${this.state.taskHistory.length + 1}`,
+      id: `sec-task-${this.state.taskHistory.length + 1}`,
       createdAt: new Date().toISOString(),
     };
   }
 
-  private async applyStep(step: CommunicationSimulationStep, task: AgentTask): Promise<void> {
+  private async applyStep(step: SecretarySimulationStep, task: AgentTask): Promise<void> {
     await this.updateAgentStatus(step.status);
     this.state.taskProgress = step.progress;
 
@@ -463,10 +517,10 @@ export class CommunicationAgent extends AgentEntityImpl {
     this.setExplanation({
       currentActivity: "Čekám na novou komunikaci nebo instrukci.",
       goal: "Být připraven okamžitě reagovat na nové zprávy.",
-      reason: "Communication Agent musí být vždy připraven hlídat příchozí komunikaci.",
-      findings: `Synchronizováno ${this.state.messages.length} zpráv. ${this.state.stats.waitingForReply} čeká na odpověď, ${this.state.drafts.length} AI konceptů připraveno, ${this.state.contacts.length} kontaktů v Relationship Intelligence.`,
+      reason: "Secretary musí být vždy připraven hlídat příchozí komunikaci.",
+      findings: `Synchronizováno ${this.state.messages.length} zpráv. ${this.state.stats.waitingForReply} čeká na odpověď, ${this.state.drafts.length} AI konceptů připraveno, ${this.state.contacts.length} kontaktů v Relationship Intelligence.${this.isDemoData ? " Gmail není připojen. Připojte účet pro reálná data." : " (reálná data z Gmailu; WhatsApp zůstává demo, integrace zatím neexistuje)"}`,
       evidence: ["Gmail", "WhatsApp", "Kontakty", "Knowledge Index"],
-      toolsUsed: ["Communication Service", "AI Summary", "Draft Generator"],
+      toolsUsed: this.isDemoData ? ["Communication Service", "Mock Provider"] : ["Communication Service", "Gmail API"],
       nextStep: "Synchronizovat komunikaci nebo reagovat na nový požadavek.",
       estimatedCompletion: "Neurčito",
       risks: "Žádná.",

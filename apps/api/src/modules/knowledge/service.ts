@@ -28,8 +28,6 @@ export class KnowledgeService {
   }
 
   async isDemo(): Promise<boolean> {
-    // Demo se použije pouze pokud není nakonfigurovaný žádný vault.
-    // Když uživatel zadá cestu, chce reálná data bez ohledu na DEMO_MODE.
     return !(await this.isConfigured());
   }
 
@@ -49,12 +47,12 @@ export class KnowledgeService {
 
   async listObsidianNotes(maxResults = 20, query?: string): Promise<ObsidianNote[]> {
     if (await this.isDemo()) {
-      return this.filterDemoNotes(query);
+      return [];
     }
 
     const indexer = await this.ensureIndexer();
     if (!indexer) {
-      return this.filterDemoNotes(query);
+      return [];
     }
 
     const notes = query ? indexer.search(query) : indexer.getNotes();
@@ -63,12 +61,12 @@ export class KnowledgeService {
 
   async searchObsidian(query: string): Promise<ObsidianNote[]> {
     if (await this.isDemo()) {
-      return this.filterDemoNotes(query);
+      return [];
     }
 
     const indexer = await this.ensureIndexer();
     if (!indexer) {
-      return this.filterDemoNotes(query);
+      return [];
     }
 
     return indexer.search(query);
@@ -76,12 +74,12 @@ export class KnowledgeService {
 
   async getObsidianNote(id: string): Promise<ObsidianNote | null> {
     if (await this.isDemo()) {
-      return this.generateDemoNotes().find((note) => note.id === id) ?? null;
+      return null;
     }
 
     const indexer = await this.ensureIndexer();
     if (!indexer) {
-      return this.generateDemoNotes().find((note) => note.id === id) ?? null;
+      return null;
     }
 
     return indexer.getNoteById(id) ?? null;
@@ -117,39 +115,5 @@ export class KnowledgeService {
     }
 
     return this.indexer;
-  }
-
-  private filterDemoNotes(query?: string): ObsidianNote[] {
-    const notes = this.generateDemoNotes();
-    if (!query) return notes;
-
-    const lower = query.toLowerCase();
-    return notes.filter(
-      (note) =>
-        note.title.toLowerCase().includes(lower) ||
-        note.content.toLowerCase().includes(lower) ||
-        note.tags.some((tag) => tag.toLowerCase().includes(lower)),
-    );
-  }
-
-  generateDemoNotes(): ObsidianNote[] {
-    return [
-      {
-        id: "demo-obsidian-1",
-        title: "Welcome to MiLO",
-        path: "welcome.md",
-        content: "# Welcome to MiLO\n\nToto je demo poznámka z Obsidianu.\n\n#milo #setup",
-        modifiedAt: new Date(),
-        tags: ["#milo", "#setup"],
-      },
-      {
-        id: "demo-obsidian-2",
-        title: "Daily Notes Template",
-        path: "templates/daily.md",
-        content: "# {{date}}\n\n## Priority\n- [ ] Hlavní úkol\n\n## Poznámky\n\n#daily",
-        modifiedAt: new Date(Date.now() - 86400_000),
-        tags: ["#daily"],
-      },
-    ];
   }
 }

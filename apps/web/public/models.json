@@ -1,0 +1,42 @@
+{
+  "description": "Konfigurace AI modelu pro MiLO — lokalni i cloudove",
+  "local": {
+    "ollama": {
+      "url": "http://localhost:11434",
+      "models": ["llama3", "mistral", "codellama", "phi3", "gemma2"]
+    }
+  },
+  "cloud": {
+    "openai": {
+      "models": ["gpt-4o", "gpt-4.1-mini", "gpt-4.1-nano", "o3-mini"],
+      "env_key": "OPENAI_API_KEY"
+    },
+    "anthropic": {
+      "models": ["claude-3.5-sonnet-20241022", "claude-3-opus-20240229", "claude-3-haiku-20240307"],
+      "env_key": "ANTHROPIC_API_KEY"
+    },
+    "google": {
+      "models": ["gemini-2.5-pro", "gemini-2.5-flash", "gemini-1.5-pro"],
+      "env_key": "GOOGLE_API_KEY"
+    },
+    "deepseek": {
+      "models": ["deepseek-chat", "deepseek-reasoner"],
+      "env_key": "DEEPSEEK_API_KEY"
+    },
+    "moonshot": {
+      "models": ["moonshot-v1-8k", "moonshot-v1-32k"],
+      "env_key": "MOONSHOT_API_KEY"
+    }
+  },
+  "routing": {
+    "coding": {"primary": "claude-3.5-sonnet-20241022", "fallback": "deepseek-chat", "provider": "anthropic"},
+    "design": {"primary": "gpt-4o", "fallback": "claude-3.5-sonnet-20241022", "provider": "openai"},
+    "analysis": {"primary": "claude-3.5-sonnet-20241022", "fallback": "gpt-4o", "provider": "anthropic"},
+    "writing": {"primary": "gpt-4o", "fallback": "claude-3.5-sonnet-20241022", "provider": "openai"},
+    "cheap_summary": {"primary": "gpt-4.1-mini", "fallback": "deepseek-chat", "provider": "openai"},
+    "legal_cz": {"primary": "claude-3.5-sonnet-20241022", "fallback": "gpt-4o", "provider": "anthropic"},
+    "email_drafting": {"primary": "gpt-4.1-mini", "fallback": "gpt-4o", "provider": "openai"},
+    "research": {"primary": "gemini-2.5-pro", "fallback": "claude-3.5-sonnet-20241022", "provider": "google"},
+    "local_only": {"primary": "llama3", "fallback": "mistral", "provider": "ollama"}
+  }
+}

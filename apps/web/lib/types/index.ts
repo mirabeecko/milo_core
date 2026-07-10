@@ -104,6 +104,8 @@ export interface PriorityItem {
   project?: string;
   due?: string;
   done: boolean;
+  source?: "user" | "agent";
+  agentName?: string;
 }
 
 export interface BriefingSnapshot {
@@ -112,6 +114,7 @@ export interface BriefingSnapshot {
   newDocuments: number;
   openTasks: number;
   activeAgents: number;
+  activeProjects: number;
 }
 
 export interface DecisionItem {
@@ -157,9 +160,16 @@ export interface AgentLogEntry {
   metadata?: Record<string, unknown>;
 }
 
-export type TaskStatus = "pending" | "running" | "completed" | "failed" | "cancelled";
+export type TaskStatus = "pending" | "queued" | "running" | "waiting" | "paused" | "completed" | "failed" | "cancelled";
 export type TaskPriority = "critical" | "high" | "normal" | "low";
 export type TaskSource = "user" | "agent" | "schedule" | "system";
+
+export interface TaskLogEntry {
+  timestamp: string;
+  level: "info" | "warn" | "error";
+  message: string;
+  metadata?: Record<string, unknown>;
+}
 
 export interface AgentTask {
   id: string;
@@ -170,7 +180,7 @@ export interface AgentTask {
   ownerId: string;
   ownerType: "user" | "agent";
   source: TaskSource;
-  log: string[];
+  log: TaskLogEntry[];
   toolsUsed: string[];
   citations: string[];
   retryCount: number;
@@ -179,6 +189,14 @@ export interface AgentTask {
   startedAt?: string;
   completedAt?: string;
   failedAt?: string;
+  result?: string | Record<string, unknown>;
+}
+
+export interface ProjectCommit {
+  hash: string;
+  message: string;
+  author: string;
+  date: string;
 }
 
 export interface Project {
@@ -191,6 +209,39 @@ export interface Project {
   documents: number;
   description: string;
   color: string;
+  goal?: string;
+  done_summary?: string;
+  remaining_summary?: string;
+  time_spent_hours?: number;
+  time_estimate_hours?: number;
+  cost_spent?: number;
+  cost_estimate?: number;
+  github_url?: string | null;
+  last_commit?: ProjectCommit | null;
+  commit_count?: number;
+  path?: string;
+}
+
+export interface ProjectUsage {
+  totalMinutes: number;
+  totalCost: number;
+  entries: Array<{
+    project: string;
+    agent: string;
+    model: string;
+    provider: string;
+    minutes: number;
+    cost_usd: number;
+    task_description: string;
+    timestamp: string;
+  }>;
+  breakdown: Record<string, {
+    model: string;
+    provider: string;
+    minutes: number;
+    cost: number;
+    tasks: string[];
+  }>;
 }
 
 export interface Document {
@@ -219,6 +270,7 @@ export interface ObsidianStatus {
   vaultPath?: string;
   noteCount: number;
   indexedAt?: string;
+  message?: string;
 }
 
 export interface Calendar {
@@ -395,7 +447,7 @@ export interface CommunicationStats {
   aiSuggestionsGenerated: number;
 }
 
-export interface CommunicationAgentState {
+export interface SecretaryAgentState {
   messages: CommMessage[];
   threads: CommThread[];
   contacts: CommContact[];
@@ -521,6 +573,18 @@ export interface DeveloperAgentState {
   taskProgress: number;
 }
 
+export interface ReminderItem {
+  id: string;
+  time: string;
+  description: string;
+  project_ref?: string;
+  reminder_options: string[];
+  selected_options: string[];
+  status: "pending" | "notified" | "dismissed";
+  source: "calendar" | "task" | "email";
+  source_id?: string;
+}
+
 export interface ChatMessage {
   id: string;
   role: "user" | "assistant";
@@ -557,6 +621,20 @@ export interface SystemRecommendation {
   title: string;
   description: string;
   action?: string;
+}
+
+export interface Email {
+  id: string;
+  from: string;
+  to: string[];
+  subject: string;
+  body: string;
+  snippet: string;
+  isRead: boolean;
+  isImportant: boolean;
+  hasAttachments: boolean;
+  receivedAt: string;
+  senderName: string;
 }
 
 export interface WeatherData {

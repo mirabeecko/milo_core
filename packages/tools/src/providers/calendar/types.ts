@@ -16,4 +16,5 @@ export interface ListEventsOptions {
   maxResults?: number;
   timeMin?: Date;
   timeMax?: Date;
+  calendarId?: string;
 }

@@ -11,20 +11,12 @@ export async function briefingRoutes(
   app.get(
     "/",
     { preHandler: authMiddleware },
-    async (request: AuthenticatedRequest, reply) => {
+    async (_request: AuthenticatedRequest, reply) => {
       try {
-        const userId = request.user?.id ?? "demo";
-        const briefing = await briefingService.generateBriefing(userId);
-        return reply.send({ briefing });
+        const { briefing, demo } = await briefingService.generateBriefing();
+        return reply.send({ briefing, demo });
       } catch (error) {
-        request.log.error(error);
-
-        // Fallback demo briefing, pokud není AI nakonfigurováno
-        if (error instanceof Error && error.message.includes("OPENAI_API_KEY")) {
-          const demoBriefing = await briefingService.generateDemoBriefing();
-          return reply.send({ briefing: demoBriefing, demo: true });
-        }
-
+        _request.log.error(error);
         return reply.status(500).send({ error: "Failed to generate briefing" });
       }
     },

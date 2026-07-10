@@ -1,0 +1,50 @@
+#!/usr/bin/env bash
+# Git pre-commit hook pro MiLO
+# Spouští validaci registru dokumentace před každým commitem.
+#
+# Instalace:
+#   cp scripts/pre-commit .git/hooks/pre-commit
+#   chmod +x .git/hooks/pre-commit
+
+set -euo pipefail
+
+REPO_ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
+SCRIPT="$REPO_ROOT/scripts/validate-docs.sh"
+RED='\033[0;31m'
+YELLOW='\033[1;33m'
+NC='\033[0m'
+
+# Zkontrolovat, zda se změnil adresář docs/ nebo registr
+changed_files=$(git diff --cached --name-only --diff-filter=ACM 2>/dev/null || true)
+
+# Pokud se nic nezměnilo v docs/ ani registr, přeskoč validaci
+if ! echo "$changed_files" | grep -qE '(^docs/|INFO ABOUT.*ALL DOCUMENTS)' 2>/dev/null; then
+    exit 0
+fi
+
+echo ""
+echo -e "${YELLOW}=== MiLO Pre-commit: Validace dokumentace ===${NC}"
+echo "Změněné soubory týkající se dokumentace:"
+echo "$changed_files" | grep -E '(^docs/|INFO ABOUT)' | while read -r f; do echo "  $f"; done
+echo ""
+
+if [[ -x "$SCRIPT" ]]; then
+    "$SCRIPT"
+    EXIT=$?
+    if [[ $EXIT -ne 0 ]]; then
+        echo ""
+        echo -e "${RED}Commit ODMÍTNUT. Registr dokumentace neodpovídá skutečnosti.${NC}"
+        echo ""
+        echo "Oprava:"
+        echo "  1. Aktualizuj 'A - INFO ABOUT - ALL DOCUMENTS.md' — přidej/uprav řádek pro změněný soubor."
+        echo "  2. Nebo spusť: ./scripts/validate-docs.sh --fix  (ukáže co změnit)"
+        echo "  3. git add 'A - INFO ABOUT - ALL DOCUMENTS.md'"
+        echo "  4. git commit znovu"
+        exit 1
+    fi
+else
+    echo "  Validační skript nenalezen: $SCRIPT"
+    echo "  Commit pokračuje bez validace."
+fi
+
+exit 0

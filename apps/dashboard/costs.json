@@ -1,0 +1,220 @@
+{
+  "updated_at": "2026-07-06T21:49:26.521543",
+  "total_cost_czk": 2290,
+  "by_project": {
+    "1 ORGANIZACE M4 PRO": {
+      "total_cost_czk": 0,
+      "details": []
+    },
+    "1 publikované": {
+      "total_cost_czk": 0,
+      "details": []
+    },
+    "CLAUDE": {
+      "total_cost_czk": 0,
+      "details": []
+    },
+    "CrewAI_OS": {
+      "total_cost_czk": 0,
+      "details": []
+    },
+    "LettaOS": {
+      "total_cost_czk": 0,
+      "details": []
+    },
+    "MiLO_Agent": {
+      "total_cost_czk": 180,
+      "details": []
+    },
+    "MiLO_Core": {
+      "total_cost_czk": 320,
+      "details": []
+    },
+    "MiLO_ISDS_MCP": {
+      "total_cost_czk": 0,
+      "details": []
+    },
+    "OBSIDIAN MUYLAYF_06_2026": {
+      "total_cost_czk": 0,
+      "details": []
+    },
+    "aaa HTML": {
+      "total_cost_czk": 0,
+      "details": []
+    },
+    "accountant24": {
+      "total_cost_czk": 0,
+      "details": []
+    },
+    "airbags": {
+      "total_cost_czk": 0,
+      "details": []
+    },
+    "brozek24": {
+      "total_cost_czk": 0,
+      "details": []
+    },
+    "brozek24-0": {
+      "total_cost_czk": 0,
+      "details": []
+    },
+    "dashboards and agents": {
+      "total_cost_czk": 0,
+      "details": []
+    },
+    "SPOL_OS": {
+      "total_cost_czk": 380,
+      "details": []
+    },
+    "TJ_KRUPKA_LEGAL_OS": {
+      "total_cost_czk": 0,
+      "details": []
+    },
+    "ads-live-dashboard": {
+      "total_cost_czk": 0,
+      "details": []
+    },
+    "ai-project-manager": {
+      "total_cost_czk": 0,
+      "details": []
+    },
+    "all_dashboard": {
+      "total_cost_czk": 0,
+      "details": []
+    },
+    "android_mac_ai_agent": {
+      "total_cost_czk": 0,
+      "details": []
+    },
+    "dashboard": {
+      "total_cost_czk": 0,
+      "details": []
+    },
+    "dashboards and assistants": {
+      "total_cost_czk": 0,
+      "details": []
+    },
+    "executive-ai": {
+      "total_cost_czk": 450,
+      "details": []
+    },
+    "gif-maker": {
+      "total_cost_czk": 0,
+      "details": []
+    },
+    "google-docs-mcp": {
+      "total_cost_czk": 0,
+      "details": []
+    },
+    "hermes-workspace": {
+      "total_cost_czk": 0,
+      "details": []
+    },
+    "hermes_agent": {
+      "total_cost_czk": 0,
+      "details": []
+    },
+    "htmler": {
+      "total_cost_czk": 0,
+      "details": []
+    },
+    "komarka_app": {
+      "total_cost_czk": 0,
+      "details": []
+    },
+    "mac_voice_ai_agent": {
+      "total_cost_czk": 0,
+      "details": []
+    },
+    "mbrozek-ai": {
+      "total_cost_czk": 200,
+      "details": []
+    },
+    "obcanai": {
+      "total_cost_czk": 350,
+      "details": []
+    },
+    "pro-ubytovane-apk": {
+      "total_cost_czk": 0,
+      "details": []
+    },
+    "project-dashboard": {
+      "total_cost_czk": 0,
+      "details": []
+    },
+    "vehicles_app": {
+      "total_cost_czk": 0,
+      "details": []
+    },
+    "voice-ai-terminal": {
+      "total_cost_czk": 160,
+      "details": []
+    },
+    "voice-ai-terminal-backup": {
+      "total_cost_czk": 0,
+      "details": []
+    },
+    "deepseek_env": {
+      "total_cost_czk": 0,
+      "details": []
+    },
+    "design-agent": {
+      "total_cost_czk": 90,
+      "details": []
+    },
+    "free-claude-code": {
+      "total_cost_czk": 0,
+      "details": []
+    },
+    "kauza-weby": {
+      "total_cost_czk": 0,
+      "details": []
+    },
+    "kauza-edit-clone": {
+      "total_cost_czk": 0,
+      "details": []
+    },
+    "kauza2": {
+      "total_cost_czk": 0,
+      "details": []
+    },
+    "kauzatjkrupka.cz": {
+      "total_cost_czk": 0,
+      "details": []
+    },
+    "kimi-webdo24": {
+      "total_cost_czk": 0,
+      "details": []
+    },
+    "marketing_agent": {
+      "total_cost_czk": 110,
+      "details": []
+    },
+    "mestokrupka": {
+      "total_cost_czk": 0,
+      "details": []
+    },
+    "myinvoice": {
+      "total_cost_czk": 0,
+      "details": []
+    },
+    "n8n": {
+      "total_cost_czk": 50,
+      "details": []
+    },
+    "open-webui": {
+      "total_cost_czk": 0,
+      "details": []
+    },
+    "riders_app": {
+      "total_cost_czk": 0,
+      "details": []
+    },
+    "veterina-live-new": {
+      "total_cost_czk": 0,
+      "details": []
+    }
+  },
+  "by_model": {},
+  "all_entries": []
+}

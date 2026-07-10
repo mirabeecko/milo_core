@@ -1,6 +1,5 @@
 import { apiClient, useMockData } from "./client";
 import type { ChatMessage } from "@/lib/types";
-import { generateMockReply } from "@/lib/mocks/chat";
 
 export interface ChatResponse {
   message: ChatMessage;
@@ -14,18 +13,13 @@ export interface ChatRequest {
 
 export async function sendMessage(request: ChatRequest): Promise<ChatMessage> {
   if (useMockData) {
-    await simulateLatency();
     return {
       id: `msg-${Date.now()}`,
       role: "assistant",
-      content: generateMockReply(request.message),
+      content: "AI chat není k dispozici — připojte OpenAI nebo Ollama provider.",
       timestamp: new Date().toISOString(),
       sources: [],
-      suggestedActions: [
-        "Co dnes musím řešit?",
-        "Najdi dokumenty ke kauze TJ Krupka.",
-        "Co udělali agenti?",
-      ],
+      suggestedActions: [],
     };
   }
 
@@ -35,8 +29,4 @@ export async function sendMessage(request: ChatRequest): Promise<ChatMessage> {
   });
 
   return response.message;
-}
-
-function simulateLatency(): Promise<void> {
-  return new Promise((resolve) => setTimeout(resolve, 800));
 }

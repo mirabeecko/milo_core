@@ -177,77 +177,72 @@ export class ExecutionTaskRunner implements TaskRunner {
     addLog("info", `Hledám: "${query}"`);
 
     if (!context.vaultPath) {
-      addLog("warn", "Obsidian vault není nakonfigurován");
-    } else {
-      addLog("info", "Otevírám Obsidian vault");
-      updateExplanation({ currentActivity: "Otevírám Obsidian vault", nextStep: "Projdu seznam poznámek" });
-      await reportProgress(15);
-
-      const listResult = await this.executeTool("obsidian:list", { maxResults: 1000 }, context, toolCalls);
-      const notes = Array.isArray(listResult) ? listResult : [];
-      addLog("info", `Nalezeno ${notes.length} poznámek v vaultu`);
-      updateExplanation({
-        currentActivity: `Analyzuji ${notes.length} markdown souborů`,
-        findings: `Nalezeno ${notes.length} poznámek v vaultu`,
-        nextStep: `Vyhledám "${query}"`,
-      });
-      await reportProgress(30);
-
-      const searchResult = await this.executeTool("obsidian:search", { query }, context, toolCalls);
-      const matches = Array.isArray(searchResult) ? searchResult : [];
-      addLog("info", `Nalezeno ${matches.length} shod pro "${query}"`);
-      updateExplanation({
-        currentActivity: `Našel jsem ${matches.length} kandidátů`,
-        findings: `Nalezeno ${matches.length} shod pro "${query}"`,
-        nextStep: "Přečtu obsah nejrelevantnějších souborů",
-      });
-      await reportProgress(60);
-
-      const readLimit = 5;
-      const readResults: Array<{ title: string; content: string }> = [];
-      for (const note of matches.slice(0, readLimit)) {
-        if (note && typeof note.filePath === "string") {
-          try {
-            const content = await this.executeTool("obsidian:read", { filePath: note.filePath }, context, toolCalls);
-            readResults.push({
-              title: typeof note.title === "string" ? note.title : note.filePath,
-              content: typeof content === "string" ? content : JSON.stringify(content),
-            });
-            addLog("info", `Čtu soubor: ${note.filePath}`);
-          } catch {
-            addLog("warn", `Nepodařilo se přečíst: ${note.filePath}`);
-          }
-        }
-      }
-      updateExplanation({
-        currentActivity: `Porovnávám metadata a obsah ${readResults.length} souborů`,
-        nextStep: "Sestavím finální výsledek",
-      });
-      await reportProgress(90);
-
-      const citations = matches
-        .slice(0, 10)
-        .map((note) => (typeof note.filePath === "string" ? note.filePath : String(note.title)))
-        .filter(Boolean);
-
-      const output = this.formatSearchResult(query, matches.length, notes.length, readResults);
-
-      return {
-        output,
-        citations,
-        metadata: {
-          query,
-          totalNotes: notes.length,
-          matchCount: matches.length,
-          readCount: readResults.length,
-        },
-      };
+      addLog("error", "Obsidian vault není nakonfigurován");
+      throw new Error("Obsidian vault není nakonfigurován. Nastavte vaultPath pro vyhledávání.");
     }
 
+    addLog("info", "Otevírám Obsidian vault");
+    updateExplanation({ currentActivity: "Otevírám Obsidian vault", nextStep: "Projdu seznam poznámek" });
+    await reportProgress(15);
+
+    const listResult = await this.executeTool("obsidian:list", { maxResults: 1000 }, context, toolCalls);
+    const notes = Array.isArray(listResult) ? listResult : [];
+    addLog("info", `Nalezeno ${notes.length} poznámek v vaultu`);
+    updateExplanation({
+      currentActivity: `Analyzuji ${notes.length} markdown souborů`,
+      findings: `Nalezeno ${notes.length} poznámek v vaultu`,
+      nextStep: `Vyhledám "${query}"`,
+    });
+    await reportProgress(30);
+
+    const searchResult = await this.executeTool("obsidian:search", { query }, context, toolCalls);
+    const matches = Array.isArray(searchResult) ? searchResult : [];
+    addLog("info", `Nalezeno ${matches.length} shod pro "${query}"`);
+    updateExplanation({
+      currentActivity: `Našel jsem ${matches.length} kandidátů`,
+      findings: `Nalezeno ${matches.length} shod pro "${query}"`,
+      nextStep: "Přečtu obsah nejrelevantnějších souborů",
+    });
+    await reportProgress(60);
+
+    const readLimit = 5;
+    const readResults: Array<{ title: string; content: string }> = [];
+    for (const note of matches.slice(0, readLimit)) {
+      if (note && typeof note.filePath === "string") {
+        try {
+          const content = await this.executeTool("obsidian:read", { filePath: note.filePath }, context, toolCalls);
+          readResults.push({
+            title: typeof note.title === "string" ? note.title : note.filePath,
+            content: typeof content === "string" ? content : JSON.stringify(content),
+          });
+          addLog("info", `Čtu soubor: ${note.filePath}`);
+        } catch {
+          addLog("warn", `Nepodařilo se přečíst: ${note.filePath}`);
+        }
+      }
+    }
+    updateExplanation({
+      currentActivity: `Porovnávám metadata a obsah ${readResults.length} souborů`,
+      nextStep: "Sestavím finální výsledek",
+    });
     await reportProgress(90);
+
+    const citations = matches
+      .slice(0, 10)
+      .map((note) => (typeof note.filePath === "string" ? note.filePath : String(note.title)))
+      .filter(Boolean);
+
+    const output = this.formatSearchResult(query, matches.length, notes.length, readResults);
+
     return {
-      output: `Hledal jsem "${query}", ale nemám přístup k žádnému zdroji. Nakonfiguruj prosím Obsidian vault.`,
-      metadata: { query },
+      output,
+      citations,
+      metadata: {
+        query,
+        totalNotes: notes.length,
+        matchCount: matches.length,
+        readCount: readResults.length,
+      },
     };
   }
 
@@ -388,13 +383,18 @@ export class ExecutionTaskRunner implements TaskRunner {
       updateExplanation: (partial: Partial<LiveWorkExplanation>) => void;
       toolCalls: ToolCall[];
     },
-  ): Promise<TaskResult & { metadata?: Record<string, unknown> }> {
-    helpers.addLog("info", `Vykonávám vlastní úkol: ${task.title}`);
-    helpers.updateExplanation({ currentActivity: `Vykonávám úkol: ${task.title}`, nextStep: "Dokončím úkol" });
-    await helpers.reportProgress(50);
+  ): Promise<TaskResult & { metadata?: Record<string, unknown>; status: "cancelled" }> {
+    helpers.addLog("warn", `Úkol typu ${task.type ?? "custom"} není podporován: ${task.title}`);
+    helpers.updateExplanation({
+      currentActivity: "Úkol nelze vykonat.",
+      findings: `Pro úkol "${task.title}" není dostupná žádná strategie.`,
+      nextStep: "Zkontrolujte typ úkolu nebo nástroje agenta.",
+    });
+    await helpers.reportProgress(100);
     return {
-      output: `Vlastní úkol "${task.title}" dokončen.`,
-      metadata: { taskType: task.type },
+      status: "cancelled",
+      output: `Úkol typu ${task.type ?? "custom"} není podporován.`,
+      metadata: { taskType: task.type, reason: "unsupported_task_type" },
     };
   }
 

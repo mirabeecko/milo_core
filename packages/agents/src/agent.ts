@@ -12,6 +12,7 @@ import type {
   AgentStatus,
   LiveWorkExplanation,
   TaskLogEntry,
+  TaskStatus,
   ToolCall,
 } from "@milo/shared";
 import type {
@@ -19,11 +20,13 @@ import type {
   AgentEventBus,
   AgentFrameworkEvent,
   AgentRuntimeState,
+  GoogleAuthDeps,
   TaskRunner,
 } from "./types.js";
 import { AgentStateMachine } from "./runtime/agent-state-machine.js";
 import type { AgentScheduler } from "./runtime/agent-scheduler.js";
 import type { BackgroundRunner } from "./runtime/background-runner.js";
+import { writeBreadcrumb } from "./breadcrumbs.js";
 
 export interface AgentEntityDeps {
   eventBus: AgentEventBus;
@@ -46,6 +49,7 @@ export interface AgentEntityDeps {
   config: AgentRuntimeConfig;
   vaultPath?: string;
   projectPath?: string;
+  googleAuth?: GoogleAuthDeps;
 }
 
 export const DEFAULT_RUNTIME_CONFIG: AgentRuntimeConfig = {
@@ -72,6 +76,8 @@ export class AgentEntityImpl implements AgentEntity {
   protected lastActivityAt?: string;
   protected consecutiveErrors = 0;
   protected stopped = false;
+  protected taskHistory: AgentTask[] = [];
+  protected pendingQueue: AgentTask[] = [];
 
   constructor(
     definition: AgentDefinition,
@@ -120,11 +126,11 @@ export class AgentEntityImpl implements AgentEntity {
   }
 
   getTaskHistory(): AgentTask[] {
-    return [];
+    return this.taskHistory;
   }
 
   getPendingQueue(): AgentTask[] {
-    return [];
+    return this.pendingQueue;
   }
 
   explain(): LiveWorkExplanation {
@@ -243,38 +249,85 @@ export class AgentEntityImpl implements AgentEntity {
       const actualTimeMs = Date.now() - startedAt;
       const log = Array.isArray(result.log) ? (result.log as TaskLogEntry[]) : [];
       const toolCalls = Array.isArray(result.toolCalls) ? (result.toolCalls as ToolCall[]) : [];
+      const returnedStatus: TaskStatus =
+        typeof result.status === "string" && ["completed", "failed", "cancelled"].includes(result.status)
+          ? (result.status as TaskStatus)
+          : "completed";
+      const taskResult = {
+        output: typeof result.output === "string" ? result.output : undefined,
+        citations: Array.isArray(result.citations) ? (result.citations as string[]) : undefined,
+        metadata: result.metadata as Record<string, unknown> | undefined,
+      };
 
       await this.deps.tasks?.update(task.id, {
-        status: "completed",
+        status: returnedStatus,
         completedAt,
         actualTimeMs,
-        result: {
-          output: typeof result.output === "string" ? result.output : undefined,
-          citations: Array.isArray(result.citations) ? (result.citations as string[]) : undefined,
-          metadata: result.metadata as Record<string, unknown> | undefined,
-        },
+        result: taskResult,
         log: [...task.log, ...log],
         toolCalls: [...(task.toolCalls ?? []), ...toolCalls],
       });
 
-      this.completedTasks += 1;
-      this.agent.metrics.successfulTasks += 1;
-      this.updateAverageDuration(actualTimeMs);
-      this.consecutiveErrors = 0;
-      this.taskProgress = 100;
-      this.setExplanation({
-        ...this.explanation,
-        currentActivity: "Úkol dokončen.",
-        findings: `Úkol ${task.title} byl úspěšně dokončen.`,
-        lastCompletedStep: `Dokončil jsem úkol ${task.title}`,
+      this.taskHistory.unshift({
+        ...task,
+        status: returnedStatus,
+        completedAt,
+        actualTimeMs,
+        result: taskResult,
       });
-      await this.emit("agent:task:completed", { taskId: task.id, title: task.title, result });
+
+      if (returnedStatus === "completed") {
+        this.completedTasks += 1;
+        this.agent.metrics.successfulTasks += 1;
+        this.updateAverageDuration(actualTimeMs);
+        this.consecutiveErrors = 0;
+        this.taskProgress = 100;
+        this.setExplanation({
+          ...this.explanation,
+          currentActivity: "Úkol dokončen.",
+          findings: `Úkol ${task.title} byl úspěšně dokončen.`,
+          lastCompletedStep: `Dokončil jsem úkol ${task.title}`,
+        });
+        this.writeCompletionBreadcrumb(task, "completed", typeof result.output === "string" ? result.output : undefined);
+        await this.emit("agent:task:completed", { taskId: task.id, title: task.title, result });
+      } else if (returnedStatus === "failed") {
+        this.failedTasks += 1;
+        this.agent.metrics.failedTasks += 1;
+        this.agent.metrics.errorCount += 1;
+        this.consecutiveErrors += 1;
+        this.taskProgress = 0;
+        const message =
+          typeof taskResult.metadata?.error === "string"
+            ? taskResult.metadata.error
+            : typeof result.output === "string"
+              ? result.output
+              : "Úkol selhal";
+        this.setExplanation({
+          ...this.explanation,
+          currentActivity: "Úkol selhal.",
+          findings: `Úkol ${task.title} selhal: ${message}`,
+        });
+        if (this.consecutiveErrors >= this.deps.config.maxConsecutiveErrors) {
+          await this.transitionTo("error");
+        }
+        await this.emit("agent:task:failed", { taskId: task.id, error: message });
+      } else {
+        // cancelled
+        this.taskProgress = 0;
+        this.setExplanation({
+          ...this.explanation,
+          currentActivity: "Úkol byl zrušen.",
+          findings: `Úkol ${task.title} nebyl vykonán: ${result.output ?? "nezjištěný důvod"}.`,
+        });
+        await this.emit("agent:task:cancelled", { taskId: task.id, title: task.title });
+      }
     } catch (error) {
       await this.handleTaskError(task, error, startedAt);
     } finally {
       this.runningTasks = Math.max(0, this.runningTasks - 1);
       this.activeTaskId = undefined;
       this.taskProgress = 0;
+      this.pendingQueue = this.pendingQueue.filter((t) => t.id !== task.id);
       if (this.status !== "paused" && this.status !== "error") {
         await this.transitionTo("idle");
       }
@@ -293,14 +346,15 @@ export class AgentEntityImpl implements AgentEntity {
   }
 
   async scheduleTask(task: AgentTask, when: string | number): Promise<void> {
+    this.pendingQueue.push(task);
+    this.pendingTasks += 1;
+
     if (!this.deps.scheduler) {
-      this.pendingTasks += 1;
       await this.log("info", `Task ${task.id} scheduled for ${String(when)} (no scheduler active)`);
       await this.emit("agent:task:created", { taskId: task.id, title: task.title, scheduledFor: when });
       return;
     }
 
-    this.pendingTasks += 1;
     const whenMs = typeof when === "number" ? when : new Date(when).getTime();
 
     this.deps.scheduler.scheduleAt(whenMs, async () => {
@@ -353,6 +407,19 @@ export class AgentEntityImpl implements AgentEntity {
     this.lastActivityAt = new Date().toISOString();
     this.agent.updatedAt = this.lastActivityAt;
     await this.emit("agent:status", { status });
+  }
+
+  protected writeCompletionBreadcrumb(task: AgentTask, taskStatus: string, output?: string): void {
+    try {
+      const summary = `${this.agent.name} dokončil úkol "${task.title}": ${taskStatus === "completed" ? "úspěšně" : "s chybou"}. ${(output ?? "").slice(0, 200)}`;
+      const watchOut = taskStatus === "failed"
+        ? `Úkol ${task.title} selhal. Zkontroluj logy a případně přeplánuj.`
+        : `Úkol ${task.title} dokončen. Zkontroluj výstup a pokračuj dalším krokem.`;
+      const project = "MiLO_Core";
+      writeBreadcrumb(project, this.agent.name, summary, watchOut);
+    } catch {
+      // non-critical, don't block task completion
+    }
   }
 
   protected async updateAgentStatus(status: AgentStatus): Promise<void> {
@@ -416,17 +483,26 @@ export class AgentEntityImpl implements AgentEntity {
     const message = error instanceof Error ? error.message : String(error);
     const actualTimeMs = startedAt ? Date.now() - startedAt : undefined;
 
+    const completedAt = new Date().toISOString();
     await this.deps.tasks?.update(task.id, {
       status: "failed",
-      completedAt: new Date().toISOString(),
+      completedAt,
       actualTimeMs,
       result: {
         error: message,
       },
       log: [
         ...task.log,
-        { timestamp: new Date().toISOString(), level: "error", message: `Úkol selhal: ${message}` },
+        { timestamp: completedAt, level: "error", message: `Úkol selhal: ${message}` },
       ],
+    });
+
+    this.taskHistory.unshift({
+      ...task,
+      status: "failed",
+      completedAt,
+      actualTimeMs,
+      result: { error: message },
     });
 
     this.setExplanation({

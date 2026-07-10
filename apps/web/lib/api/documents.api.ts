@@ -1,6 +1,5 @@
 import { apiClient, useMockData } from "./client";
 import type { Document } from "@/lib/types";
-import { documents } from "@/lib/mocks";
 
 interface DriveFileResponse {
   files: Array<{
@@ -22,7 +21,7 @@ function mapMimeTypeToType(mimeType: string): string {
 
 export async function getDocuments(): Promise<Document[]> {
   if (useMockData) {
-    return documents;
+    return [];
   }
 
   const response = await apiClient<DriveFileResponse>("/documents");

@@ -34,6 +34,7 @@ import type {
   AgentEventBus,
   AgentFrameworkConfig,
   AgentFrameworkEvent,
+  GoogleAuthDeps,
   TaskQueue,
 } from "./types.js";
 
@@ -52,6 +53,7 @@ export interface AgentManagerDeps {
   config?: AgentFrameworkConfig;
   vaultPath?: string;
   projectPath?: string;
+  googleAuth?: GoogleAuthDeps;
 }
 
 export class AgentManager {
@@ -130,6 +132,7 @@ export class AgentManager {
       config: this.runtimeConfig,
       vaultPath: this.deps.vaultPath,
       projectPath: this.deps.projectPath,
+      googleAuth: this.deps.googleAuth,
     };
     const entity = factory ? factory(definition, entityDeps) : new AgentEntityImpl(definition, entityDeps);
     await entity.initialize();
@@ -184,7 +187,18 @@ export class AgentManager {
   async startAll(): Promise<void> {
     this.scheduler.start();
     this.startDeadlineChecker();
-    await Promise.all(this.listAgents().map((agent) => agent.start()));
+    const results = await Promise.allSettled(
+      this.listAgents().map((agent) => agent.start()),
+    );
+    for (const result of results) {
+      if (result.status === "rejected") {
+        console.error(result.reason, "Agent failed to start");
+      }
+    }
+    const allFailed = results.every((r) => r.status === "rejected");
+    if (allFailed && results.length > 0) {
+      throw new Error(`All ${results.length} agents failed to start`);
+    }
     this.startHeartbeat(this.runtimeConfig.heartbeatIntervalMs);
   }
 
@@ -197,6 +211,9 @@ export class AgentManager {
 
   async delegate(task: Omit<AgentTask, "id" | "createdAt">): Promise<AgentTask> {
     const full = await this.deps.repositories.tasks.create(task);
+    if (full.ownerType === "user") {
+      return full;
+    }
     await this.runDelegatedTask(full);
     return full;
   }

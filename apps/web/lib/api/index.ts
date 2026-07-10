@@ -7,3 +7,4 @@ export * from "./projects.api";
 export * from "./documents.api";
 export * from "./home.api";
 export * from "./knowledge.api";
+export * from "./notifier.api";

@@ -230,7 +230,11 @@ export class DeveloperAgent extends AgentEntityImpl {
 
   async start(): Promise<void> {
     await super.start();
-    await this.syncDeveloperState();
+    try {
+      await this.syncDeveloperState();
+    } catch (err) {
+      console.warn({ err }, "Initial developer state sync failed");
+    }
     this.startSimulation();
   }
 
@@ -257,11 +261,11 @@ export class DeveloperAgent extends AgentEntityImpl {
   }
 
   getTaskHistory(): AgentTask[] {
-    return this.state.taskHistory;
+    return [...this.state.taskHistory, ...this.taskHistory];
   }
 
   getPendingQueue(): AgentTask[] {
-    return this.state.pendingQueue;
+    return [...this.state.pendingQueue, ...this.pendingQueue];
   }
 
   getDeveloperState(): DeveloperAgentState {
@@ -304,10 +308,18 @@ export class DeveloperAgent extends AgentEntityImpl {
     if (this.stopped) return;
 
     this.simulationInterval = setInterval(() => {
-      this.runningTick = this.simulateTick().finally(() => { this.runningTick = undefined; });
+      this.runningTick = this.simulateTick()
+        .catch((err) => {
+          console.error({ err }, "Developer simulation tick failed");
+        })
+        .finally(() => { this.runningTick = undefined; });
     }, 4000 + Math.random() * 4000);
 
-    this.runningTick = this.simulateTick().finally(() => { this.runningTick = undefined; });
+    this.runningTick = this.simulateTick()
+      .catch((err) => {
+        console.error({ err }, "Developer simulation tick failed");
+      })
+      .finally(() => { this.runningTick = undefined; });
   }
 
   private stopSimulation(): void {

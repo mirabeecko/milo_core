@@ -51,6 +51,7 @@ describe("AgentManager", () => {
     const task = await manager.delegate({
       title: "Test task",
       description: "A simple test task",
+      type: "analyze",
       priority: "normal",
       status: "pending",
       ownerId: "chief-of-staff",

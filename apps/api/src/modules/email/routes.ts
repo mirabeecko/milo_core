@@ -2,6 +2,7 @@ import { FastifyInstance, FastifyPluginOptions } from "fastify";
 import { z } from "zod";
 import { EmailService } from "./service.js";
 import { AuthenticatedRequest, authMiddleware } from "../auth/middleware.js";
+import { getGoogleTokens, setGoogleTokens } from "../../config/google-tokens.js";
 
 const connectSchema = z.object({
   code: z.string(),
@@ -27,7 +28,11 @@ export async function emailRoutes(
         return reply.status(503).send({ error: "Google OAuth is not configured" });
       }
 
-      const url = emailService.getAuthorizationUrl(request.user?.id);
+      const state = JSON.stringify({
+        userId: request.user?.id,
+        service: "email",
+      });
+      const url = emailService.getAuthorizationUrl(state);
       return reply.send({ url });
     },
   );
@@ -47,8 +52,8 @@ export async function emailRoutes(
       }
 
       try {
-        await emailService.exchangeCode(parsed.data.code);
-        // TODO: uložit tokeny do databáze šifrovaně
+        const tokens = await emailService.exchangeCode(parsed.data.code);
+        await setGoogleTokens(request.user?.id ?? "", "email", tokens);
         return reply.send({ connected: true });
       } catch (error) {
         request.log.error(error);
@@ -61,19 +66,25 @@ export async function emailRoutes(
     "/",
     { preHandler: authMiddleware },
     async (request: AuthenticatedRequest, reply) => {
-      // Demo režim, pokud není Google OAuth nakonfigurován
       if (!emailService) {
-        return reply.send({ emails: new EmailService().generateDemoEmails() });
+        return reply.send({
+          emails: [],
+          demo: true,
+          message: "Gmail není připojen. Připojte účet pro zobrazení e-mailů.",
+        });
       }
 
       try {
-        // TODO: načíst access token z databáze podle userId
-        const demoAccessToken = "";
-        if (!demoAccessToken) {
-          return reply.send({ emails: emailService.generateDemoEmails() });
+        const tokens = await getGoogleTokens(request.user?.id ?? "", "email");
+        if (!tokens) {
+          return reply.send({
+            emails: [],
+            demo: true,
+            message: "Gmail není připojen. Připojte účet pro zobrazení e-mailů.",
+          });
         }
 
-        const emails = await emailService.listEmails(demoAccessToken);
+        const emails = await emailService.listEmails(request.user?.id ?? "", tokens.accessToken, tokens.refreshToken);
         return reply.send({ emails });
       } catch (error) {
         request.log.error(error);

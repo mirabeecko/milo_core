@@ -1,3 +1,5 @@
+import type { Email, CalendarEvent } from "./index";
+
 export interface HomeMeeting {
   id: string;
   summary: string;

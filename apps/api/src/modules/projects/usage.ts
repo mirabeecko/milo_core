@@ -1,7 +1,11 @@
-import { existsSync, readFileSync, writeFileSync, appendFileSync } from "fs";
-import { join } from "path";
+import { existsSync, readFileSync, appendFileSync } from "fs";
+import { join, resolve } from "path";
+import { dirname } from "node:path";
+import { fileURLToPath } from "node:url";
 
-const usageLogFile = join(process.cwd(), "apps/api/data/usage.log");
+const __dirname = dirname(fileURLToPath(import.meta.url));
+const DATA_DIR = resolve(__dirname, "../../../data");
+const usageLogFile = join(DATA_DIR, "usage.log");
 
 export async function logUsage(entry: {
   project: string;
@@ -14,7 +18,11 @@ export async function logUsage(entry: {
   timestamp: string;
 }): Promise<void> {
   const line = JSON.stringify(entry) + "\n";
-  appendFileSync(usageLogFile, line);
+  try {
+    appendFileSync(usageLogFile, line);
+  } catch (error) {
+    console.error(`Failed to log usage to ${usageLogFile}:`, error);
+  }
 }
 
 export async function getUsageForProject(projectId: string): Promise<{

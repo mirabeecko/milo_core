@@ -9,6 +9,10 @@
     ".": {
       "import": "./dist/index.js",
       "types": "./src/index.ts"
+    },
+    "./breadcrumbs": {
+      "import": "./dist/breadcrumbs.js",
+      "types": "./src/breadcrumbs.ts"
     }
   },
   "scripts": {

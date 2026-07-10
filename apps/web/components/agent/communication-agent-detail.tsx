@@ -17,23 +17,23 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { getAgentCommunicationState, syncAgentCommunication } from "@/lib/api/agents.api";
-import type { Agent, CommunicationAgentState, CommMessage, CommContact, DraftReply } from "@/lib/types";
+import { getAgentSecretaryState, syncAgentSecretary } from "@/lib/api/agents.api";
+import type { Agent, SecretaryAgentState, CommMessage, CommContact, DraftReply } from "@/lib/types";
 import { formatRelative, formatTime } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
-interface CommunicationAgentDetailProps {
+interface SecretaryAgentDetailProps {
   agent: Agent;
 }
 
-export function CommunicationAgentDetail({ agent }: CommunicationAgentDetailProps): JSX.Element {
-  const [state, setState] = useState<CommunicationAgentState | null>(null);
+export function SecretaryAgentDetail({ agent }: SecretaryAgentDetailProps): JSX.Element {
+  const [state, setState] = useState<SecretaryAgentState | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   const load = useCallback(async (): Promise<void> => {
     try {
       setIsLoading(true);
-      const data = await getAgentCommunicationState(agent.id);
+      const data = await getAgentSecretaryState(agent.id);
       setState(data);
     } catch {
       setState(null);
@@ -51,7 +51,7 @@ export function CommunicationAgentDetail({ agent }: CommunicationAgentDetailProp
   }, [agent.state.lastActivityAt, load]);
 
   async function handleSync(): Promise<void> {
-    const result = await syncAgentCommunication(agent.id);
+    const result = await syncAgentSecretary(agent.id);
     setState(result.state);
   }
 
@@ -69,7 +69,7 @@ export function CommunicationAgentDetail({ agent }: CommunicationAgentDetailProp
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
-          <h3 className="text-lg font-semibold">Communication Agent</h3>
+          <h3 className="text-lg font-semibold">Secretary</h3>
           <p className="text-sm text-muted-foreground">
             {state.messages.length} zpráv · Poslední sync: {state.lastSyncedAt ? formatRelative(state.lastSyncedAt) : "nikdy"}
           </p>

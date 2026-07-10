@@ -44,30 +44,32 @@ export function AgentCard({
     ? Math.round((agent.metrics.successfulTasks / agent.metrics.totalTasks) * 100)
     : 0;
   const isRunning = state.status !== "offline" && state.status !== "error" && state.status !== "paused";
+  const borderColor = hudBorderColor(state.status);
 
   return (
     <Card
       className={cn(
-        "cursor-pointer transition-all hover:border-primary/50",
+        "cursor-pointer transition-all hover:border-primary/40 hud-card",
         isSelected && "border-primary ring-1 ring-primary",
       )}
+      style={{ borderLeftColor: borderColor }}
       onClick={onClick}
     >
       <CardHeader className="pb-2">
         <div className="flex items-start justify-between gap-4">
           <div className="flex items-center gap-3">
-            <div className="relative flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 text-primary">
+            <div className="relative flex h-10 w-10 items-center justify-center rounded-none bg-primary/10 text-primary">
               <Bot className="h-5 w-5" />
               <StatusDot status={state.status} />
             </div>
             <div>
               <CardTitle className="text-base font-semibold">{agent.name}</CardTitle>
-              <p className="text-xs text-muted-foreground">{agent.role}</p>
+              <p className="text-xs text-muted-foreground font-mono">{agent.role.toUpperCase()}</p>
             </div>
           </div>
           <div className="flex items-center gap-2">
             <HealthIndicator health={agent.health.status} />
-            <Badge variant="outline" className={cn("text-xs", statusColor(state.status))}>
+            <Badge variant="outline" className={cn("text-xs rounded-none", statusColor(state.status))}>
               {statusLabel(state.status)}
             </Badge>
           </div>
@@ -76,8 +78,8 @@ export function AgentCard({
       <CardContent className="space-y-4">
         <div className="space-y-1">
           <div className="flex items-center justify-between text-xs text-muted-foreground">
-            <span>🧠 Co dělá</span>
-            <span>{state.explanation.estimatedCompletion}</span>
+            <span>Co dělá</span>
+            <span className="font-mono">{state.explanation.estimatedCompletion}</span>
           </div>
           <p className="text-sm leading-relaxed">{state.explanation.currentActivity}</p>
         </div>
@@ -86,37 +88,37 @@ export function AgentCard({
           <div className="space-y-1">
             <div className="flex items-center justify-between text-xs text-muted-foreground">
               <span>Průběh úkolu</span>
-              <span>{state.taskProgress}%</span>
+              <span className="font-mono">{state.taskProgress}%</span>
             </div>
-            <Progress value={state.taskProgress} className="h-1.5" />
+            <Progress value={state.taskProgress} className="h-1.5 rounded-none" />
           </div>
         )}
 
         <div className="grid grid-cols-4 gap-2 text-center text-xs">
-          <div className="rounded-md border p-2">
-            <div className="font-semibold">{state.pendingTasks}</div>
+          <div className="rounded-none border border-[var(--hud-border)] p-2 bg-card/50">
+            <div className="font-mono font-semibold">{state.pendingTasks}</div>
             <div className="text-muted-foreground">čeká</div>
           </div>
-          <div className="rounded-md border p-2">
-            <div className="font-semibold">{state.runningTasks}</div>
+          <div className="rounded-none border border-[var(--hud-border)] p-2 bg-card/50">
+            <div className="font-mono font-semibold">{state.runningTasks}</div>
             <div className="text-muted-foreground">běží</div>
           </div>
-          <div className="rounded-md border p-2">
-            <div className="font-semibold">{state.completedTasks}</div>
+          <div className="rounded-none border border-[var(--hud-border)] p-2 bg-card/50">
+            <div className="font-mono font-semibold">{state.completedTasks}</div>
             <div className="text-muted-foreground">hotovo</div>
           </div>
-          <div className="rounded-md border p-2">
-            <div className="font-semibold">{state.failedTasks}</div>
+          <div className="rounded-none border border-[var(--hud-border)] p-2 bg-card/50">
+            <div className="font-mono font-semibold">{state.failedTasks}</div>
             <div className="text-muted-foreground">chyba</div>
           </div>
         </div>
 
         {total > 0 && (
           <div className="space-y-1">
-            <Progress value={(state.completedTasks / total) * 100} className="h-1.5" />
+            <Progress value={(state.completedTasks / total) * 100} className="h-1.5 rounded-none" />
             <div className="flex justify-between text-xs text-muted-foreground">
-              <span>Úspěšnost {successRate}%</span>
-              <span>{agent.metrics.totalTasks} celkem</span>
+              <span>Úspěšnost <span className="font-mono">{successRate}%</span></span>
+              <span className="font-mono">{agent.metrics.totalTasks} celkem</span>
             </div>
           </div>
         )}
@@ -136,13 +138,56 @@ export function AgentCard({
   );
 }
 
+function hudBorderColor(status: Agent["state"]["status"]): string {
+  switch (status) {
+    case "working":
+    case "delegating":
+    case "reviewing":
+    case "reporting":
+    case "scheduling":
+    case "implementing":
+    case "testing":
+    case "building":
+    case "deploying":
+      return "var(--hud-green)";
+    case "idle":
+    case "thinking":
+    case "planning":
+    case "analyzing":
+    case "reading_code":
+    case "starting":
+    case "waiting":
+    case "loading_calendar":
+    case "loading_messages":
+    case "summarizing":
+    case "drafting_reply":
+      return "var(--hud-blue)";
+    case "paused":
+      return "var(--hud-amber)";
+    case "error":
+    case "stopping":
+    case "recovering":
+      return "var(--hud-red)";
+    case "offline":
+      return "#52525b";
+    default:
+      return "var(--hud-border)";
+  }
+}
+
 function StatusDot({ status }: { status: Agent["state"]["status"] }): JSX.Element {
   const color = statusDotColor(status);
+  const shouldPulse = [
+    "working", "delegating", "reviewing", "reporting", "scheduling",
+    "implementing", "testing", "building", "deploying", "thinking",
+    "planning", "analyzing", "reading_code", "starting",
+  ].includes(status);
   return (
     <span
       className={cn(
         "absolute -right-0.5 -top-0.5 h-3 w-3 rounded-full border-2 border-background",
         color,
+        shouldPulse && "animate-pulse",
       )}
     />
   );

@@ -1,4 +1,5 @@
 import type { AgentMemory } from "./memory/index.js";
+import type { GoogleService, GoogleTokens } from "@milo/tools";
 import type {
   Agent,
   AgentDefinition,
@@ -8,6 +9,14 @@ import type {
   LiveWorkExplanation,
   TaskLogEntry,
 } from "@milo/shared";
+
+export interface GoogleAuthDeps {
+  isConfigured: boolean;
+  clientId?: string;
+  clientSecret?: string;
+  getTokens: (service: GoogleService) => Promise<GoogleTokens | undefined>;
+  saveTokens: (service: GoogleService, tokens: GoogleTokens) => Promise<void>;
+}
 
 export interface AgentFrameworkConfig {
   redis?: {
