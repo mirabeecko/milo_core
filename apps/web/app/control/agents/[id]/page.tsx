@@ -8,7 +8,7 @@ export default function AgentDetailPage() {
   const router = useRouter();
   const [agent, setAgent] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-  const [tab, setTab] = useState<"overview" | "spec">("overview");
+  const [tab, setTab] = useState<"overview" | "spec" | "tasks">("overview");
 
   // Spec editor state
   const [spec, setSpec] = useState<Record<string, any>>({});
@@ -67,6 +67,42 @@ export default function AgentDetailPage() {
     }
   }
 
+  // Tasks state
+  const [tasks, setTasks] = useState<any[]>([]);
+  const [newTaskTitle, setNewTaskTitle] = useState("");
+  const [addingTask, setAddingTask] = useState(false);
+
+  useEffect(() => {
+    fetch(`http://127.0.0.1:4000/executive/control/tasks?agent_id=${params.id}`)
+      .then((r) => r.json())
+      .then((d) => setTasks(d.tasks || []));
+  }, [params.id]);
+
+  async function addTask() {
+    if (!newTaskTitle.trim()) return;
+    setAddingTask(true);
+    const res = await fetch("http://127.0.0.1:4000/executive/control/tasks", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ agent_id: params.id, title: newTaskTitle, task_type: "implementation" }),
+    });
+    if (res.ok) {
+      const t = await res.json();
+      setTasks([t, ...tasks]);
+      setNewTaskTitle("");
+    }
+    setAddingTask(false);
+  }
+
+  async function updateTaskStatus(taskId: string, status: string) {
+    await fetch(`http://127.0.0.1:4000/executive/control/tasks/${taskId}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ status }),
+    });
+    setTasks(tasks.map((t) => (t.id === taskId ? { ...t, status } : t)));
+  }
+
   if (loading) return <div className="p-8">Načítání...</div>;
   if (!agent) return <div className="p-8 text-red-500">Agent nenalezen</div>;
 
@@ -91,6 +127,7 @@ export default function AgentDetailPage() {
         {[
           ["overview", "Přehled"],
           ["spec", "Specifikace"],
+          ["tasks", "Úkoly"],
         ].map(([key, label]) => (
           <button key={key} onClick={() => setTab(key as any)} className={`pb-2 text-sm ${tab === key ? "border-b-2 border-primary font-medium" : "text-muted-foreground"}`}>
             {label}
@@ -169,6 +206,40 @@ export default function AgentDetailPage() {
               </div>
             </div>
           )}
+        </div>
+      )}
+      {tab === "tasks" && (
+        <div className="space-y-4 max-w-3xl">
+          <div className="flex gap-2">
+            <input
+              className="flex-1 border rounded-lg p-2 text-sm"
+              placeholder="Nový úkol..."
+              value={newTaskTitle}
+              onChange={(e) => setNewTaskTitle(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && addTask()}
+            />
+            <button onClick={addTask} disabled={addingTask} className="px-4 py-2 bg-primary text-primary-foreground rounded-lg text-sm">
+              {addingTask ? "..." : "Přidat"}
+            </button>
+          </div>
+          {tasks.length === 0 && <p className="text-muted-foreground text-sm">Žádné úkoly</p>}
+          {tasks.map((t) => (
+            <div key={t.id} className="border rounded-lg p-3 flex items-center justify-between">
+              <div>
+                <div className="font-medium text-sm">{t.title}</div>
+                <div className="text-xs text-muted-foreground">{t.status} · {t.task_type}</div>
+              </div>
+              <select
+                className="text-xs border rounded px-2 py-1"
+                value={t.status}
+                onChange={(e) => updateTaskStatus(t.id, e.target.value)}
+              >
+                {["planned", "in_progress", "in_review", "completed", "blocked"].map((s) => (
+                  <option key={s} value={s}>{s}</option>
+                ))}
+              </select>
+            </div>
+          ))}
         </div>
       )}
     </div>
