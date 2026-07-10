@@ -12,7 +12,9 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { PageHeader } from "@/components/common/page-header";
-import type { Approval } from "@/lib/data/executive";
+import type { Approval } from "@/lib/data/executive/types";
+import { useExecutiveApprovals } from "@/lib/data/executive/use-executive-queries";
+import { LiveIndicator } from "@/app/executive/live-indicator";
 
 interface Props {
   approvals: Approval[];
@@ -41,7 +43,8 @@ const typeIcons: Record<string, React.ElementType> = {
   other: Clock,
 };
 
-export function ApprovalsView({ approvals }: Props) {
+export function ApprovalsView({ approvals: initialApprovals }: Props) {
+  const { data: approvals = initialApprovals, isFetching, isStale, dataUpdatedAt } = useExecutiveApprovals(initialApprovals);
   const pending = approvals.filter((a) => a.status === "pending");
 
   return (
@@ -49,7 +52,9 @@ export function ApprovalsView({ approvals }: Props) {
       <PageHeader
         title="Owner Approvals"
         description="Rozhodnutí a schválení čekající na Vlastníka"
-      />
+      >
+        <LiveIndicator isFetching={isFetching} isStale={isStale} isError={false} dataUpdatedAt={dataUpdatedAt} />
+      </PageHeader>
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <Card>

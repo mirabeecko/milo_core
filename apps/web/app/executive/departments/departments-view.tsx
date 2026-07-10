@@ -11,7 +11,9 @@ import {
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { PageHeader } from "@/components/common/page-header";
-import type { Department } from "@/lib/data/executive";
+import type { Department } from "@/lib/data/executive/types";
+import { useExecutiveDepartments } from "@/lib/data/executive/use-executive-queries";
+import { LiveIndicator } from "@/app/executive/live-indicator";
 
 interface Props {
   departments: Department[];
@@ -37,13 +39,16 @@ const deptColors: Record<string, string> = {
   qa: "bg-rose-500/10 text-rose-500 border-rose-500/30",
 };
 
-export function DepartmentsView({ departments }: Props) {
+export function DepartmentsView({ departments: initialDepartments }: Props) {
+  const { data: departments = initialDepartments, isFetching, isStale, dataUpdatedAt } = useExecutiveDepartments(initialDepartments);
   return (
     <div className="mx-auto max-w-7xl space-y-6">
       <PageHeader
         title="Executive Departments"
         description="7 oddělení MiLO — každé vlastní přesně definovanou doménu"
-      />
+      >
+        <LiveIndicator isFetching={isFetching} isStale={isStale} isError={false} dataUpdatedAt={dataUpdatedAt} />
+      </PageHeader>
 
       <div className="grid gap-4 md:gap-6 grid-cols-1 lg:grid-cols-2">
         {departments.map((dept) => {

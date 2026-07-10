@@ -1,7 +1,7 @@
 import type { ExecutiveDataProvider } from "./provider-interface";
 import { MockExecutiveDataProvider, ApiExecutiveDataProvider } from "./providers";
 
-export type ProviderMode = "auto" | "file" | "mock" | "api";
+export type ProviderMode = "auto" | "file" | "mock" | "api" | "realtime";
 
 let _manualOverride: ProviderMode | null = null;
 let _cachedProvider: ExecutiveDataProvider | null = null;
@@ -18,12 +18,12 @@ export function getExecutiveProviderMode(): ProviderMode {
 
   if (typeof window !== "undefined") {
     const stored = localStorage.getItem("milo:executive-provider");
-    if (stored === "file" || stored === "mock" || stored === "api") return stored;
+    if (stored === "file" || stored === "mock" || stored === "api" || stored === "realtime") return stored as ProviderMode;
   }
 
   if (typeof process !== "undefined" && process.env.NEXT_PUBLIC_EXECUTIVE_PROVIDER) {
     const env = process.env.NEXT_PUBLIC_EXECUTIVE_PROVIDER;
-    if (env === "file" || env === "mock" || env === "api") return env;
+    if (env === "file" || env === "mock" || env === "api" || env === "realtime") return env as ProviderMode;
   }
 
   return "api";
@@ -32,6 +32,14 @@ export function getExecutiveProviderMode(): ProviderMode {
 async function loadFileProvider(): Promise<ExecutiveDataProvider> {
   const mod = await import("./providers/file-executive-data-provider");
   return new mod.FileExecutiveDataProvider();
+}
+
+async function loadSseProvider(): Promise<ExecutiveDataProvider> {
+  if (typeof window === "undefined") return new ApiExecutiveDataProvider();
+  const mod = await import("./providers/sse-executive-data-provider");
+  const provider = new mod.SseExecutiveDataProvider();
+  await provider.connect();
+  return provider;
 }
 
 export async function getExecutiveProviderAsync(): Promise<ExecutiveDataProvider> {
@@ -47,6 +55,9 @@ export async function getExecutiveProviderAsync(): Promise<ExecutiveDataProvider
       break;
     case "mock":
       provider = new MockExecutiveDataProvider();
+      break;
+    case "realtime":
+      provider = await loadSseProvider();
       break;
     case "api":
     default:
@@ -69,6 +80,7 @@ export function getExecutiveProvider(): ExecutiveDataProvider {
     case "mock":
       _cachedProvider = new MockExecutiveDataProvider();
       break;
+    case "realtime":
     case "api":
     default:
       _cachedProvider = new ApiExecutiveDataProvider();

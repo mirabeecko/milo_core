@@ -6,6 +6,18 @@ export type { ProviderMode } from "./provider-factory";
 export { useExecutiveDataProvider, ExecutiveProviderProvider } from "./executive-provider-context";
 
 export {
+  useExecutiveOverview,
+  useExecutiveMissions,
+  useExecutiveDepartments,
+  useExecutiveApprovals,
+  useExecutiveRisks,
+  useExecutiveBlockers,
+  useExecutiveDecisions,
+  useExecutiveArtifacts,
+  useExecutiveActivity,
+} from "./use-executive-queries";
+
+export {
   MockExecutiveDataProvider,
   mockExecutiveDataProvider,
   ApiExecutiveDataProvider,

@@ -1,12 +1,14 @@
 /**
- * Executive Brief Pipeline — přímý přístup k datům (ne HTTP).
+ * Executive Brief Pipeline — integrovaný ranní briefing.
+ * Čte Docker, LLM costs, projekty, ISDS — vše na jednom místě.
  */
 import { execSync } from "node:child_process";
-import { existsSync } from "node:fs";
-import { resolve } from "node:path";
 import type { AgentManager } from "@milo/agents";
 import { getPendingCount, listApprovals } from "./approval-store.js";
 import { readRecentEvents } from "./event-logger.js";
+import { dockerStatus } from "./docker-monitor.js";
+import { prioritizeProjects } from "./project-prioritizer.js";
+import { llmCosts } from "./llm-costs.js";
 import type { ExecutiveMission } from "./executive-runtime.js";
 
 export type Confidence = "vysoká" | "střední" | "nízká" | "nedostupné";
@@ -50,118 +52,128 @@ export function generateExecutiveBrief(
   const criticalBlockers: string[] = [];
   const agents = manager.listAgents().map((a) => ({ id: a.agent.id, name: a.agent.name, status: a.agent.status }));
   const missions = execMissions || [];
-  const pendingCount = getPendingCount();
   const pendingApprovals = listApprovals("pending");
-  const recentEvents = readRecentEvents(30);
 
-  // 1. ORGANIZAČNÍ STATUS (přímý přístup k AgentManageru)
-  const runningAgents = agents.filter((a) => a.status !== "offline");
-  const blockedAgents = agents.filter((a) => a.status === "error");
-  const deptMap = new Map<string, number>();
-  agents.forEach((a) => {
-    const dept = (a as any).department || "unknown";
-    deptMap.set(dept, (deptMap.get(dept) || 0) + 1);
-  });
-
+  // 1. ORGANIZAČNÍ STATUS
+  const running = agents.filter((a) => a.status !== "offline");
+  const blocked = agents.filter((a) => a.status === "error");
   sections.push({
     title: "Organizační status",
     confidence: "vysoká",
-    source: "AgentManager (přímý přístup)",
-    content: [
-      `Agenti celkem: ${agents.length} (${runningAgents.length} běžících, ${blockedAgents.length} v chybě)`,
-      `Oddělení: ${deptMap.size}`,
-      `Aktivní mise: ${missions.filter((m) => !["completed", "failed"].includes(m.lifecycleStatus)).length}`,
-      `Čekající schválení: ${pendingCount}`,
-      ...agents.filter((a) => a.status === "error").map((a) => `  ⚠️ ${a.name}: error`),
-    ].join("\n"),
-    priority: 1,
-    blockers: blockedAgents.length > 0 ? [`${blockedAgents.length} agentů v chybovém stavu`] : [],
-    recommendations: pendingCount > 0 ? ["Zkontrolovat frontu schválení"] : [],
+    source: "AgentManager",
+    content: `Agentů: ${agents.length} (${running.length} běžících, ${blocked.length} chyb), Misí: ${missions.length}, Schválení: ${getPendingCount()}`,
+    priority: 1, blockers: blocked.length ? [`${blocked.length} agentů v chybě`] : [], recommendations: [],
   });
-  if (blockedAgents.length > 0) criticalBlockers.push(`${blockedAgents.length} agentů v chybě`);
+  if (blocked.length) criticalBlockers.push(`${blocked.length} agentů v chybě`);
 
-  // 2. GIT AKTIVITA
+  // 2. DOCKER
+  const docker = dockerStatus();
+  sections.push({
+    title: "Docker kontejnery",
+    confidence: docker.available ? "vysoká" : "nedostupné",
+    source: "docker ps",
+    content: docker.available
+      ? `${docker.healthy}/${docker.total} healthy${docker.unhealthy ? `, ${docker.unhealthy} nezdravých` : ""}`
+      : "Docker nedostupný",
+    priority: 2,
+    blockers: docker.unhealthy ? docker.containers.filter((c) => !c.healthy).map((c) => `Kontejner ${c.name}: ${c.status}`) : [],
+    recommendations: [],
+  });
+
+  // 3. PROJEKTY
+  const proj = prioritizeProjects();
+  if (proj.active > 0) {
+    sections.push({
+      title: "Prioritní projekty",
+      confidence: "vysoká",
+      source: "milo-os/projects.json",
+      content: `Aktivních: ${proj.active}, Dokončených: ${proj.finished}. Top: ${proj.top5.slice(0, 3).map((p) => `${p.name} (${p.reason})`).join(" | ")}`,
+      priority: 3, blockers: [], recommendations: proj.top5[0] ? [`Dnes pracovat na: ${proj.top5[0].name}`] : [],
+    });
+  }
+
+  // 4. LLM NÁKLADY
+  const costs = llmCosts();
+  sections.push({
+    title: "LLM náklady",
+    confidence: costs.available ? "střední" : "nízká",
+    source: "milo-os/llm_costs.json",
+    content: costs.available
+      ? `Měsíc: ${costs.monthly.total_czk} Kč. Včera: ${costs.yesterday.calls} volání, ${costs.yesterday.total_czk} Kč. Top model: ${costs.monthly.topModel}`
+      : "Data nedostupná (cost_tracker.py neběžel)",
+    priority: 5, blockers: [], recommendations: [],
+  });
+
+  // 5. GIT
   const git = getGitActivity(repoPath);
   if (git) {
     const intensity = git.commits > 10 ? "vysoká" : git.commits > 3 ? "střední" : "nízká";
     sections.push({
       title: "Vývojová aktivita",
       confidence: "vysoká",
-      source: `git log (${repoPath})`,
-      content: `Branch: ${git.branch}\nCommitů za 7 dní: ${git.commits} (${intensity} aktivita)\nZměněných souborů (unstaged): ${git.filesChanged}\nPoslední commit: ${git.lastCommit}`,
-      priority: 2,
-      blockers: git.filesChanged > 50 ? [`${git.filesChanged} změněných souborů — riziko konfliktů`] : [],
-      recommendations: git.filesChanged > 50 ? ["Zvážit commit a push před další prací"] : [],
+      source: `git log`,
+      content: `${git.branch}: ${git.commits} commitů/7d (${intensity}), ${git.filesChanged} změněných souborů. Poslední: ${git.lastCommit}`,
+      priority: 4,
+      blockers: git.filesChanged > 50 ? [`${git.filesChanged} změněných souborů`] : [],
+      recommendations: git.filesChanged > 30 ? ["Zvážit commit"] : [],
     });
   }
 
-  // 3. AKTIVNÍ MISE
+  // 6. AKTIVNÍ MISE
   const active = missions.filter((m) => !["completed", "failed"].includes(m.lifecycleStatus));
-  const blocked = missions.filter((m) => m.lifecycleStatus === "blocked");
   sections.push({
     title: "Aktivní mise",
     confidence: "vysoká",
     source: "ExecutiveRuntime",
-    content: active.length === 0
-      ? "žádné aktivní mise"
-      : active.map((m) => `  ${m.id}: "${m.title}" — ${m.lifecycleStatus} (${m.department || "?"})`).join("\n"),
-    priority: 3,
-    blockers: blocked.map((m) => `Mise ${m.id} blokována: ${m.title}`),
-    recommendations: active.length === 0 ? ["Vytvořit první misi: POST /executive/demo/full-mission"] : [],
+    content: active.length === 0 ? "žádné" : active.map((m) => `  ${m.id}: "${m.title}" — ${m.lifecycleStatus}`).join("\n"),
+    priority: 6, blockers: [], recommendations: active.length === 0 ? ["Vytvořit první misi"] : [],
   });
 
-  // 4. SCHVÁLENÍ
+  // 7. SCHVÁLENÍ
+  const highRisk = pendingApprovals.filter((a) => a.risk_level === "critical" || a.risk_level === "high");
   sections.push({
     title: "Čekající schválení",
     confidence: "vysoká",
     source: "Approval Store",
-    content: pendingApprovals.length === 0
-      ? "žádná čekající schválení"
-      : pendingApprovals.map((a) => `  ${a.id}: ${a.what} (riziko: ${a.risk_level}, od ${a.requested_at.slice(0, 10)})`).join("\n"),
-    priority: 2,
-    blockers: pendingApprovals.filter((a) => a.risk_level === "critical" || a.risk_level === "high").map((a) => `Kritické schválení: ${a.id}`),
-    recommendations: pendingApprovals.length > 0 ? ["Schválit nebo zamítnout čekající položky"] : [],
+    content: pendingApprovals.length === 0 ? "žádná" : `${pendingApprovals.length} čekajících (${highRisk.length} vysoké riziko)`,
+    priority: 3,
+    blockers: highRisk.map((a) => `Kritické schválení: ${a.id}`),
+    recommendations: pendingApprovals.length > 0 ? ["Zkontrolovat frontu"] : [],
   });
-  if (pendingApprovals.length > 0) criticalBlockers.push(`${pendingApprovals.length} čekajících schválení`);
+  if (highRisk.length) criticalBlockers.push(`${highRisk.length} kritických schválení`);
 
-  // 5. POSLEDNÍ UDÁLOSTI
-  if (recentEvents.length > 0) {
+  // 8. UDÁLOSTI
+  const events = readRecentEvents(15);
+  if (events.length) {
     sections.push({
       title: "Poslední události",
       confidence: "vysoká",
-      source: "Event Log (JSONL)",
-      content: recentEvents.slice(0, 8).map((e) => `  [${e.event_type}] ${e.summary || ""}`).join("\n"),
-      priority: 4,
-      blockers: [],
-      recommendations: [],
+      source: "Event Log",
+      content: events.slice(0, 5).map((e) => `  [${e.event_type}] ${e.summary || ""}`).join("\n"),
+      priority: 8, blockers: [], recommendations: [],
     });
   }
 
-  // 6. INTEGRACE
-  const integrations = [
-    { name: "ISDS (Datové schránky)", available: existsSync(resolve(repoPath, "../MiLO_ISDS_MCP")) },
-    { name: "n8n", available: existsSync(resolve(repoPath, "../n8n")) },
-    { name: "Obsidian vault", available: !!process.env.OBSIDIAN_VAULT_PATH },
-  ];
-  sections.push({
-    title: "Dostupné integrace",
-    confidence: "vysoká",
-    source: "Souborový systém",
-    content: integrations.map((i) => `  ${i.available ? "✅" : "⚠️"} ${i.name}: ${i.available ? "dostupné" : "nedostupné"}`).join("\n"),
-    priority: 5,
-    blockers: [],
-    recommendations: [],
-  });
-
-  const allBlockers = sections.flatMap((s) => s.blockers);
-  const allRecs = sections.flatMap((s) => s.recommendations);
+  const allBl = sections.flatMap((s) => s.blockers);
+  const allRec = sections.flatMap((s) => s.recommendations);
 
   return {
     generated: new Date().toISOString(),
-    version: "1.0",
+    version: "2.0",
     sections: sections.sort((a, b) => a.priority - b.priority),
-    summary: `MiLO Executive Brief: ${active.length} aktivních misí, ${pendingCount} čekajících schválení, ${git?.commits || 0} commitů za 7 dní. ${criticalBlockers.length > 0 ? `⚠️ ${criticalBlockers.length} blokátorů.` : "✅ Bez blokátorů."}`,
-    criticalBlockers: [...new Set([...criticalBlockers, ...allBlockers])].slice(0, 10),
-    topRecommendations: [...new Set([...allRecs, ...(criticalBlockers.length > 0 ? ["Řešit blokátory"] : ["Pokračovat v aktivaci KNOW, COMM, ARCH"])])].slice(0, 5),
+    summary: [
+      `${agents.length} agentů, ${docker.healthy}/${docker.total} kont.`,
+      costs.available ? `LLM: ${costs.monthly.total_czk} Kč` : null,
+      `${git?.commits || 0} commitů`,
+      `${pendingApprovals.length} schválení`,
+      criticalBlockers.length ? `${criticalBlockers.length} blokátorů` : "bez blokátorů",
+    ].filter(Boolean).join(" | "),
+    criticalBlockers: [...new Set([...criticalBlockers, ...allBl])].slice(0, 10),
+    topRecommendations: [
+      ...new Set([
+        ...allRec,
+        ...(proj.top5[0] ? [`Prioritní projekt: ${proj.top5[0].name}`] : []),
+      ]),
+    ].slice(0, 5),
   };
 }

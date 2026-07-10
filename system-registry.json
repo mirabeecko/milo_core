@@ -1,0 +1,331 @@
+{
+  "meta": {
+    "version": "1.0.0",
+    "generated": "2026-07-10T18:58:00Z",
+    "authority": "AUTHORITATIVE — jediný zdroj pravdy o MiLO ekosystému",
+    "maintainer": "ARCH Department",
+    "update_policy": "Automatická synchronizace při změně. Manuální rebuild: POST /executive/system/sync"
+  },
+  "repositories": {
+    "milo-core": {
+      "id": "milo-core",
+      "name": "MiLO_Core",
+      "purpose": "Hlavní repozitář — Agent Runtime, Executive API, Dashboard",
+      "owner": "ARCH + ENG",
+      "path": "/Users/mb/dev/MiLO_Core",
+      "gitRemote": "local",
+      "defaultBranch": "main",
+      "status": "active",
+      "techStack": ["TypeScript", "pnpm", "Fastify", "Next.js", "React"],
+      "dependencies": ["milo-agent", "milo-isds-mcp", "milo-os"],
+      "capabilities": ["C-001", "C-002", "C-004", "C-005", "C-010", "C-011", "C-018"],
+      "processes": ["P-001", "P-003"]
+    },
+    "milo-agent": {
+      "id": "milo-agent",
+      "name": "MiLO_Agent",
+      "purpose": "Produkční agent runtime — FastAPI, Telegram webhook, Telnyx, Voice",
+      "owner": "ENG + COMM",
+      "path": "/Users/mb/dev/MiLO_Agent",
+      "gitRemote": "local",
+      "defaultBranch": "main",
+      "status": "production",
+      "techStack": ["Python", "FastAPI", "SQLAlchemy", "Supabase"],
+      "dependencies": ["milo-isds-mcp"],
+      "capabilities": ["C-001", "C-006"],
+      "processes": ["P-015"]
+    },
+    "milo-isds-mcp": {
+      "id": "milo-isds-mcp",
+      "name": "MiLO_ISDS_MCP",
+      "purpose": "MCP server pro datové schránky — download, OCR, extrakce, reporty",
+      "owner": "KNOW",
+      "path": "/Users/mb/dev/MiLO_ISDS_MCP",
+      "gitRemote": "local",
+      "defaultBranch": "main",
+      "status": "active",
+      "techStack": ["Python", "MCP", "PyMuPDF", "pytesseract", "Whoosh"],
+      "dependencies": [],
+      "capabilities": ["C-003", "C-004", "C-016"],
+      "processes": ["P-003"]
+    },
+    "milo-os": {
+      "id": "milo-os",
+      "name": "milo-os",
+      "purpose": "Skenování projektů, backup, GA4 sync, dashboard",
+      "owner": "OC",
+      "path": "/Users/mb/dev/milo-os",
+      "gitRemote": "local",
+      "defaultBranch": "main",
+      "status": "active",
+      "techStack": ["Python", "Supabase"],
+      "dependencies": [],
+      "capabilities": ["C-005", "C-009", "C-011"],
+      "processes": []
+    },
+    "executive-ai": {
+      "id": "executive-ai",
+      "name": "executive-ai",
+      "purpose": "Telegram bot pro Executive Assistant — denní briefing, projektový management",
+      "owner": "COMM",
+      "path": "/Users/mb/dev/dashboards and agents/executive-ai",
+      "gitRemote": "local",
+      "defaultBranch": "main",
+      "status": "production",
+      "techStack": ["TypeScript", "Node.js", "node-telegram-bot-api", "Supabase"],
+      "dependencies": [],
+      "capabilities": ["C-001", "C-005", "C-007"],
+      "processes": ["P-015"]
+    },
+    "voice-ai-terminal": {
+      "id": "voice-ai-terminal",
+      "name": "voice-ai-terminal",
+      "purpose": "Hlasový AI agent s tool registry — Telegram bot, Docker, filesystem",
+      "owner": "COMM",
+      "path": "/Users/mb/dev/dashboards and agents/voice-ai-terminal",
+      "gitRemote": "local",
+      "defaultBranch": "main",
+      "status": "development",
+      "techStack": ["Python", "pyTelegramBotAPI", "OpenAI"],
+      "dependencies": [],
+      "capabilities": ["C-006", "C-014"],
+      "processes": []
+    },
+    "n8n": {
+      "id": "n8n",
+      "name": "n8n",
+      "purpose": "Workflow automatizace — agentic-os workflowy",
+      "owner": "OPS",
+      "path": "/Users/mb/dev/n8n",
+      "gitRemote": "local",
+      "defaultBranch": "main",
+      "status": "production",
+      "techStack": ["n8n", "Docker", "Supabase", "OpenAI"],
+      "dependencies": [],
+      "capabilities": ["C-015"],
+      "processes": ["P-014"]
+    },
+    "obcanai": {
+      "id": "obcanai",
+      "name": "obcanai",
+      "purpose": "Právní chatbot — RAG nad českými zákony, Next.js",
+      "owner": "KNOW",
+      "path": "/Users/mb/dev/dashboards and agents/obcanai",
+      "gitRemote": "local",
+      "defaultBranch": "main",
+      "status": "active",
+      "techStack": ["TypeScript", "Next.js", "Supabase pgvector", "OpenAI"],
+      "dependencies": [],
+      "capabilities": ["C-017"],
+      "processes": []
+    }
+  },
+  "services": {
+    "executive-api": {
+      "id": "executive-api",
+      "name": "MiLO Executive API",
+      "purpose": "Hlavní API — status, missions, agents, brief, search, approvals",
+      "port": 4000,
+      "protocol": "HTTP",
+      "startup": "pnpm --filter @milo/api dev",
+      "healthEndpoint": "http://127.0.0.1:4000/health",
+      "department": "OC",
+      "repository": "milo-core",
+      "dependencies": ["supabase"],
+      "status": "running"
+    },
+    "web-dashboard": {
+      "id": "web-dashboard",
+      "name": "MiLO Web Dashboard",
+      "purpose": "Next.js dashboard — UI pro Vlastníka",
+      "port": 3000,
+      "protocol": "HTTP",
+      "startup": "pnpm --filter @milo/web dev",
+      "healthEndpoint": "http://127.0.0.1:3000",
+      "department": null,
+      "repository": "milo-core",
+      "dependencies": ["executive-api"],
+      "status": "running"
+    },
+    "milo-agent-api": {
+      "id": "milo-agent-api",
+      "name": "MiLO_Agent API",
+      "purpose": "Produkční FastAPI server — Telegram webhook, voice, Telnyx",
+      "port": 8000,
+      "protocol": "HTTP",
+      "startup": "uvicorn app.main:app --reload",
+      "healthEndpoint": "http://127.0.0.1:8000/health",
+      "department": "COMM",
+      "repository": "milo-agent",
+      "dependencies": ["supabase"],
+      "status": "running"
+    }
+  },
+  "docker": {
+    "containers": [
+      {"name": "hermes-fae02adb", "status": "Up 2 days", "purpose": "Hermes agent runtime"},
+      {"name": "myinvoice-app-1", "status": "Up 2 days", "purpose": "MyInvoice app", "ports": ["8080:80"]},
+      {"name": "myinvoice-db-1", "status": "Up 2 days", "purpose": "MyInvoice MySQL DB", "ports": ["3307:3306"]},
+      {"name": "ai-mail-redis", "status": "Up 2 days", "purpose": "Redis pro AI mail", "ports": ["6379:6379"]},
+      {"name": "ai-mail-postgres", "status": "Up 2 days", "purpose": "PostgreSQL pro AI mail", "ports": ["5432:5432"]}
+    ],
+    "composeProjects": ["myinvoice", "ai-mail"],
+    "lastChecked": "2026-07-10T18:58:00Z"
+  },
+  "databases": {
+    "supabase": {
+      "id": "supabase",
+      "type": "PostgreSQL (Supabase)",
+      "url": "mljqltwcdqknezuqpisb.supabase.co",
+      "purpose": "Sdílená databáze — projekty, úkoly, LLM costs, kalendář, emaily, embeddingy",
+      "consumers": ["milo-core", "milo-agent", "executive-ai", "n8n", "obcanai"],
+      "owner": "OPS"
+    },
+    "ai-mail-postgres": {
+      "id": "ai-mail-postgres",
+      "type": "PostgreSQL (Docker)",
+      "purpose": "AI mail lokální PostgreSQL",
+      "consumers": ["ai-mail"],
+      "owner": "OPS"
+    },
+    "ai-mail-redis": {
+      "id": "ai-mail-redis",
+      "type": "Redis",
+      "purpose": "AI mail cache",
+      "consumers": ["ai-mail"],
+      "owner": "OPS"
+    }
+  },
+  "integrations": {
+    "telegram": {
+      "id": "telegram",
+      "name": "Telegram",
+      "purpose": "Primární komunikační kanál — 3 boti",
+      "authMethod": "Bot Token (env: TELEGRAM_BOT_TOKEN)",
+      "status": "configured",
+      "owner": "COMM",
+      "consumers": ["milo-agent", "executive-ai", "voice-ai-terminal", "n8n"],
+      "bots": [
+        {"id": "muy_empoyee_bot", "project": "milo-agent", "status": "production"},
+        {"id": "executive_ai_bot", "project": "executive-ai", "status": "production"},
+        {"id": "voice_ai_bot", "project": "voice-ai-terminal", "status": "development"}
+      ]
+    },
+    "gmail": {
+      "id": "gmail",
+      "name": "Gmail",
+      "purpose": "Emailová schránka Vlastníka",
+      "authMethod": "OAuth 2.0 (env: GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET)",
+      "status": "configured",
+      "owner": "COMM",
+      "consumers": ["executive-ai", "google-docs-mcp"]
+    },
+    "google-calendar": {
+      "id": "google-calendar",
+      "name": "Google Calendar",
+      "purpose": "Kalendář Vlastníka",
+      "authMethod": "OAuth 2.0",
+      "status": "configured",
+      "owner": "OC",
+      "consumers": ["milo-core", "executive-ai"]
+    },
+    "isds": {
+      "id": "isds",
+      "name": "ISDS (Datové schránky)",
+      "purpose": "Datová schránka TJ Krupka",
+      "authMethod": "Certifikát + heslo (config.yaml + .env)",
+      "status": "configured",
+      "owner": "KNOW",
+      "consumers": ["milo-isds-mcp", "milo-core"]
+    },
+    "n8n": {
+      "id": "n8n-external",
+      "name": "n8n",
+      "purpose": "Workflow automatizace",
+      "authMethod": "API Key",
+      "status": "configured",
+      "owner": "OPS",
+      "consumers": ["milo-core"]
+    },
+    "supabase": {
+      "id": "supabase-ext",
+      "name": "Supabase",
+      "purpose": "Backend-as-a-Service",
+      "authMethod": "Service Role Key + Anon Key",
+      "status": "configured",
+      "owner": "OPS",
+      "consumers": ["milo-core", "milo-agent", "executive-ai", "n8n", "obcanai", "milo-os"]
+    },
+    "ga4": {
+      "id": "ga4",
+      "name": "Google Analytics 4",
+      "purpose": "Analytika webů (sheskates, ninja-tyden, tjkrupka, webdo24)",
+      "authMethod": "OAuth 2.0",
+      "status": "configured",
+      "owner": "OC",
+      "consumers": ["milo-os", "milo-core"]
+    },
+    "obsidian": {
+      "id": "obsidian",
+      "name": "Obsidian",
+      "purpose": "Knowledge vault Vlastníka",
+      "authMethod": "Filesystem (env: OBSIDIAN_VAULT_PATH)",
+      "status": "configured",
+      "owner": "KNOW",
+      "consumers": ["milo-core"]
+    },
+    "github": {
+      "id": "github",
+      "name": "GitHub",
+      "purpose": "Správa kódu",
+      "authMethod": "SSH / Git config",
+      "status": "configured",
+      "owner": "ENG",
+      "consumers": ["milo-core"]
+    },
+    "mcp-google-docs": {
+      "id": "mcp-google-docs",
+      "name": "Google Docs MCP",
+      "purpose": "MCP server pro Google Docs, Sheets, Drive, Gmail, Calendar",
+      "authMethod": "OAuth 2.0",
+      "status": "available",
+      "owner": "KNOW",
+      "consumers": ["milo-core"]
+    },
+    "mcp-isds": {
+      "id": "mcp-isds",
+      "name": "MiLO ISDS MCP",
+      "purpose": "MCP server pro datové schránky",
+      "authMethod": "Certifikát",
+      "status": "available",
+      "owner": "KNOW",
+      "consumers": ["milo-core", "milo-agent"]
+    }
+  },
+  "credentials": {
+    "items": [
+      {"logicalName": "TELEGRAM_BOT_TOKEN", "purpose": "MiLO_Agent Telegram bot", "envVar": "TELEGRAM_BOT_TOKEN", "repositories": ["milo-agent"], "rotation": "not required", "status": "active"},
+      {"logicalName": "TELEGRAM_BOT_TOKEN_2", "purpose": "executive-ai Telegram bot", "envVar": "TELEGRAM_BOT_TOKEN", "repositories": ["executive-ai"], "rotation": "not required", "status": "active"},
+      {"logicalName": "TELEGRAM_BOT_TOKEN_3", "purpose": "voice-ai-terminal Telegram bot", "envVar": "TELEGRAM_BOT_TOKEN", "repositories": ["voice-ai-terminal"], "rotation": "not required", "status": "active"},
+      {"logicalName": "GOOGLE_CLIENT_ID", "purpose": "Google OAuth pro Gmail, Calendar, GA4", "envVar": "GOOGLE_CLIENT_ID", "repositories": ["milo-core", "executive-ai", "milo-os", "dashboard"], "rotation": "not required", "status": "active"},
+      {"logicalName": "GOOGLE_CLIENT_SECRET", "purpose": "Google OAuth secret", "envVar": "GOOGLE_CLIENT_SECRET", "repositories": ["milo-os", "dashboard"], "rotation": "not required", "status": "active"},
+      {"logicalName": "SUPABASE_SERVICE_ROLE_KEY", "purpose": "Supabase admin přístup", "envVar": "SUPABASE_SERVICE_ROLE_KEY", "repositories": ["milo-core", "milo-agent", "executive-ai", "n8n"], "rotation": "recommended", "status": "active"},
+      {"logicalName": "SUPABASE_ANON_KEY", "purpose": "Supabase public přístup", "envVar": "NEXT_PUBLIC_SUPABASE_ANON_KEY", "repositories": ["milo-core", "obcanai"], "rotation": "not required", "status": "active"},
+      {"logicalName": "ISDS_CERTIFICATE", "purpose": "ISDS přístupový certifikát", "envVar": "config.yaml", "repositories": ["milo-isds-mcp"], "rotation": "not required", "status": "active"},
+      {"logicalName": "OPENAI_API_KEY", "purpose": "OpenAI API přístup", "envVar": "OPENAI_API_KEY", "repositories": ["milo-agent", "voice-ai-terminal", "n8n", "obcanai"], "rotation": "recommended", "status": "active"},
+      {"logicalName": "ANTHROPIC_API_KEY", "purpose": "Anthropic API přístup", "envVar": "ANTHROPIC_API_KEY", "repositories": ["executive-ai"], "rotation": "recommended", "status": "active"}
+    ],
+    "duplications": [
+      {"credential": "TELEGRAM_BOT_TOKEN", "count": 3, "repositories": ["milo-agent", "executive-ai", "voice-ai-terminal"], "recommendation": "Sjednotit na jednoho bota po C-006"},
+      {"credential": "OPENAI_API_KEY", "count": 4, "repositories": ["milo-agent", "voice-ai-terminal", "n8n", "obcanai"], "recommendation": "Centrální credentials store"},
+      {"credential": "GOOGLE_CLIENT_ID", "count": 4, "repositories": ["milo-core", "executive-ai", "milo-os", "dashboard"], "recommendation": "OK — sdílené OAuth credentials"}
+    ]
+  },
+  "dependencies": {
+    "critical": [
+      {"component": "Supabase", "consumers": ["milo-core", "milo-agent", "executive-ai", "n8n", "obcanai"], "impact": "All data storage, auth, realtime"},
+      {"component": "OpenAI API", "consumers": ["milo-agent", "voice-ai-terminal", "n8n", "obcanai"], "impact": "All LLM capabilities"},
+      {"component": "Executive API", "consumers": ["web-dashboard", "milo-core brief pipeline"], "impact": "Dashboard and brief generation"}
+    ]
+  }
+}

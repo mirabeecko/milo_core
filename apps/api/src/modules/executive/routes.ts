@@ -30,6 +30,13 @@ import { getAgentManager } from "../agents/manager.js";
 import { ExecutiveRuntime } from "./executive-runtime.js";
 import { generateExecutiveBrief } from "./brief-pipeline.js";
 import { readRecentEvents, logExecutiveEvent } from "./event-logger.js";
+import { buildIndex, searchIndex, getIndex } from "./search-index.js";
+import { buildUnifiedIndex, unifiedSearch } from "./unified-search.js";
+import { sendMorningBrief, setManager, getDeliveryStatus, enableDelivery, disableDelivery } from "./morning-brief.js";
+import { prioritizeProjects } from "./project-prioritizer.js";
+import { executeISDSIntake } from "./isds-intake.js";
+import { dockerStatus } from "./docker-monitor.js";
+import { llmCosts } from "./llm-costs.js";
 import {
   listApprovals,
   createApproval,
@@ -369,12 +376,165 @@ export async function executiveRoutes(
   });
 
   // ═══════════════════════════════════════════════════════════════════
+  // KNOWLEDGE SEARCH
+  // ═══════════════════════════════════════════════════════════════════
+
+  app.post("/executive/search/build", async (_req, reply) => {
+    const result = buildIndex();
+    logExecutiveEvent("artifact_created", {
+      artifact_type: "index",
+      artifact_path: "document-index.json",
+      summary: `Index vybudován: ${result.count} dokumentů`,
+    });
+    return reply.send(result);
+  });
+
+  app.get("/executive/search", async (req, reply) => {
+    const q = (req.query as any)?.q;
+    if (!q) return reply.status(400).send({ error: "query parameter 'q' is required" });
+    const results = searchIndex(q);
+    return reply.send({ query: q, count: results.length, results });
+  });
+
+  app.get("/executive/search/catalog", async (_req, reply) => {
+    const entries = getIndex();
+    const byCategory: Record<string, number> = {};
+    for (const e of entries) {
+      byCategory[e.category] = (byCategory[e.category] || 0) + 1;
+    }
+    return reply.send({ total: entries.length, byCategory, entries });
+  });
+
+  // Unified search — all sources
+  app.post("/executive/search/unified/build", async (_req, reply) => {
+    const result = buildUnifiedIndex();
+    logExecutiveEvent("artifact_created", {
+      artifact_type: "index",
+      artifact_path: "unified-index.json",
+      summary: `Unified index: ${result.count} docs from [${result.sources.join(", ")}]`,
+    });
+    return reply.send(result);
+  });
+
+  app.get("/executive/search/unified", async (req, reply) => {
+    const q = (req.query as any)?.q;
+    if (!q) return reply.status(400).send({ error: "q required" });
+    const results = unifiedSearch(q);
+    const bySource: Record<string, number> = {};
+    const byType: Record<string, number> = {};
+    for (const r of results) {
+      bySource[r.source] = (bySource[r.source] || 0) + 1;
+      byType[r.type] = (byType[r.type] || 0) + 1;
+    }
+    return reply.send({ query: q, count: results.length, bySource, byType, results });
+  });
+
+  // Morning brief trigger + status
+  app.post("/executive/brief/send", async (_req, reply) => {
+    const runtime = await getExecRuntime();
+    setManager(runtime.getManager());
+    const result = sendMorningBrief(REPO_ROOT);
+    logExecutiveEvent(result.status === "sent" ? "mission_completed" : "mission_blocked", {
+      mission_id: "morning-brief",
+      summary: result.status === "sent" ? "Ranní briefing odeslán" : `Briefing: ${result.status}`,
+    });
+    return reply.send(result);
+  });
+
+  app.get("/executive/brief/status", async (_req, reply) => {
+    const status = getDeliveryStatus();
+    // Strip any potential secret from error messages
+    if (status.lastError && status.lastError.includes("bot")) {
+      status.lastError = "Telegram delivery failed (token valid, check chat ID)";
+    }
+    return reply.send(status);
+  });
+
+  app.post("/executive/brief/enable", async (_req, reply) => {
+    enableDelivery();
+    return reply.send({ enabled: true });
+  });
+
+  app.post("/executive/brief/disable", async (_req, reply) => {
+    disableDelivery();
+    return reply.send({ enabled: false });
+  });
+
+  // Project prioritization — C-005
+  app.get("/executive/projects/priorities", async (_req, reply) => {
+    const result = prioritizeProjects();
+    return reply.send(result);
+  });
+
+  // ISDS Intake — P-003
+  app.post("/executive/isds/intake", async (_req, reply) => {
+    const result = executeISDSIntake();
+    return reply.send(result);
+  });
+
+  // Docker monitoring — C-014
+  app.get("/executive/docker", async (_req, reply) => {
+    return reply.send(dockerStatus());
+  });
+
+  // LLM costs — C-010
+  app.get("/executive/costs", async (_req, reply) => {
+    return reply.send(llmCosts());
+  });
+
+  // System Registry — autoritativní metadata
+  app.get("/executive/system", async (_req, reply) => {
+    const path = resolve(REPO_ROOT, "system-registry.json");
+    if (!existsSync(path)) return reply.status(404).send({ error: "system-registry.json not found" });
+    return reply.send(JSON.parse(readFileSync(path, "utf-8")));
+  });
+
+  app.get("/executive/system/:section", async (req, reply) => {
+    const path = resolve(REPO_ROOT, "system-registry.json");
+    if (!existsSync(path)) return reply.status(404).send({ error: "not found" });
+    const r = JSON.parse(readFileSync(path, "utf-8"));
+    const section = (req.params as any).section;
+    if (!(section in r)) return reply.status(404).send({ error: `section '${section}' not found` });
+    return reply.send(r[section]);
+  });
+
+  // ═══════════════════════════════════════════════════════════════════
   // EXECUTIVE BRIEF
   // ═══════════════════════════════════════════════════════════════════
 
   app.get("/executive/brief", async (_req, reply) => {
     const runtime = await getExecRuntime();
     const brief = generateExecutiveBrief(REPO_ROOT, runtime.getManager(), runtime.listMissions());
+    const format = (_req.query as any)?.format;
+    if (format === "text") {
+      const lines = [
+        `=== MiLO Executive Brief ===`,
+        `Generováno: ${brief.generated}`,
+        ``,
+        ...brief.sections.map((s) =>
+          `[${s.confidence}] ${s.title}\n${s.content}${s.blockers.length ? `\n  ⚠️  ${s.blockers.join(", ")}` : ""}${s.recommendations.length ? `\n  → ${s.recommendations.join(", ")}` : ""}`
+        ),
+        ``,
+        `SHRNUTÍ: ${brief.summary}`,
+        `BLOKÁTORY: ${brief.criticalBlockers.length ? brief.criticalBlockers.join("; ") : "žádné"}`,
+        `DOPORUČENÍ: ${brief.topRecommendations.join("; ")}`,
+      ].join("\n");
+      // Telegram send (pokud je token)
+      if ((_req.query as any)?.send === "telegram") {
+        const token = process.env.TELEGRAM_BOT_TOKEN || process.env.TELEGRAM_BOT_TOKEN_2;
+        const chatId = process.env.TELEGRAM_CHAT_ID;
+        if (token && chatId) {
+          try {
+            const { execSync } = await import("node:child_process");
+            execSync(
+              `curl -s -X POST "https://api.telegram.org/bot${token}/sendMessage" -d "chat_id=${chatId}" -d "text=${lines.replace(/"/g, '\\"').replace(/\n/g, '\\n').slice(0, 2000)}"`,
+              { timeout: 5000 },
+            );
+          } catch { /* degrade gracefully */ }
+        }
+      }
+      return reply.type("text/plain").send(lines);
+    }
     return reply.send(brief);
   });
 

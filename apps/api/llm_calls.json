@@ -1,0 +1,35 @@
+[
+  {
+    "date": "2026-07-10T19:06:46.585213+00:00",
+    "model": "gpt-4o",
+    "tokens": 2000,
+    "tokens_input": 1500,
+    "tokens_output": 500,
+    "cost": 0.36,
+    "agent": "poradce",
+    "project": "api",
+    "description": "Test trackingu"
+  },
+  {
+    "date": "2026-07-10T19:07:23.531849+00:00",
+    "model": "gpt-4o",
+    "tokens": 2000,
+    "tokens_input": 1500,
+    "tokens_output": 500,
+    "cost": 0.36,
+    "agent": "poradce",
+    "project": "api",
+    "description": "Test trackingu"
+  },
+  {
+    "date": "2026-07-10T21:54:57.394483+00:00",
+    "model": "gpt-4o",
+    "tokens": 2000,
+    "tokens_input": 1500,
+    "tokens_output": 500,
+    "cost": 0.36,
+    "agent": "poradce",
+    "project": "api",
+    "description": "Test trackingu"
+  }
+]

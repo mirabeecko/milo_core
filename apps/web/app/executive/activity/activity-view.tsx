@@ -16,7 +16,9 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { PageHeader } from "@/components/common/page-header";
 import { cn } from "@/lib/utils";
-import type { ActivityItem } from "@/lib/data/executive";
+import type { ActivityItem } from "@/lib/data/executive/types";
+import { useExecutiveActivity } from "@/lib/data/executive/use-executive-queries";
+import { LiveIndicator } from "@/app/executive/live-indicator";
 
 interface Props {
   activity: ActivityItem[];
@@ -31,13 +33,16 @@ const typeConfig: Record<string, { icon: React.ElementType; color: string; label
   system: { icon: ShieldCheck, color: "bg-rose-500/10 text-rose-500", label: "Systém" },
 };
 
-export function ActivityView({ activity }: Props) {
+export function ActivityView({ activity: initialActivity }: Props) {
+  const { data: activity = initialActivity, isFetching, isStale, dataUpdatedAt } = useExecutiveActivity(initialActivity);
   return (
     <div className="mx-auto max-w-7xl space-y-6">
       <PageHeader
         title="Activity Timeline"
         description="Nedávná aktivita — git historie, dokumenty, rozhodnutí"
-      />
+      >
+        <LiveIndicator isFetching={isFetching} isStale={isStale} isError={false} dataUpdatedAt={dataUpdatedAt} />
+      </PageHeader>
 
       <Card>
         <CardHeader className="pb-3">

@@ -97,8 +97,14 @@ export class ApiExecutiveDataProvider implements ExecutiveDataProvider {
   private baseUrl: string;
   private fetch: typeof globalThis.fetch;
 
-  constructor(baseUrl = "/api", fetchImpl?: typeof globalThis.fetch) {
-    this.baseUrl = baseUrl;
+  constructor(baseUrl?: string, fetchImpl?: typeof globalThis.fetch) {
+    if (baseUrl) {
+      this.baseUrl = baseUrl;
+    } else if (typeof window === "undefined") {
+      this.baseUrl = "http://127.0.0.1:4000";
+    } else {
+      this.baseUrl = "/api";
+    }
     this.fetch = fetchImpl ?? globalThis.fetch.bind(globalThis);
   }
 
@@ -167,7 +173,18 @@ export class ApiExecutiveDataProvider implements ExecutiveDataProvider {
         recentActivityCount: 0,
       };
     } catch {
-      throw new Error("Failed to fetch executive overview from API");
+      return {
+        generatedAt: new Date().toISOString(),
+        bootstrap: { status: "API unavailable", message: "Could not reach the Executive API. Is the API server running on port 4000?" },
+        backlogStats: { total: 0, done: 0, waiting: 0, byPriority: {} },
+        departments: [],
+        missionStats: { total: 0, completed: 0, failed: 0, active: 0 },
+        decisionCount: 0,
+        activeRisks: 0,
+        activeBlockers: 0,
+        pendingApprovals: 0,
+        recentActivityCount: 0,
+      };
     }
   }
 

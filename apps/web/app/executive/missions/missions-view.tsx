@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import {
   Bot,
   CheckCircle2,
@@ -13,14 +14,16 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { PageHeader } from "@/components/common/page-header";
 import { cn } from "@/lib/utils";
-import { useState } from "react";
-import type { Mission } from "@/lib/data/executive";
+import type { Mission } from "@/lib/data/executive/types";
+import { useExecutiveMissions } from "@/lib/data/executive/use-executive-queries";
+import { LiveIndicator } from "@/app/executive/live-indicator";
 
 interface Props {
   missions: Mission[];
 }
 
-export function MissionsView({ missions }: Props) {
+export function MissionsView({ missions: initialMissions }: Props) {
+  const { data: missions = initialMissions, isFetching, isStale, dataUpdatedAt } = useExecutiveMissions(initialMissions);
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
   const completed = missions.filter((m) => m.status === "completed");
@@ -52,7 +55,9 @@ export function MissionsView({ missions }: Props) {
       <PageHeader
         title="Mise"
         description="Přehled všech misí — dokončených, neúspěšných i aktivních"
-      />
+      >
+        <LiveIndicator isFetching={isFetching} isStale={isStale} isError={false} dataUpdatedAt={dataUpdatedAt} />
+      </PageHeader>
 
       {missions.length === 0 && (
         <Card>

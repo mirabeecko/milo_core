@@ -12,7 +12,9 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { PageHeader } from "@/components/common/page-header";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import type { Risk, Blocker } from "@/lib/data/executive";
+import type { Risk, Blocker } from "@/lib/data/executive/types";
+import { useExecutiveRisks, useExecutiveBlockers } from "@/lib/data/executive/use-executive-queries";
+import { LiveIndicator } from "@/app/executive/live-indicator";
 
 interface Props {
   risks: Risk[];
@@ -47,7 +49,12 @@ const severityColor = (s: Blocker["severity"]) => {
   }
 };
 
-export function RisksView({ risks, blockers }: Props) {
+export function RisksView({ risks: initialRisks, blockers: initialBlockers }: Props) {
+  const { data: risks = initialRisks, isFetching: risksFetching, isStale: risksStale, dataUpdatedAt: risksAt } = useExecutiveRisks(initialRisks);
+  const { data: blockers = initialBlockers, isFetching: blockersFetching, isStale: blockersStale, dataUpdatedAt: blockersAt } = useExecutiveBlockers(initialBlockers);
+  const isFetching = risksFetching || blockersFetching;
+  const isStale = risksStale || blockersStale;
+  const dataUpdatedAt = Math.max(risksAt, blockersAt);
   const activeBlockers = blockers.filter((b) => b.status === "active");
 
   return (
@@ -55,7 +62,9 @@ export function RisksView({ risks, blockers }: Props) {
       <PageHeader
         title="Risks & Blockers"
         description="Identifikovaná rizika a aktivní blokery — přehled pro Executive Board"
-      />
+      >
+        <LiveIndicator isFetching={isFetching} isStale={isStale} isError={false} dataUpdatedAt={dataUpdatedAt} />
+      </PageHeader>
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <Card>

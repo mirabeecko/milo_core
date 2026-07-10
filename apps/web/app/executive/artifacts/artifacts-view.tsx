@@ -14,7 +14,9 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { PageHeader } from "@/components/common/page-header";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import type { Artifact, Decision } from "@/lib/data/executive";
+import type { Artifact, Decision } from "@/lib/data/executive/types";
+import { useExecutiveArtifacts, useExecutiveDecisions } from "@/lib/data/executive/use-executive-queries";
+import { LiveIndicator } from "@/app/executive/live-indicator";
 
 interface Props {
   artifacts: Artifact[];
@@ -29,13 +31,20 @@ const typeIcons: Record<string, React.ElementType> = {
   report: FileEdit,
 };
 
-export function ArtifactsView({ artifacts, decisions }: Props) {
+export function ArtifactsView({ artifacts: initialArtifacts, decisions: initialDecisions }: Props) {
+  const { data: artifacts = initialArtifacts, isFetching: aFetching, isStale: aStale, dataUpdatedAt: aAt } = useExecutiveArtifacts(initialArtifacts);
+  const { data: decisions = initialDecisions, isFetching: dFetching, isStale: dStale, dataUpdatedAt: dAt } = useExecutiveDecisions(initialDecisions);
+  const isFetching = aFetching || dFetching;
+  const isStale = aStale || dStale;
+  const dataUpdatedAt = Math.max(aAt, dAt);
   return (
     <div className="mx-auto max-w-7xl space-y-6">
       <PageHeader
         title="Artifacts & Decisions"
         description="Dokumenty, rozhodnutí a artefakty vytvořené organizací MiLO"
-      />
+      >
+        <LiveIndicator isFetching={isFetching} isStale={isStale} isError={false} dataUpdatedAt={dataUpdatedAt} />
+      </PageHeader>
 
       <Tabs defaultValue="artifacts" className="w-full">
         <TabsList>
