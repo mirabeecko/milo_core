@@ -745,4 +745,94 @@ export async function executiveRoutes(
       return reply.status(500).send({ error: e.message });
     }
   });
+
+  // ═══════════════════════════════════════════════════════════════════
+  // LIVE AGENT RUNTIME — interaktivní ovládání agentů
+  // ═══════════════════════════════════════════════════════════════════
+
+  // Inicializace všech Control Center agentů do runtime
+  const { getAgents } = await import("@milo/database");
+  const { getAgentRuntime } = await import("./agent-runtime.js");
+  const runtime = getAgentRuntime();
+  try {
+    const ccAgents = await getAgents();
+    for (const a of ccAgents) {
+      runtime.register({
+        id: a.id, slug: a.slug, name: a.name, category: a.category,
+        capabilities: a.category === "executive"
+          ? ["brief", "docker", "projects", "costs", "search", "system", "audit", "mission"]
+          : a.category === "design"
+          ? ["css", "layout", "theming"]
+          : [],
+      });
+    }
+  } catch {}
+
+  /** GET /executive/agents/live — live stav všech agentů */
+  app.get("/executive/agents/live", async (_req, reply) => {
+    const agents = runtime.listAgents().map(a => ({
+      id: a.id, slug: a.slug, name: a.name, category: a.category,
+      status: a.status, startedAt: a.startedAt, currentActivity: a.currentActivity,
+      progress: a.progress, queueSize: a.taskQueue.length, historySize: a.history.length,
+      errorCount: a.errors.filter(e => !e.resolved).length,
+      capabilities: a.capabilities,
+    }));
+    return reply.send({ count: agents.length, agents });
+  });
+
+  /** POST /executive/agents/:id/start */
+  app.post("/executive/agents/:id/start", async (req, reply) => {
+    try {
+      const agent = runtime.start((req.params as any).id);
+      return reply.send({ status: "started", agent: { id: agent.id, name: agent.name, status: agent.status, startedAt: agent.startedAt } });
+    } catch (e: any) { return reply.status(404).send({ error: e.message }); }
+  });
+
+  /** POST /executive/agents/:id/stop */
+  app.post("/executive/agents/:id/stop", async (req, reply) => {
+    try {
+      const agent = runtime.stop((req.params as any).id);
+      return reply.send({ status: "stopped", agent: { id: agent.id, name: agent.name, status: agent.status } });
+    } catch (e: any) { return reply.status(404).send({ error: e.message }); }
+  });
+
+  /** POST /executive/agents/:id/task — zadat úkol */
+  app.post("/executive/agents/:id/task", async (req, reply) => {
+    try {
+      const body = req.body as any;
+      if (!body.title) return reply.status(400).send({ error: "title required" });
+      const task = runtime.assignTask((req.params as any).id, { title: body.title, type: body.type });
+      return reply.status(201).send(task);
+    } catch (e: any) { return reply.status(400).send({ error: e.message }); }
+  });
+
+  /** GET /executive/agents/:id — detail agenta */
+  app.get("/executive/agents/:id", async (req, reply) => {
+    try {
+      const agent = runtime.getAgent((req.params as any).id);
+      return reply.send({
+        ...agent,
+        errors: agent.errors.filter(e => !e.resolved),
+        history: agent.history.slice(-20),
+      });
+    } catch (e: any) { return reply.status(404).send({ error: e.message }); }
+  });
+
+  /** GET /executive/agents/:id/history */
+  app.get("/executive/agents/:id/history", async (req, reply) => {
+    try {
+      const q = req.query as any;
+      const limit = parseInt(q.limit, 10) || 50;
+      const history = runtime.getHistory((req.params as any).id, limit);
+      return reply.send({ count: history.length, history });
+    } catch (e: any) { return reply.status(404).send({ error: e.message }); }
+  });
+
+  /** POST /executive/agents/:id/errors/:errorId/resolve */
+  app.post("/executive/agents/:id/errors/:errorId/resolve", async (req, reply) => {
+    try {
+      runtime.resolveError((req.params as any).id, (req.params as any).errorId);
+      return reply.send({ resolved: true });
+    } catch (e: any) { return reply.status(404).send({ error: e.message }); }
+  });
 }
