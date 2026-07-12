@@ -591,4 +591,158 @@ export async function executiveRoutes(
       summary: "Plná mise: Owner → Chief → ENG → Worker → QA → Completed",
     });
   });
+
+  // ─── Testovací mise s reálnými komponentami ──────────────────────
+
+  /**
+   * POST /executive/test/run
+   * Spustí testovací misi s reálnými executive komponentami.
+   * Body: { mission: "ranní briefing" | "stav systému" | "vyhledej X" | "audit" }
+   */
+  app.post("/executive/test/run", async (req, reply) => {
+    const body = req.body as any;
+    const missionTitle = body?.mission || "stav systému";
+    
+    const results: string[] = [];
+    const errors: string[] = [];
+    
+    const log = (msg: string) => results.push(msg);
+
+    log(`🚀 Testovací mise: "${missionTitle}"`);
+    log(`Čas: ${new Date().toLocaleString("cs-CZ")}`);
+    log("");
+
+    // 1. Docker status
+    try {
+      const { dockerStatus } = await import("./docker-monitor.js");
+      const ds = dockerStatus();
+      log(`🐳 Docker: ${ds.total} kontejnerů, ${ds.healthy} healthy, ${ds.unhealthy} unhealthy`);
+    } catch (e: any) {
+      errors.push(`Docker: ${e.message}`);
+    }
+
+    // 2. Projekty
+    try {
+      const { prioritizeProjects } = await import("./project-prioritizer.js");
+      const pp = prioritizeProjects();
+      log(`📊 Projekty: ${pp.active} aktivních, top: ${pp.top5?.[0]?.name ?? "N/A"}`);
+    } catch (e: any) {
+      errors.push(`Projekty: ${e.message}`);
+    }
+
+    // 3. LLM náklady
+    try {
+      const { llmCosts } = await import("./llm-costs.js");
+      const lc = llmCosts();
+      if (lc.available) {
+        log(`💰 LLM: ${lc.monthly.total_czk} Kč tento měsíc, ${lc.yesterday.calls} volání včera`);
+      } else {
+        log("💰 LLM: cost tracker není dostupný");
+      }
+    } catch (e: any) {
+      errors.push(`LLM costs: ${e.message}`);
+    }
+
+    // 4. System Registry
+    try {
+      const { readFileSync } = await import("node:fs");
+      const { resolve } = await import("node:path");
+      const regPath = resolve(REPO_ROOT, "system-registry.json");
+      const registry = JSON.parse(readFileSync(regPath, "utf-8"));
+      const repoCount = Object.keys(registry.repositories || {}).length;
+      const svcCount = Object.keys(registry.services || {}).length;
+      log(`📋 Registry: ${repoCount} repozitářů, ${svcCount} služeb`);
+    } catch (e: any) {
+      errors.push(`Registry: ${e.message}`);
+    }
+
+    // 5. Vyhledávání (pokud mise obsahuje hledaný výraz)
+    const searchMatch = missionTitle.match(/hledej|vyhledej|najdi|search/i);
+    if (searchMatch) {
+      try {
+        const { unifiedSearch, buildUnifiedIndex } = await import("./unified-search.js");
+        const query = missionTitle.replace(/^(hledej|vyhledej|najdi|search|find)\s+/i, "").trim();
+        try { buildUnifiedIndex(); } catch {}
+        const searchResults = unifiedSearch(query, 5);
+        log(`🔍 Vyhledávání "${query}": ${searchResults.length} výsledků`);
+      } catch (e: any) {
+        errors.push(`Search: ${e.message}`);
+      }
+    }
+
+    // 6. Audit Control Center agentů
+    try {
+      const { getAgents, startAudit } = await import("@milo/database");
+      const agents = await getAgents();
+      log(`🤖 Agenti: ${agents.length} v Control Center`);
+      
+      // Audit prvního agenta s plnou implementací
+      const implAgent = agents.find((a: any) => a.implementation_progress >= 100);
+      if (implAgent) {
+        try {
+          const audit = await startAudit({ agent_id: implAgent.id });
+          log(`✅ Audit ${implAgent.name}: ${audit.verdict} (${audit.findings.length} nálezů)`);
+        } catch (e: any) {
+          errors.push(`Audit: ${e.message}`);
+        }
+      }
+    } catch (e: any) {
+      errors.push(`Control Center: ${e.message}`);
+    }
+
+    // 7. Event log
+    logExecutiveEvent("mission_completed" as any, {
+      mission: missionTitle,
+      results_count: results.length,
+      errors_count: errors.length,
+    });
+
+    return reply.send({
+      mission: missionTitle,
+      status: errors.length === 0 ? "success" : errors.length < results.length / 2 ? "partial" : "failed",
+      results,
+      errors: errors.length > 0 ? errors : undefined,
+      timestamp: new Date().toISOString(),
+    });
+  });
+
+  /**
+   * GET /executive/test/agents
+   * Vrátí stav všech agentů s jejich capability.
+   */
+  app.get("/executive/test/agents", async (_req, reply) => {
+    try {
+      const { getAgents } = await import("@milo/database");
+      const agents = await getAgents();
+      
+      const agentStatus = agents.map((a: any) => ({
+        name: a.name,
+        slug: a.slug,
+        category: a.category,
+        progress: a.implementation_progress,
+        status: a.status,
+        runtime: a.runtime_status,
+        capabilities: a.category === "executive" 
+          ? ["brief", "docker", "projects", "costs", "search", "system", "audit"]
+          : a.category === "design"
+          ? ["css", "layout", "theming"]
+          : [],
+      }));
+
+      return reply.send({
+        count: agentStatus.length,
+        agents: agentStatus,
+        summary: {
+          total: agentStatus.length,
+          executive: agentStatus.filter((a: any) => a.category === "executive").length,
+          design: agentStatus.filter((a: any) => a.category === "design").length,
+          fullyImplemented: agentStatus.filter((a: any) => a.progress >= 100).length,
+          inProgress: agentStatus.filter((a: any) => a.progress > 0 && a.progress < 100).length,
+          specified: agentStatus.filter((a: any) => a.progress === 0).length,
+        },
+      });
+    } catch (e: any) {
+      return reply.status(500).send({ error: e.message });
+    }
+  });
 }

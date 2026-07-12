@@ -123,7 +123,7 @@ export class ExecutionTaskRunner implements TaskRunner {
     }
   }
 
-  private async runStrategy(
+  protected async runStrategy(
     task: AgentTask,
     agent: Agent,
     context: ToolContext,
