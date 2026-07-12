@@ -79,5 +79,35 @@
     "category": "quality",
     "created_at": "2026-07-10T22:35:30.618Z",
     "updated_at": "2026-07-10T22:35:30.618Z"
+  },
+  {
+    "id": "cap-gfx-css-editor",
+    "name": "CSS Editor",
+    "description": "Schopnost upravovat CSS soubory a Tailwind třídy bez ovlivnění logiky",
+    "category": "design",
+    "agent_id": "agent-graphics-001",
+    "status": "specified",
+    "created_at": "2026-07-11T00:00:00.000Z",
+    "updated_at": "2026-07-11T00:00:00.000Z"
+  },
+  {
+    "id": "cap-gfx-layout",
+    "name": "Layout Designer",
+    "description": "Schopnost upravovat rozvržení stránek a komponent pomocí CSS Grid/Flexbox",
+    "category": "design",
+    "agent_id": "agent-graphics-001",
+    "status": "specified",
+    "created_at": "2026-07-11T00:00:00.000Z",
+    "updated_at": "2026-07-11T00:00:00.000Z"
+  },
+  {
+    "id": "cap-gfx-theming",
+    "name": "Theme Manager",
+    "description": "Schopnost spravovat barevná schémata a design tokeny",
+    "category": "design",
+    "agent_id": "agent-graphics-001",
+    "status": "specified",
+    "created_at": "2026-07-11T00:00:00.000Z",
+    "updated_at": "2026-07-11T00:00:00.000Z"
   }
 ]

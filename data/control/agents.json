@@ -117,5 +117,49 @@
     "runtime_status": "offline",
     "created_at": "2026-07-10T22:35:30.615Z",
     "updated_at": "2026-07-10T22:39:59.347Z"
+  },
+  {
+    "id": "agent-graphics-001",
+    "slug": "graphics-agent",
+    "name": "Graphics Agent",
+    "description": "Specializovaný agent pro úpravy grafiky, CSS, rozvržení a vizuálního stylu. Nemůže ovlivnit funkčnost ani logiku aplikace.",
+    "purpose": "Vizuální design a rozvržení",
+    "category": "design",
+    "owner": "ENG",
+    "status": "specified",
+    "lifecycle_status": "specified",
+    "risk_level": "low",
+    "priority": "normal",
+    "implementation_progress": 0,
+    "runtime_status": "offline",
+    "scope": {
+      "allowed_extensions": [
+        ".css",
+        ".scss",
+        ".less",
+        ".module.css",
+        ".svg"
+      ],
+      "allowed_patterns": [
+        "*.css",
+        "*.scss",
+        "*.module.css",
+        "tailwind.config.*",
+        "globals.css",
+        "*.svg"
+      ],
+      "restricted": [
+        "*.ts",
+        "*.tsx",
+        "*.js",
+        "*.jsx",
+        "*.json",
+        "*.sql",
+        "*.env"
+      ],
+      "description": "Pouze vizuální změny — CSS, layout, barvy, fonty, responzivní design. Nikdy nemodifikuje logiku, API volání, datové struktury."
+    },
+    "created_at": "2026-07-11T00:00:00.000Z",
+    "updated_at": "2026-07-11T00:00:00.000Z"
   }
 ]

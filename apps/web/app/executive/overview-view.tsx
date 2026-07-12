@@ -344,7 +344,6 @@ export function DailyCommandCenterView(props: Props) {
                 <div className="flex items-center gap-2">
                   <Sunrise className="h-4 w-4 text-primary" />
                   <span className="text-xs font-medium text-primary">Today&apos;s Brief</span>
-                  {briefing.demo && <Badge variant="outline" className="text-[9px] h-4">demo</Badge>}
                 </div>
                 <button onClick={() => setBriefExpanded(false)} className="text-muted-foreground hover:text-foreground">
                   <ChevronUp className="h-4 w-4" />
@@ -386,7 +385,6 @@ export function DailyCommandCenterView(props: Props) {
                 <div className="flex items-center gap-2 mb-1">
                   <Sunrise className="h-4 w-4 text-primary" />
                   <span className="text-xs font-medium text-primary">Today&apos;s Brief</span>
-                  {briefing.demo && <Badge variant="outline" className="text-[9px] h-4">demo</Badge>}
                   <ChevronDown className="h-3.5 w-3.5 ml-auto text-muted-foreground group-hover:text-foreground" />
                 </div>
                 <p className="text-xs text-muted-foreground line-clamp-2">{briefing.briefing.slice(0, 200)}</p>

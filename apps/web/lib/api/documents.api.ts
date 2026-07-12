@@ -1,4 +1,4 @@
-import { apiClient, useMockData } from "./client";
+import { apiClient } from "./client";
 import type { Document } from "@/lib/types";
 
 interface DriveFileResponse {
@@ -20,19 +20,19 @@ function mapMimeTypeToType(mimeType: string): string {
 }
 
 export async function getDocuments(): Promise<Document[]> {
-  if (useMockData) {
+  try {
+    const response = await apiClient<DriveFileResponse>("/documents");
+    return response.files.map((file) => ({
+      id: file.id,
+      title: file.name,
+      type: mapMimeTypeToType(file.mimeType),
+      source: "drive" as const,
+      date: file.modifiedAt,
+      project: undefined,
+      tags: [],
+      snippet: file.isFolder ? "Google Drive složka" : "Google Drive soubor",
+    }));
+  } catch {
     return [];
   }
-
-  const response = await apiClient<DriveFileResponse>("/documents");
-  return response.files.map((file) => ({
-    id: file.id,
-    title: file.name,
-    type: mapMimeTypeToType(file.mimeType),
-    source: "drive" as const,
-    date: file.modifiedAt,
-    project: undefined,
-    tags: [],
-    snippet: file.isFolder ? "Google Drive složka" : "Google Drive soubor",
-  }));
 }

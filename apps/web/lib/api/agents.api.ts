@@ -1,4 +1,4 @@
-import { apiClient, useMockData } from "./client";
+import { apiClient } from "./client";
 import type { Agent, AgentLogEntry, AgentTask, CalendarAgentState, SecretaryAgentState, DeveloperAgentState, LiveWorkExplanation } from "@/lib/types";
 
 export async function getAgents(): Promise<Agent[]> {

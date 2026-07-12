@@ -1,9 +1,8 @@
-import { apiClient, useMockData } from "./client";
+import { apiClient } from "./client";
 import type { ObsidianNote, ObsidianStatus } from "@/lib/types";
 
 export interface ObsidianListResponse {
   notes: ObsidianNote[];
-  demo?: boolean;
 }
 
 export interface ObsidianSearchResponse {
@@ -12,69 +11,58 @@ export interface ObsidianSearchResponse {
 }
 
 export async function getObsidianNotes(query?: string, maxResults = 50): Promise<ObsidianNote[]> {
-  if (useMockData) {
-    return [];
-  }
-
   const params = new URLSearchParams();
   if (query) params.set("q", query);
   params.set("maxResults", String(maxResults));
-  const response = await apiClient<ObsidianListResponse>(`/knowledge/obsidian?${params.toString()}`);
-  return response.notes;
+  try {
+    const response = await apiClient<ObsidianListResponse>(`/knowledge/obsidian?${params.toString()}`);
+    return response.notes;
+  } catch {
+    return [];
+  }
 }
 
 export async function searchObsidian(query: string): Promise<ObsidianNote[]> {
-  if (useMockData) {
+  try {
+    const response = await apiClient<ObsidianSearchResponse>(
+      `/knowledge/search?q=${encodeURIComponent(query)}`,
+    );
+    return response.notes;
+  } catch {
     return [];
   }
-
-  const response = await apiClient<ObsidianSearchResponse>(
-    `/knowledge/search?q=${encodeURIComponent(query)}`,
-  );
-  return response.notes;
 }
 
 export async function getObsidianNote(id: string): Promise<ObsidianNote | null> {
-  if (useMockData) {
+  try {
+    const response = await apiClient<{ note: ObsidianNote }>(`/knowledge/obsidian/${id}`);
+    return response.note;
+  } catch {
     return null;
   }
-
-  const response = await apiClient<{ note: ObsidianNote }>(`/knowledge/obsidian/${id}`);
-  return response.note;
 }
 
 export async function reindexObsidian(): Promise<{ indexed: number }> {
-  if (useMockData) {
+  try {
+    return apiClient<{ indexed: number }>("/knowledge/index", { method: "POST" });
+  } catch {
     return { indexed: 0 };
   }
-
-  return apiClient<{ indexed: number }>("/knowledge/index", { method: "POST" });
 }
 
 export async function getObsidianStatus(): Promise<ObsidianStatus> {
-  if (useMockData) {
+  try {
+    return apiClient<ObsidianStatus>("/knowledge/settings/obsidian");
+  } catch {
     return {
       configured: false,
-      demo: true,
       noteCount: 0,
-      message: "Obsidian vault není nakonfigurován",
+      message: "Obsidian API není dostupné",
     };
   }
-
-  return apiClient<ObsidianStatus>("/knowledge/settings/obsidian");
 }
 
 export async function setObsidianVaultPath(vaultPath: string): Promise<ObsidianStatus> {
-  if (useMockData) {
-    return {
-      configured: true,
-      demo: false,
-      vaultPath,
-      noteCount: 0,
-      indexedAt: new Date().toISOString(),
-    };
-  }
-
   return apiClient<ObsidianStatus>("/knowledge/settings/obsidian", {
     method: "POST",
     body: JSON.stringify({ vaultPath }),

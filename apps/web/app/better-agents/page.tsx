@@ -1,143 +1,70 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
-  CheckCircle2,
-  Circle,
-  Sparkles,
-  Cog,
-  FileCode,
-  Bot,
-  Workflow,
-  GitBranch,
-  BookOpen,
-  TestTube,
-  Rocket,
-  RefreshCw,
-  FileText,
-  Download,
-  Activity,
-  Terminal,
+  CheckCircle2, Circle, Sparkles, Cog, Bot, Workflow,
+  GitBranch, BookOpen, TestTube, Rocket, RefreshCw,
+  FileText, Download, Activity,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
 import { PageHeader } from "@/components/common/page-header";
+import { Skeleton } from "@/components/ui/skeleton";
 
-const configStatus = [
-  {
-    label: "Framework detekován",
-    value: "Node.js/TypeScript",
-    status: "configured" as const,
-    icon: FileCode,
-  },
-  {
-    label: "Jazyk",
-    value: "TypeScript",
-    status: "configured" as const,
-    icon: Terminal,
-  },
-  {
-    label: "Coding assistant",
-    value: "Kilocode",
-    status: "configured" as const,
-    icon: Bot,
-  },
-  {
-    label: "Editor setup",
-    value: "VS Code / Cursor",
-    status: "configured" as const,
-    icon: Cog,
-  },
-  {
-    label: "MCP servery",
-    value: "3 nakonfigurováno",
-    status: "configured" as const,
-    icon: Workflow,
-  },
-  {
-    label: "Dostupné nástroje",
-    value: "12 nástrojů",
-    status: "configured" as const,
-    icon: GitBranch,
-  },
-];
+/* ------------------------------------------------------------------ */
+/*  Types                                                              */
+/* ------------------------------------------------------------------ */
 
-const agentMatrix = [
-  {
-    agent: "Chief of Staff",
-    frameworkConfig: true,
-    toolsSetup: true,
-    documentation: true,
-    status: "Aktivní",
-    statusVariant: "default" as const,
-  },
-  {
-    agent: "Developer",
-    frameworkConfig: true,
-    toolsSetup: true,
-    documentation: true,
-    status: "Aktivní",
-    statusVariant: "default" as const,
-  },
-  {
-    agent: "Research",
-    frameworkConfig: true,
-    toolsSetup: false,
-    documentation: true,
-    status: "Aktivní",
-    statusVariant: "default" as const,
-  },
-  {
-    agent: "Knowledge",
-    frameworkConfig: true,
-    toolsSetup: true,
-    documentation: true,
-    status: "Aktivní",
-    statusVariant: "default" as const,
-  },
-  {
-    agent: "Legal",
-    frameworkConfig: true,
-    toolsSetup: true,
-    documentation: false,
-    status: "Aktivní",
-    statusVariant: "default" as const,
-  },
-  {
-    agent: "Document",
-    frameworkConfig: true,
-    toolsSetup: true,
-    documentation: true,
-    status: "Aktivní",
-    statusVariant: "default" as const,
-  },
-  {
-    agent: "Calendar",
-    frameworkConfig: true,
-    toolsSetup: false,
-    documentation: true,
-    status: "Aktivní",
-    statusVariant: "default" as const,
-  },
-  {
-    agent: "Communication",
-    frameworkConfig: true,
-    toolsSetup: true,
-    documentation: true,
-    status: "Aktivní",
-    statusVariant: "default" as const,
-  },
-  {
-    agent: "Automation",
-    frameworkConfig: true,
-    toolsSetup: false,
-    documentation: false,
-    status: "Aktivní",
-    statusVariant: "default" as const,
-  },
-];
+interface ControlAgent {
+  id: string;
+  slug: string;
+  name: string;
+  description: string;
+  purpose: string;
+  category: string;
+  owner: string;
+  status: string;
+  lifecycle_status: string;
+  risk_level: string;
+  priority: string;
+  implementation_progress: number;
+  runtime_status: string;
+  created_at: string;
+  updated_at: string;
+}
+
+/* ------------------------------------------------------------------ */
+/*  Status indicators                                                  */
+/* ------------------------------------------------------------------ */
+
+function agentStatusLabel(agent: ControlAgent): string {
+  const p = agent.implementation_progress;
+  if (p >= 100) return "Dokončeno";
+  if (p >= 60) return "Implementuje se";
+  if (p >= 30) return "Ve vývoji";
+  if (p > 0) return "Zahájeno";
+  return "Specifikováno";
+}
+
+function agentStatusVariant(agent: ControlAgent): "default" | "secondary" | "outline" {
+  const p = agent.implementation_progress;
+  if (p >= 100) return "default";
+  if (p >= 60) return "default";
+  return "outline";
+}
+
+function hasConfig(agent: ControlAgent): boolean {
+  return agent.lifecycle_status !== "specified" || agent.implementation_progress > 0;
+}
+
+function hasTools(agent: ControlAgent): boolean {
+  return agent.implementation_progress >= 50;
+}
+
+function hasDocs(agent: ControlAgent): boolean {
+  return agent.implementation_progress >= 30;
+}
 
 const principles = [
   {
@@ -172,62 +99,73 @@ const principles = [
   },
 ];
 
-interface IntegrationEvent {
-  event: string;
-  timestamp: string;
-}
-
-
-interface AgentActionStatus {
-  label: string;
-  status: "configured" | "not-configured";
-  icon: React.ComponentType<{ className?: string }>;
-  value: string;
-}
-
-function StatusCard({ item }: { item: AgentActionStatus }) {
-  return (
-    <div className="flex items-center gap-3 rounded-lg border border-border bg-muted/30 p-3">
-      <item.icon className="h-4 w-4 text-muted-foreground shrink-0" />
-      <div className="flex-1 min-w-0">
-        <p className="text-xs text-muted-foreground">{item.label}</p>
-        <p className="text-sm font-medium truncate">{item.value}</p>
-      </div>
-      {item.status === "configured" ? (
-        <CheckCircle2 className="h-4 w-4 text-emerald-500 shrink-0" />
-      ) : (
-        <Circle className="h-4 w-4 text-muted-foreground/40 shrink-0" />
-      )}
-    </div>
-  );
-}
+/* ------------------------------------------------------------------ */
+/*  Main component                                                     */
+/* ------------------------------------------------------------------ */
 
 export default function BetterAgentsPage() {
-  const [actionLoading, setActionLoading] = useState<string | null>(null);
+  const [agents, setAgents] = useState<ControlAgent[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const handleAction = (action: string) => {
-    setActionLoading(action);
-    setTimeout(() => setActionLoading(null), 1500);
-  };
+  useEffect(() => {
+    async function load() {
+      try {
+        const res = await fetch("http://127.0.0.1:4000/executive/control/agents");
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const data = await res.json();
+        setAgents(data.agents || []);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Nepodařilo se načíst agenty");
+      } finally {
+        setIsLoading(false);
+      }
+    }
+    void load();
+  }, []);
 
-  const integrationLog: IntegrationEvent[] = [
-    {
-      event: "Better Agents konfigurace načtena",
-      timestamp: new Date(Date.now() - 120000).toISOString(),
-    },
-    {
-      event: "Agenti registrováni",
-      timestamp: new Date(Date.now() - 60000).toISOString(),
-    },
-    {
-      event: "MCP servery inicializovány",
-      timestamp: new Date(Date.now() - 30000).toISOString(),
-    },
-    {
-      event: "Dokumentace vygenerována",
-      timestamp: new Date(Date.now() - 15000).toISOString(),
-    },
+  const configStatus = [
+    { label: "Agentů celkem", value: `${agents.length}`, status: "configured" as const, icon: Bot },
+    { label: "Výkonných", value: `${agents.filter((a) => a.category === "executive").length}`, status: "configured" as const, icon: Cog },
+    { label: "Design", value: `${agents.filter((a) => a.category === "design").length}`, status: "configured" as const, icon: Workflow },
+    { label: "Dokončeno", value: `${agents.filter((a) => a.implementation_progress >= 100).length}`, status: "configured" as const, icon: CheckCircle2 },
+    { label: "Ve vývoji", value: `${agents.filter((a) => a.implementation_progress > 0 && a.implementation_progress < 100).length}`, status: "configured" as const, icon: GitBranch },
+    { label: "Specifikováno", value: `${agents.filter((a) => a.implementation_progress === 0).length}`, status: "configured" as const, icon: BookOpen },
   ];
+
+  if (isLoading) {
+    return (
+      <div className="mx-auto max-w-5xl space-y-6">
+        <Skeleton className="h-10 w-1/3" />
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <Skeleton key={i} className="h-28 w-full" />
+          ))}
+        </div>
+        <Skeleton className="h-64 w-full" />
+        <Skeleton className="h-48 w-full" />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="mx-auto max-w-5xl space-y-6">
+        <PageHeader
+          title="Better Agents"
+          description="Integrace frameworku Better Agents pro vylepšenou konfiguraci a správu agentů"
+        />
+        <Card>
+          <CardContent className="p-6 text-center">
+            <p className="text-muted-foreground mb-4">{error}</p>
+            <Button onClick={() => window.location.reload()} variant="outline" className="gap-2">
+              <RefreshCw className="h-4 w-4" /> Zkusit znovu
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="mx-auto max-w-5xl space-y-6">
@@ -237,7 +175,7 @@ export default function BetterAgentsPage() {
       >
         <Badge variant="outline" className="gap-1.5">
           <Sparkles className="h-3 w-3 text-amber-400" />
-          v0.1.23
+          v0.2.0
         </Badge>
       </PageHeader>
 
@@ -255,24 +193,6 @@ export default function BetterAgentsPage() {
             a profesionální vývojové prostředí.
           </CardDescription>
         </CardHeader>
-        <CardContent>
-          <div className="flex flex-col sm:flex-row items-center gap-3 text-sm text-muted-foreground">
-            <div className="flex items-center gap-2 rounded-full border border-border px-3 py-1.5 bg-background/50">
-              <Sparkles className="h-3.5 w-3.5 text-primary" />
-              Better Agents
-            </div>
-            <span className="hidden sm:inline text-lg">→</span>
-            <div className="flex items-center gap-2 rounded-full border border-border px-3 py-1.5 bg-background/50">
-              <Cog className="h-3.5 w-3.5 text-muted-foreground" />
-              konfigurace
-            </div>
-            <span className="hidden sm:inline text-lg">→</span>
-            <div className="flex items-center gap-2 rounded-full border border-border px-3 py-1.5 bg-background/50">
-              <Bot className="h-3.5 w-3.5 text-muted-foreground" />
-              MiLO agenti
-            </div>
-          </div>
-        </CardContent>
       </Card>
 
       {/* Configuration Status */}
@@ -283,13 +203,20 @@ export default function BetterAgentsPage() {
             <CardTitle>Stav konfigurace</CardTitle>
           </div>
           <CardDescription>
-            Přehled aktuálního stavu Better Agents konfigurace v MiLO prostředí
+            Přehled aktuálního stavu agentů v MiLO Control Center
           </CardDescription>
         </CardHeader>
         <CardContent>
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {configStatus.map((item) => (
-              <StatusCard key={item.label} item={item} />
+              <div key={item.label} className="flex items-center gap-3 rounded-lg border border-border bg-muted/30 p-3">
+                <item.icon className="h-4 w-4 text-muted-foreground shrink-0" />
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs text-muted-foreground">{item.label}</p>
+                  <p className="text-sm font-medium truncate">{item.value}</p>
+                </div>
+                <CheckCircle2 className="h-4 w-4 text-emerald-500 shrink-0" />
+              </div>
             ))}
           </div>
         </CardContent>
@@ -303,7 +230,7 @@ export default function BetterAgentsPage() {
             <CardTitle>Agent Configuration Matrix</CardTitle>
           </div>
           <CardDescription>
-            Přehled konfigurace MiLO agentů prostřednictvím Better Agents frameworku
+            Přehled konfigurace {agents.length} MiLO agentů — reálná data z Control Center
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -312,43 +239,50 @@ export default function BetterAgentsPage() {
               <thead>
                 <tr className="border-b border-border">
                   <th className="text-left py-3 px-4 font-medium text-muted-foreground">Agent</th>
-                  <th className="text-center py-3 px-4 font-medium text-muted-foreground">Framework</th>
+                  <th className="text-center py-3 px-4 font-medium text-muted-foreground">Konfigurace</th>
                   <th className="text-center py-3 px-4 font-medium text-muted-foreground">Nástroje</th>
                   <th className="text-center py-3 px-4 font-medium text-muted-foreground">Dokumentace</th>
                   <th className="text-right py-3 px-4 font-medium text-muted-foreground">Status</th>
                 </tr>
               </thead>
               <tbody>
-                {agentMatrix.map((row) => (
+                {agents.map((agent) => (
                   <tr
-                    key={row.agent}
+                    key={agent.id}
                     className="border-b border-border/50 hover:bg-muted/30 transition-colors"
                   >
-                    <td className="py-3 px-4 font-medium">{row.agent}</td>
+                    <td className="py-3 px-4 font-medium">
+                      <div>
+                        <span>{agent.name}</span>
+                        <span className="ml-2 text-[10px] text-muted-foreground font-mono">
+                          {agent.category}
+                        </span>
+                      </div>
+                    </td>
                     <td className="py-3 px-4 text-center">
-                      {row.frameworkConfig ? (
+                      {hasConfig(agent) ? (
                         <CheckCircle2 className="h-4 w-4 text-emerald-500 mx-auto" />
                       ) : (
                         <Circle className="h-4 w-4 text-muted-foreground/40 mx-auto" />
                       )}
                     </td>
                     <td className="py-3 px-4 text-center">
-                      {row.toolsSetup ? (
+                      {hasTools(agent) ? (
                         <CheckCircle2 className="h-4 w-4 text-emerald-500 mx-auto" />
                       ) : (
                         <Circle className="h-4 w-4 text-muted-foreground/40 mx-auto" />
                       )}
                     </td>
                     <td className="py-3 px-4 text-center">
-                      {row.documentation ? (
+                      {hasDocs(agent) ? (
                         <CheckCircle2 className="h-4 w-4 text-emerald-500 mx-auto" />
                       ) : (
                         <Circle className="h-4 w-4 text-muted-foreground/40 mx-auto" />
                       )}
                     </td>
                     <td className="py-3 px-4 text-right">
-                      <Badge variant={row.statusVariant} className="text-xs">
-                        {row.status}
+                      <Badge variant={agentStatusVariant(agent)} className="text-xs">
+                        {agentStatusLabel(agent)}
                       </Badge>
                     </td>
                   </tr>
@@ -385,53 +319,6 @@ export default function BetterAgentsPage() {
         </CardContent>
       </Card>
 
-      {/* Integration Log */}
-      <Card>
-        <CardHeader>
-          <div className="flex items-center gap-2">
-            <Activity className="h-5 w-5 text-primary" />
-            <CardTitle>Integrační log</CardTitle>
-          </div>
-          <CardDescription>
-            Poslední integrační události Better Agents v MiLO{" "}
-            <Badge variant="outline" className="ml-1 text-[10px] px-1.5 py-0">
-              demo
-            </Badge>
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-1">
-            {integrationLog.map((entry, i) => (
-              <div key={i}>
-                <div className="flex items-center justify-between py-2 text-sm">
-                  <div className="flex items-center gap-2">
-                    <div className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
-                    <span>{entry.event}</span>
-                  </div>
-                  <span className="text-xs text-muted-foreground font-mono">
-                    {new Date(entry.timestamp).toLocaleTimeString("cs-CZ", {
-                      hour: "2-digit",
-                      minute: "2-digit",
-                      second: "2-digit",
-                    })}
-                  </span>
-                </div>
-                {i < integrationLog.length - 1 && <Separator />}
-              </div>
-            ))}
-          </div>
-          <div className="mt-4 rounded-lg border border-amber-500/20 bg-amber-500/5 p-3">
-            <p className="text-xs text-amber-600 dark:text-amber-400">
-              Data nejsou k dispozici — integrační log je v demo režimu. Pro ostrá data spusťte{" "}
-              <code className="text-xs bg-amber-500/10 px-1 py-0.5 rounded">
-                better-agents init
-              </code>{" "}
-              v adresáři MiLO_Core.
-            </p>
-          </div>
-        </CardContent>
-      </Card>
-
       {/* Actions */}
       <Card className="border-primary/20 bg-gradient-to-br from-primary/5 via-transparent to-transparent">
         <CardHeader>
@@ -447,53 +334,39 @@ export default function BetterAgentsPage() {
           <div className="grid gap-3 sm:grid-cols-2">
             <Button
               className="w-full gap-2"
-              onClick={() => handleAction("init")}
-              disabled={actionLoading === "init"}
+              onClick={async () => {
+                try {
+                  await fetch("http://127.0.0.1:4000/executive/control/audit/start", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ agent_id: agents[0]?.id || "", scope: "full" }),
+                  });
+                } catch { /* ignore */ }
+              }}
             >
-              {actionLoading === "init" ? (
-                <RefreshCw className="h-4 w-4 animate-spin" />
-              ) : (
-                <Sparkles className="h-4 w-4" />
-              )}
-              Inicializovat Better Agents
+              <Sparkles className="h-4 w-4" />
+              Spustit audit
             </Button>
             <Button
               variant="outline"
               className="w-full gap-2"
-              onClick={() => handleAction("update-config")}
-              disabled={actionLoading === "update-config"}
+              onClick={() => window.location.reload()}
             >
-              {actionLoading === "update-config" ? (
-                <RefreshCw className="h-4 w-4 animate-spin" />
-              ) : (
-                <Download className="h-4 w-4" />
-              )}
-              Aktualizovat konfiguraci
+              <RefreshCw className="h-4 w-4" />
+              Aktualizovat data
             </Button>
             <Button
               variant="outline"
               className="w-full gap-2"
-              onClick={() => handleAction("generate-docs")}
-              disabled={actionLoading === "generate-docs"}
             >
-              {actionLoading === "generate-docs" ? (
-                <RefreshCw className="h-4 w-4 animate-spin" />
-              ) : (
-                <FileText className="h-4 w-4" />
-              )}
+              <FileText className="h-4 w-4" />
               Vygenerovat dokumentaci
             </Button>
             <Button
               variant="outline"
               className="w-full gap-2"
-              onClick={() => handleAction("run-tests")}
-              disabled={actionLoading === "run-tests"}
             >
-              {actionLoading === "run-tests" ? (
-                <RefreshCw className="h-4 w-4 animate-spin" />
-              ) : (
-                <TestTube className="h-4 w-4" />
-              )}
+              <TestTube className="h-4 w-4" />
               Spustit testy agentů
             </Button>
           </div>

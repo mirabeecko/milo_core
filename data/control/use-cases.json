@@ -142,5 +142,41 @@
     "implementation_status": "not_started",
     "created_at": "2026-07-10T22:35:30.617Z",
     "updated_at": "2026-07-10T22:35:30.617Z"
+  },
+  {
+    "id": "uc-gfx-style-update",
+    "slug": "style-update",
+    "name": "Aktualizace vizuálního stylu",
+    "description": "Změna barev, fontů, rozvržení komponent dle požadavků",
+    "category": "design",
+    "agent_id": "agent-graphics-001",
+    "status": "draft",
+    "implementation_status": "not_started",
+    "created_at": "2026-07-11T00:00:00.000Z",
+    "updated_at": "2026-07-11T00:00:00.000Z"
+  },
+  {
+    "id": "uc-gfx-responsive-fix",
+    "slug": "responsive-fix",
+    "name": "Oprava responzivního designu",
+    "description": "Úprava CSS media queries pro mobilní/tablet zobrazení",
+    "category": "design",
+    "agent_id": "agent-graphics-001",
+    "status": "draft",
+    "implementation_status": "not_started",
+    "created_at": "2026-07-11T00:00:00.000Z",
+    "updated_at": "2026-07-11T00:00:00.000Z"
+  },
+  {
+    "id": "uc-gfx-dark-mode",
+    "slug": "dark-mode",
+    "name": "Implementace dark mode",
+    "description": "Přidání dark mode varianty do existujících komponent",
+    "category": "design",
+    "agent_id": "agent-graphics-001",
+    "status": "draft",
+    "implementation_status": "not_started",
+    "created_at": "2026-07-11T00:00:00.000Z",
+    "updated_at": "2026-07-11T00:00:00.000Z"
   }
 ]

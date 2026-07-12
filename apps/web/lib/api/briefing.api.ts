@@ -1,4 +1,4 @@
-import { apiClient, useMockData } from "./client";
+import { apiClient } from "./client";
 
 export interface BriefingResponse {
   briefing: string;
@@ -6,9 +6,9 @@ export interface BriefingResponse {
 }
 
 export async function generateBriefing(): Promise<BriefingResponse> {
-  if (useMockData) {
-    return { briefing: "Briefing není k dispozici — připojte AI provider.", demo: true };
+  try {
+    return apiClient<BriefingResponse>("/briefing");
+  } catch {
+    return { briefing: "Briefing API není dostupné.", demo: true };
   }
-
-  return apiClient<BriefingResponse>("/briefing");
 }
