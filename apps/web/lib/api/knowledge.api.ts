@@ -56,6 +56,7 @@ export async function getObsidianStatus(): Promise<ObsidianStatus> {
   } catch {
     return {
       configured: false,
+      demo: false,
       noteCount: 0,
       message: "Obsidian API není dostupné",
     };
