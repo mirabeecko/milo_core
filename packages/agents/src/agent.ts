@@ -1,4 +1,5 @@
 import type { ToolRegistry } from "@milo/tools";
+import type { ModelRouter } from "@milo/ai";
 import type { AgentMemory } from "./memory/index.js";
 import type {
   Agent,
@@ -46,6 +47,7 @@ export interface AgentEntityDeps {
   };
   scheduler?: AgentScheduler;
   backgroundRunner?: BackgroundRunner;
+  aiRouter?: ModelRouter;
   config: AgentRuntimeConfig;
   vaultPath?: string;
   projectPath?: string;
@@ -200,6 +202,7 @@ export class AgentEntityImpl implements AgentEntity {
   }
 
   async runTask(task: AgentTask): Promise<void> {
+    process.stdout.write(`[AGENT] runTask START: ${task.id} agent=${this.id} status=${this.status}`);
     if (AgentStateMachine.isTerminal(this.status)) {
       throw new Error(`Agent ${this.id} is ${this.status}`);
     }
@@ -209,6 +212,7 @@ export class AgentEntityImpl implements AgentEntity {
     this.runningTasks += 1;
     this.taskProgress = 0;
     await this.transitionTo("working");
+    process.stdout.write(`[AGENT] runTask transitioned to working`);
 
     this.agent.metrics.totalTasks += 1;
 
@@ -235,15 +239,14 @@ export class AgentEntityImpl implements AgentEntity {
     });
 
     await this.emit("agent:task:created", { taskId: task.id, title: task.title });
+    await this.emit("agent:task:started", { taskId: task.id, title: task.title });
 
     const callbacks = this.createTaskCallbacks(task);
     const execute = async () => this.deps.taskRunner.execute(task, this.agent, callbacks);
 
-    const runner = this.deps.backgroundRunner;
     try {
-      const result = runner
-        ? await runner.run(task.id, execute, this.deps.config.taskTimeoutMs)
-        : await execute();
+      process.stdout.write("[AGENT] runTask calling execute directly (no background runner)");
+      const result = await execute();
 
       const completedAt = new Date().toISOString();
       const actualTimeMs = Date.now() - startedAt;
@@ -264,7 +267,7 @@ export class AgentEntityImpl implements AgentEntity {
         completedAt,
         actualTimeMs,
         result: taskResult,
-        log: [...task.log, ...log],
+        log: [...(task.log ?? []), ...log],
         toolCalls: [...(task.toolCalls ?? []), ...toolCalls],
       });
 
@@ -454,10 +457,11 @@ export class AgentEntityImpl implements AgentEntity {
     return {
       onProgress: (progress: number) => {
         this.taskProgress = progress;
+        void this.emit("agent:task:progress", { taskId: task.id, title: task.title, progress });
       },
       onLog: (entry: TaskLogEntry) => {
         void this.deps.tasks?.update(task.id, {
-          log: [...task.log, entry],
+          log: [...(task.log ?? []), entry],
         });
       },
       onExplanation: (partial: Partial<LiveWorkExplanation>) => {
