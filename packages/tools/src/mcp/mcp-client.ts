@@ -37,6 +37,11 @@ type JsonRpcMessage = JsonRpcRequest | JsonRpcResponse | JsonRpcNotification;
 
 type TransportSend = (method: string, params?: Record<string, unknown>) => Promise<unknown>;
 
+/** Default timeout for MCP HTTP requests (60s) */
+const MCP_HTTP_TIMEOUT_MS = 60_000;
+/** Default timeout for SSE stream read loop (5min — covers long-running server pushes) */
+const MCP_SSE_READ_TIMEOUT_MS = 300_000;
+
 export class McpClient {
   public readonly config: McpServerConfig;
   private process: ChildProcess | null = null;
@@ -48,9 +53,12 @@ export class McpClient {
   private serverVersion: Record<string, unknown> | null = null;
   private disposable: Array<() => void> = [];
   private transportSend: TransportSend | null = null;
+  /** HTTP request timeout config (overridable via env or constructor in the future) */
+  private httpTimeoutMs: number;
 
   constructor(serverConfig: McpServerConfig) {
     this.config = serverConfig;
+    this.httpTimeoutMs = MCP_HTTP_TIMEOUT_MS;
   }
 
   async connect(): Promise<void> {
@@ -222,7 +230,20 @@ export class McpClient {
       headers["Authorization"] = `Bearer ${this.config.env["API_KEY"]}`;
     }
 
-    const sseResponse = await fetch(`${url}/sse`, { headers: { Accept: "text/event-stream" } });
+    // SSE connection with timeout
+    const sseController = new AbortController();
+    const sseTimer = setTimeout(() => sseController.abort(), this.httpTimeoutMs);
+
+    let sseResponse: Response;
+    try {
+      sseResponse = await fetch(`${url}/sse`, {
+        headers: { Accept: "text/event-stream" },
+        signal: sseController.signal,
+      });
+    } finally {
+      clearTimeout(sseTimer);
+    }
+
     if (!sseResponse.ok) {
       throw new Error(`MCP server "${this.config.name}": SSE endpoint returned ${sseResponse.status}`);
     }
@@ -235,12 +256,19 @@ export class McpClient {
     const reader = body.getReader();
     const decoder = new TextDecoder();
     let buffer = "";
+    let sseReadAborted = false;
+
+    // Global read-loop timeout — aborts if the SSE stream hangs indefinitely
+    const sseReadTimer = setTimeout(() => {
+      sseReadAborted = true;
+      reader.cancel("SSE read loop timeout").catch(() => {});
+    }, MCP_SSE_READ_TIMEOUT_MS);
 
     const readLoop = async () => {
       try {
         while (true) {
           const { done, value } = await reader.read();
-          if (done) break;
+          if (done || sseReadAborted) break;
 
           buffer += decoder.decode(value, { stream: true });
           const lines = buffer.split("\n");
@@ -266,6 +294,8 @@ export class McpClient {
           }
           this.pending.clear();
         }
+      } finally {
+        clearTimeout(sseReadTimer);
       }
     };
 
@@ -284,11 +314,20 @@ export class McpClient {
         params,
       };
 
-      const response = await fetch(url, {
-        method: "POST",
-        headers,
-        body: JSON.stringify(request),
-      });
+      const postController = new AbortController();
+      const postTimer = setTimeout(() => postController.abort(), this.httpTimeoutMs);
+
+      let response: Response;
+      try {
+        response = await fetch(url, {
+          method: "POST",
+          headers,
+          body: JSON.stringify(request),
+          signal: postController.signal,
+        });
+      } finally {
+        clearTimeout(postTimer);
+      }
 
       if (!response.ok) {
         throw new Error(`MCP HTTP POST failed with status ${response.status}`);

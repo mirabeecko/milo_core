@@ -37,7 +37,7 @@ import { phoneTrackerRoutes } from "./modules/phone-tracker/routes.js";
 import { testerRoutes } from "./modules/tester/routes.js";
 
 import { startCronScheduler, stopCronScheduler } from "./services/cron-scheduler.js";
-import { closeRedisClient } from "./infrastructure/redis.js";
+import { closeRedisClient, getRedisClient } from "./infrastructure/redis.js";
 import { startWorkers, type MiloWorkers } from "./infrastructure/workers.js";
 import { closeQueues } from "./queue/index.js";
 import { closeWorkers } from "./queue/workers.js";
@@ -47,6 +47,8 @@ import { closeAgentManager, startAgentManager } from "./modules/agents/manager.j
 import { mcpRoutes, initializeMcpServers, shutdownMcpServers } from "./modules/mcp/routes.js";
 
 const GRACEFUL_SHUTDOWN_TIMEOUT_MS = 5000;
+const DEPENDENCY_RETRY_MAX = 10;
+const DEPENDENCY_RETRY_DELAY_MS = 2000;
 
 let workers: MiloWorkers | null = null;
 
@@ -56,7 +58,44 @@ const app = Fastify({
   },
 });
 
+/**
+ * Wait for Redis (and optionally Postgres) to be available before starting.
+ * In Docker, depends_on only waits for the container to start, not for the
+ * service to be ready. This retry loop bridges that gap and also handles
+ * transient Redis outages on startup.
+ */
+async function waitForDependencies(): Promise<void> {
+  const startTime = Date.now();
+
+  for (let attempt = 1; attempt <= DEPENDENCY_RETRY_MAX; attempt++) {
+    try {
+      const redis = await getRedisClient();
+      if (redis?.isOpen) {
+        app.log.info(`Redis ready after ${attempt} attempt(s) in ${Date.now() - startTime}ms`);
+        return;
+      }
+    } catch {
+      // getRedisClient already logs warnings
+    }
+
+    if (attempt < DEPENDENCY_RETRY_MAX) {
+      app.log.info(
+        `Waiting for dependencies... attempt ${attempt}/${DEPENDENCY_RETRY_MAX}, retrying in ${DEPENDENCY_RETRY_DELAY_MS}ms`,
+      );
+      await new Promise((resolve) => setTimeout(resolve, DEPENDENCY_RETRY_DELAY_MS));
+    }
+  }
+
+  app.log.warn(
+    `Dependencies not available after ${DEPENDENCY_RETRY_MAX} attempts (${Date.now() - startTime}ms) — starting in degraded mode`,
+  );
+}
+
 async function start(): Promise<void> {
+  // Čekej na závislosti (DB, Redis) před startem serveru
+  // Toto řeší Docker race condition, kde depends_on čeká jen na kontejner, ne službu
+  await waitForDependencies();
+
   await app.register(helmet);
   await app.register(cors, {
     origin: config.NODE_ENV === "development",

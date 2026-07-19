@@ -11,15 +11,33 @@ export interface OpenAIConfig {
   apiKey: string;
   baseUrl?: string;
   defaultModel: string;
+  /** Timeout in ms for chat requests (default: 120_000 = 2min) */
+  chatTimeoutMs?: number;
+}
+
+/** Helper: fetch with timeout via AbortController */
+async function fetchWithTimeout(
+  url: string,
+  init: RequestInit,
+  timeoutMs: number,
+): Promise<Response> {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    return await fetch(url, { ...init, signal: controller.signal });
+  } finally {
+    clearTimeout(timer);
+  }
 }
 
 export class OpenAIProvider implements LLMProvider {
   readonly name = "openai";
-  private config: OpenAIConfig;
+  private config: OpenAIConfig & { chatTimeoutMs: number };
 
   constructor(config: OpenAIConfig) {
     this.config = {
       baseUrl: "https://api.openai.com/v1",
+      chatTimeoutMs: 120_000,
       ...config,
     };
   }
@@ -33,14 +51,18 @@ export class OpenAIProvider implements LLMProvider {
       tools: req.tools,
     };
 
-    const res = await fetch(`${this.config.baseUrl}/chat/completions`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${this.config.apiKey}`,
+    const res = await fetchWithTimeout(
+      `${this.config.baseUrl}/chat/completions`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${this.config.apiKey}`,
+        },
+        body: JSON.stringify(body),
       },
-      body: JSON.stringify(body),
-    });
+      this.config.chatTimeoutMs,
+    );
 
     if (!res.ok) {
       const err = await res.text();
@@ -83,47 +105,68 @@ export class OpenAIProvider implements LLMProvider {
       stream: true,
     };
 
-    const res = await fetch(`${this.config.baseUrl}/chat/completions`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${this.config.apiKey}`,
-      },
-      body: JSON.stringify(body),
-    });
+    const streamController = new AbortController();
+    const streamTimeout = setTimeout(
+      () => streamController.abort(),
+      this.config.chatTimeoutMs,
+    );
 
-    if (!res.ok) {
-      const err = await res.text();
-      throw new Error(`OpenAI API error ${res.status}: ${err}`);
-    }
+    let reader: ReadableStreamDefaultReader<Uint8Array> | undefined;
 
-    const reader = res.body?.getReader();
-    if (!reader) throw new Error("No response body");
+    try {
+      const res = await fetchWithTimeout(
+        `${this.config.baseUrl}/chat/completions`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${this.config.apiKey}`,
+          },
+          body: JSON.stringify(body),
+          signal: streamController.signal,
+        },
+        this.config.chatTimeoutMs,
+      );
 
-    const decoder = new TextDecoder();
-    let buffer = "";
+      if (!res.ok) {
+        const err = await res.text();
+        throw new Error(`OpenAI API error ${res.status}: ${err}`);
+      }
 
-    while (true) {
-      const { done, value } = await reader.read();
-      if (done) break;
+      reader = res.body?.getReader();
+      if (!reader) throw new Error("No response body");
 
-      buffer += decoder.decode(value, { stream: true });
-      const lines = buffer.split("\n");
-      buffer = lines.pop() ?? "";
+      const decoder = new TextDecoder();
+      let buffer = "";
 
-      for (const line of lines) {
-        const trimmed = line.trim();
-        if (!trimmed || !trimmed.startsWith("data: ")) continue;
-        const data = trimmed.slice(6);
-        if (data === "[DONE]") return;
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
 
-        try {
-          const parsed = JSON.parse(data);
-          const content = parsed.choices?.[0]?.delta?.content;
-          if (content) yield content;
-        } catch {
-          // ignore parse errors
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split("\n");
+        buffer = lines.pop() ?? "";
+
+        for (const line of lines) {
+          const trimmed = line.trim();
+          if (!trimmed || !trimmed.startsWith("data: ")) continue;
+          const data = trimmed.slice(6);
+          if (data === "[DONE]") return;
+
+          try {
+            const parsed = JSON.parse(data);
+            const content = parsed.choices?.[0]?.delta?.content;
+            if (content) yield content;
+          } catch {
+            // ignore parse errors
+          }
         }
+      }
+    } finally {
+      clearTimeout(streamTimeout);
+      // Cancel reader if the stream was aborted (prevents hanging read lock)
+      if (reader) {
+        try { reader.cancel(); } catch { /* cleanup */ }
       }
     }
   }

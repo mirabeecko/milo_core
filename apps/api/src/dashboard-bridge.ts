@@ -1,10 +1,11 @@
 /**
- * MiLO Dashboard API Bridge — lightweight Express server
+ * MiLO Dashboard API Bridge — lightweight Fastify server
  * 
  * Poskytuje API endpointy pro MiLO dashboard na localhost:3000.
  * Data bere z reálných Hermes sessions a systémových metrik.
  * 
- * Port: 4000
+ * Port: DASHBOARD_PORT env var, default 4001
+ *       (oddělený od hlavního API serveru na 4000, aby nedocházelo ke kolizi EADDRINUSE)
  */
 
 import Fastify from "fastify";
@@ -453,13 +454,14 @@ async function start() {
     });
   }
 
+  const PORT = parseInt(process.env.DASHBOARD_PORT || "4001", 10);
   try {
-    await app.listen({ port: 4000, host: "0.0.0.0" });
-    console.log("✅ MiLO Dashboard API running on http://localhost:4000");
+    await app.listen({ port: PORT, host: "0.0.0.0" });
+    console.log(`✅ MiLO Dashboard API running on http://localhost:${PORT}`);
     console.log(`   ${MOCK_AGENTS.length} agents, control center ready`);
   } catch (err: any) {
     if (err.code === "EADDRINUSE") {
-      console.log("⚠️  Port 4000 already in use — API may already be running");
+      console.log(`⚠️  Port ${PORT} already in use — dashboard may already be running (or try DASHBOARD_PORT env var)`);
     } else {
       console.error("Failed to start:", err.message);
       process.exit(1);
