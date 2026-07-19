@@ -45,11 +45,6 @@ export default function DelegationsPage() {
       <PageHeader
         title="Delegace"
         description="Historie delegování subagentů — použitelnost a užitečnost"
-        actions={
-          <Button variant="outline" size="sm" onClick={fetchData}>
-            <RefreshCw className="w-4 h-4 mr-1" />Obnovit
-          </Button>
-        }
       />
 
       <div className="grid grid-cols-3 gap-4">
