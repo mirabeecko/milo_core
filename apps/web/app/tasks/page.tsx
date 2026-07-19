@@ -298,7 +298,7 @@ export default function TasksPage() {
             const isFailed = task.status === "failed";
             const isCompleted = task.status === "completed";
             const hasLog = (task.log && task.log.length > 0);
-            const hasResult = task.result && (task.result.output || task.result.error);
+            const hasResult = task.result && (((task.result as any).output) || ((task.result as any).error));
 
             return (
               <Card
