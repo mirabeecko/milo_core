@@ -72,7 +72,7 @@ export default function TasksPage() {
         `Původní task selhal: ${task.id}`,
         `Název: ${task.title}`,
         task.description ? `Popis: ${task.description}` : null,
-        task.result?.error ? `Chyba: ${task.result.error}` : null,
+        (task.result as any)?.error ? `Chyba: ${(task.result as any).error}` : null,
         `Vytvořeno: ${task.createdAt}`,
       ].filter(Boolean).join("\n");
 
