@@ -359,11 +359,11 @@ export default function TasksPage() {
                       {/* Meta row */}
                       <div className="mt-2 flex items-center gap-3 flex-wrap text-xs text-muted-foreground">
                         <span>{formatRelative(task.createdAt)}</span>
-                        {task.actualTimeMs != null && (
+                        {(task as any).actualTimeMs != null && (
                           <span className="text-muted-foreground/70">
-                            {task.actualTimeMs < 1000
-                              ? `${task.actualTimeMs}ms`
-                              : `${(task.actualTimeMs / 1000).toFixed(1)}s`}
+                            {(task as any).actualTimeMs < 1000
+                              ? `${(task as any).actualTimeMs}ms`
+                              : `${((task as any).actualTimeMs / 1000).toFixed(1)}s`}
                           </span>
                         )}
                         {(task.toolsUsed || []).length > 0 && (
@@ -419,12 +419,12 @@ export default function TasksPage() {
                                 {new Date(task.completedAt).toLocaleString("cs-CZ")}
                               </div>
                             )}
-                            {task.actualTimeMs != null && (
+                            {(task as any).actualTimeMs != null && (
                               <div>
                                 <span className="font-medium">Trvání: </span>
-                                {task.actualTimeMs < 1000
-                                  ? `${task.actualTimeMs}ms`
-                                  : `${(task.actualTimeMs / 1000).toFixed(1)}s`}
+                                {(task as any).actualTimeMs < 1000
+                                  ? `${(task as any).actualTimeMs}ms`
+                                  : `${((task as any).actualTimeMs / 1000).toFixed(1)}s`}
                               </div>
                             )}
                           </div>
