@@ -5,6 +5,7 @@ import rateLimit from "@fastify/rate-limit";
 import { config } from "./config/index.js";
 import { healthRoutes } from "./modules/health/routes.js";
 import { authRoutes } from "./modules/auth/routes.js";
+import { googleAuthRoutes } from "./modules/auth/google.routes.js";
 import { briefingRoutes } from "./modules/briefing/routes.js";
 import { emailRoutes } from "./modules/email/routes.js";
 import { calendarRoutes } from "./modules/calendar/routes.js";
@@ -29,13 +30,25 @@ import { controlUseCasesRoutes } from "./modules/control/use-cases.js";
 import { controlCapabilitiesRoutes } from "./modules/control/capabilities.js";
 import { weeklyRoutes } from "./modules/weekly/routes.js";
 import { executiveRoutes } from "./modules/executive/routes.js";
+import { exportRoutes } from "./modules/export/routes.js";
+import { activityRoutes } from "./modules/activity/routes.js";
+import { controlCenterRoutes } from "./modules/control-center/routes.js";
+import { phoneTrackerRoutes } from "./modules/phone-tracker/routes.js";
+import { testerRoutes } from "./modules/tester/routes.js";
 
 import { startCronScheduler, stopCronScheduler } from "./services/cron-scheduler.js";
 import { closeRedisClient } from "./infrastructure/redis.js";
-import { closeQueue } from "./infrastructure/queue.js";
+import { startWorkers, type MiloWorkers } from "./infrastructure/workers.js";
+import { closeQueues } from "./queue/index.js";
+import { closeWorkers } from "./queue/workers.js";
+import { startScheduler } from "./queue/scheduler.js";
+import { jobsRoutes } from "./modules/jobs/routes.js";
 import { closeAgentManager, startAgentManager } from "./modules/agents/manager.js";
+import { mcpRoutes, initializeMcpServers, shutdownMcpServers } from "./modules/mcp/routes.js";
 
 const GRACEFUL_SHUTDOWN_TIMEOUT_MS = 5000;
+
+let workers: MiloWorkers | null = null;
 
 const app = Fastify({
   logger: {
@@ -55,6 +68,7 @@ async function start(): Promise<void> {
 
   await app.register(healthRoutes, { prefix: "/" });
   await app.register(authRoutes, { prefix: "/auth" });
+  await app.register(googleAuthRoutes, { prefix: "/auth" });
   await app.register(briefingRoutes, { prefix: "/briefing" });
   await app.register(emailRoutes, { prefix: "/email" });
   await app.register(calendarRoutes, { prefix: "/calendar" });
@@ -79,6 +93,14 @@ async function start(): Promise<void> {
   await app.register(controlAgentsRoutes);
   await app.register(controlUseCasesRoutes);
   await app.register(controlCapabilitiesRoutes);
+  await app.register(controlCenterRoutes, { prefix: "/control-center" });
+  await app.register(phoneTrackerRoutes, { prefix: "/phone-tracker" });
+  await app.register(testerRoutes, { prefix: "/tester" });
+
+  await app.register(jobsRoutes);
+  await app.register(exportRoutes, { prefix: "/export" });
+  await app.register(mcpRoutes, { prefix: "/mcp" });
+  await app.register(activityRoutes);
 
   app.setErrorHandler((error: Error & { statusCode?: number }, _request, reply) => {
     app.log.error({ err: error }, "Unhandled API error");
@@ -90,9 +112,14 @@ async function start(): Promise<void> {
   });
 
   app.addHook("onClose", async () => {
-    stopCronScheduler();
+    await closeWorkers();
+    await closeQueues();
+    await stopCronScheduler();
     await closeAgentManager();
-    await closeQueue();
+    await shutdownMcpServers();
+    if (workers) {
+      await workers.closeAll();
+    }
     await closeRedisClient();
   });
 
@@ -105,12 +132,33 @@ async function start(): Promise<void> {
   }
 
   try {
+    startScheduler();
+    app.log.info("BullMQ scheduler started");
+  } catch (err) {
+    app.log.warn("BullMQ scheduler not started (Redis may be unavailable)");
+  }
+
+  try {
     await startAgentManager();
     app.log.info("Agent manager started");
     startCronScheduler();
     app.log.info("Cron scheduler started");
+    workers = await startWorkers();
+    if (workers.emailWorker) {
+      app.log.info("BullMQ workers started");
+    } else {
+      app.log.warn("BullMQ workers not started (Redis unavailable)");
+    }
   } catch (error) {
     app.log.error({ err: error }, "Failed to start agent manager, continuing without agents");
+  }
+
+  // Initialize MCP servers (optional — won't block startup on failure)
+  try {
+    await initializeMcpServers();
+    app.log.info("MCP servers initialized");
+  } catch (error) {
+    app.log.warn({ err: error }, "Failed to initialize MCP servers, continuing without MCP");
   }
 }
 

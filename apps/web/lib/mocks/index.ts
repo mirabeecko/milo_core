@@ -1,6 +1,7 @@
 import type {
   ActivityLogItem,
   Agent,
+  AgentIcon,
   AgentLogEntry,
   DecisionItem,
   Document,
@@ -34,6 +35,8 @@ export const aiSummary = {
 };
 
 export const recommendation: SystemRecommendation | null = null;
+
+export const demo = true;
 
 export const agents: Agent[] = [];
 
@@ -82,6 +85,7 @@ export function baseAgent(): Agent {
     description: "",
     role: "",
     specialization: "",
+    icon: "bot" as AgentIcon,
     priority: "low" as const,
     status: "offline" as const,
     health: { status: "healthy" as const, lastHeartbeat: now },

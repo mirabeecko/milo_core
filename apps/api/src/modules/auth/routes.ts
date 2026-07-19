@@ -22,6 +22,11 @@ export async function authRoutes(
 ): Promise<void> {
   const authService = new AuthService();
 
+  app.get("/status", async (_request, reply) => {
+    const mode = authService.getAuthMode();
+    return reply.send(mode);
+  });
+
   app.post("/login", async (request, reply) => {
     const parsed = loginSchema.safeParse(request.body);
 

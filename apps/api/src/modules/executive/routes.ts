@@ -23,7 +23,7 @@
  *   GET  /executive/telemetry    — telemetrický kontrakt
  */
 import { FastifyInstance, FastifyPluginOptions } from "fastify";
-import { readFileSync, existsSync } from "node:fs";
+import { readFileSync, writeFileSync, existsSync } from "node:fs";
 import { resolve, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { getAgentManager } from "../agents/manager.js";
@@ -238,6 +238,28 @@ export async function executiveRoutes(
     return reply.send({ mission_id: params.id, events: timeline, count: timeline.length });
   });
 
+  // POST /executive/missions/retry-failed — restart all failed missions
+  app.post("/executive/missions/retry-failed", async (_req, reply) => {
+    const missionsPath = resolve(REPO_ROOT, "apps/api/data/missions.json");
+    if (!existsSync(missionsPath)) {
+      return reply.status(404).send({ error: "missions.json not found" });
+    }
+    const missions = JSON.parse(readFileSync(missionsPath, "utf-8"));
+    let restarted = 0;
+    for (const m of missions) {
+      if (m.status === "failed") {
+        m.status = "pending";
+        restarted++;
+      }
+    }
+    writeFileSync(missionsPath, JSON.stringify(missions, null, 2), "utf-8");
+    logExecutiveEvent("mission_retried", {
+      count: restarted,
+      summary: `Restartováno ${restarted} neúspěšných misí`,
+    });
+    return reply.send({ restarted });
+  });
+
   // ═══════════════════════════════════════════════════════════════════
   // EVENTS (telemetry)
   // ═══════════════════════════════════════════════════════════════════
@@ -437,7 +459,19 @@ export async function executiveRoutes(
       bySource[r.source] = (bySource[r.source] || 0) + 1;
       byType[r.type] = (byType[r.type] || 0) + 1;
     }
-    return reply.send({ query: q, count: results.length, bySource, byType, results });
+
+    // Live Gmail + Calendar bridge
+    let gmailResults: any[] = [];
+    let calResults: any[] = [];
+    try {
+      const { searchGmail, searchCalendar } = await import("./search-routes.js");
+      [gmailResults, calResults] = await Promise.all([searchGmail(q), searchCalendar(q)]);
+      bySource["gmail"] = gmailResults.length;
+      bySource["calendar"] = calResults.length;
+    } catch { /* bridge unavailable */ }
+
+    const all = [...results.map((r: any) => ({ ...r, source: r.source || "milo" })), ...gmailResults, ...calResults];
+    return reply.send({ query: q, count: all.length, bySource, byType, results: all });
   });
 
   // Morning brief trigger + status

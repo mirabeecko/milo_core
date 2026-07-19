@@ -3,7 +3,7 @@ import type { Agent } from "@milo/shared";
 export interface AgentRepository {
   findAll(): Promise<Agent[]>;
   findById(id: string): Promise<Agent | null>;
-  create(agent: Omit<Agent, "createdAt" | "updatedAt">): Promise<Agent>;
+  create(agent: Omit<Agent, "created_at" | "updated_at">): Promise<Agent>;
   update(id: string, partial: Partial<Agent>): Promise<Agent>;
   upsert(agent: Agent): Promise<Agent>;
   delete(id: string): Promise<void>;
@@ -14,7 +14,7 @@ export class InMemoryAgentRepository implements AgentRepository {
 
   async findAll(): Promise<Agent[]> {
     return Array.from(this.agents.values()).sort(
-      (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+      (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
     );
   }
 
@@ -22,9 +22,9 @@ export class InMemoryAgentRepository implements AgentRepository {
     return this.agents.get(id) ?? null;
   }
 
-  async create(agent: Omit<Agent, "createdAt" | "updatedAt">): Promise<Agent> {
+  async create(agent: Omit<Agent, "created_at" | "updated_at">): Promise<Agent> {
     const now = new Date().toISOString();
-    const full: Agent = { ...agent, createdAt: now, updatedAt: now };
+    const full: Agent = { ...agent, created_at: now, updated_at: now };
     this.agents.set(full.id, full);
     return full;
   }
@@ -38,7 +38,7 @@ export class InMemoryAgentRepository implements AgentRepository {
       ...existing,
       ...partial,
       id: existing.id,
-      updatedAt: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
     };
     this.agents.set(id, updated);
     return updated;

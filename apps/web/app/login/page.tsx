@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { createSupabaseClient, isSupabaseConfigured } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -10,7 +11,6 @@ import {
   CardTitle,
   CardDescription,
 } from "@/components/ui/card";
-import { getAccessToken } from "@/lib/api/client";
 import {
   Chrome,
   LogIn,
@@ -23,22 +23,9 @@ import {
   HardDrive,
 } from "lucide-react";
 
-const STORAGE_KEY = "milo:accessToken";
-
-function storeToken(token: string): void {
-  if (typeof window === "undefined") return;
-  localStorage.setItem(STORAGE_KEY, token);
-}
-
-function getStoredToken(): string | null {
-  if (typeof window === "undefined") return null;
-  return localStorage.getItem(STORAGE_KEY);
-}
-
 type OAuthState =
   | { kind: "idle" }
   | { kind: "loading" }
-  | { kind: "processing-callback" }
   | { kind: "error"; message: string }
   | { kind: "not-configured" };
 
@@ -54,120 +41,62 @@ export default function LoginPage() {
   const [state, setState] = useState<OAuthState>({ kind: "idle" });
 
   useEffect(() => {
-    const code = searchParams.get("code");
-    const stateParam = searchParams.get("state");
-    const errorParam = searchParams.get("error");
-
-    if (errorParam) {
-      setState({ kind: "error", message: "Přihlášení bylo zrušeno nebo selhalo." });
+    if (!isSupabaseConfigured) {
+      setState({ kind: "not-configured" });
       return;
     }
 
-    if (code && stateParam) {
-      void handleCallback(code, stateParam);
+    const supabase = createSupabaseClient();
+    if (!supabase) {
+      setState({ kind: "not-configured" });
       return;
     }
 
-    const existingToken = getStoredToken();
-    if (existingToken && existingToken !== "demo-token") {
-      router.replace("/");
-    }
-  }, [searchParams]);
-
-  async function handleCallback(code: string, state: string): Promise<void> {
-    setState({ kind: "processing-callback" });
-
-    try {
-      const res = await fetch(`/api/auth/google/callback?code=${encodeURIComponent(code)}&state=${encodeURIComponent(state)}`, {
-        credentials: "include",
-      });
-
-      if (!res.ok) {
-        const text = await res.text();
-        throw new Error(text || "Nepodařilo se dokončit přihlášení.");
-      }
-
-      const data = (await res.json()) as {
-        access_token?: string;
-        token?: string;
-      };
-
-      const token = data.access_token ?? data.token;
-
-      if (token) {
-        storeToken(token);
+    void supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session) {
         router.replace("/");
-      } else {
-        throw new Error("Server nevrátil přístupový token.");
       }
-    } catch (err) {
-      const message =
-        err instanceof Error ? err.message : "Neznámá chyba při přihlašování.";
+    });
 
-      if (
-        message.includes("not configured") ||
-        message.includes("Není nakonfigurováno") ||
-        message.includes("GOOGLE_CLIENT_ID")
-      ) {
-        setState({ kind: "not-configured" });
-      } else {
-        setState({ kind: "error", message });
+    const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (session) {
+        router.replace("/");
       }
-    }
-  }
+    });
+
+    return () => {
+      listener.subscription.unsubscribe();
+    };
+  }, [router, searchParams]);
 
   async function initiateGoogleLogin(): Promise<void> {
     setState({ kind: "loading" });
 
-    try {
-      const res = await fetch("/api/auth/google?redirect=/login", {
-        credentials: "include",
-      });
+    if (!isSupabaseConfigured) {
+      setState({ kind: "not-configured" });
+      return;
+    }
 
-      if (!res.ok) {
-        const text = await res.text();
-        if (
-          res.status === 501 ||
-          text.includes("not configured") ||
-          text.includes("Není nakonfigurováno")
-        ) {
-          setState({ kind: "not-configured" });
-          return;
-        }
-        throw new Error(text || "Nepodařilo se získat autorizační URL.");
-      }
+    const supabase = createSupabaseClient();
+    if (!supabase) {
+      setState({ kind: "not-configured" });
+      return;
+    }
 
-      const { url } = (await res.json()) as { url: string };
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: "google",
+      options: {
+        redirectTo: `${window.location.origin}/login`,
+      },
+    });
 
-      if (!url) {
-        setState({ kind: "not-configured" });
-        return;
-      }
-
-      window.location.href = url;
-    } catch (err) {
-      if (err instanceof TypeError && err.message === "Failed to fetch") {
-        setState({ kind: "not-configured" });
-        return;
-      }
-      const message =
-        err instanceof Error ? err.message : "Neznámá chyba.";
-      setState({ kind: "error", message });
+    if (error) {
+      setState({ kind: "error", message: error.message });
     }
   }
 
   function renderContent(): JSX.Element {
     switch (state.kind) {
-      case "processing-callback":
-        return (
-          <div className="flex flex-col items-center gap-4 py-8">
-            <Loader2 className="h-8 w-8 animate-spin text-primary" />
-            <p className="text-sm text-muted-foreground">
-              Dokončuji přihlášení...
-            </p>
-          </div>
-        );
-
       case "not-configured":
         return (
           <div className="flex flex-col items-center gap-4 py-4">

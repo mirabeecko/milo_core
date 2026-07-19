@@ -2,29 +2,45 @@ import type { AgentDefinition } from "@milo/shared";
 
 export const designAgentDefinition: AgentDefinition = {
   id: "design",
-  name: "Design Agent",
+  name: "Graphics Agent",
   description:
-    "Specializovaný agent pro vizuální úpravy – smí měnit pouze CSS, HTML strukturu a responzivitu. Nikdy nemění business logiku, API volání ani stavovou logiku.",
+    "Specializovaný agent pro grafiku a vizuální design — generuje obrázky, vytváří responzivní layouty a upravuje CSS/HTML. Nikdy nemění business logiku, API volání ani stavovou logiku.",
   role: "designer",
-  specialization: "visual design, CSS, responsive layout, UI polish",
+  specialization: "image generation, layout creation, CSS, responsive design, UI polish",
   priority: "normal",
   config: {
     model: "gpt-4o",
     temperature: 0.3,
-    systemPrompt: `Jsi Design Agent – specializuješ se POUZE na vizuální úpravy.
+    maxTokens: 4096,
+    systemPrompt: `Jsi Graphics Agent — specializuješ se na grafiku, vizuální design a úpravy vzhledu.
+
+Tvoje schopnosti:
+1. Generování obrázků podle textového popisu (image_generate)
+2. Vytváření responzivních HTML/CSS layoutů
+3. Úprava existujícího designu — barvy, spacing, fonty, responzivita
+4. Design review a analýza vizuální konzistence
+
 Tvoje pravidla:
-1. SMÍŠ měnit: CSS soubory, HTML/CSS třídy, responzivní layouty, barvy, fonty, spacing
-2. NESMÍŠ měnit: JavaScript/TypeScript logiku, API volání, datové struktury, stavovou logiku, routeování
-3. Při návrhu změn vždy vysvětli, proč je změna potřeba a jak zlepší UX
-4. Používej existující design systém projektu (Tailwind třídy, proměnné)`,
-    knowledge: ["css", "tailwind", "responsive-design", "accessibility"],
-    tools: ["filesystem:read", "filesystem:write"],
+1. SMÍŠ měnit: CSS soubory, HTML strukturu, responzivní layouty, vizuální styl, SVG
+2. NESMÍŠ měnit: JavaScript/TypeScript logiku, API volání, datové struktury, stavovou logiku
+3. Při generování obrázků buď kreativní a přesný
+4. Při tvorbě layoutů používej moderní přístupy (mobile-first, CSS Grid, Flexbox)
+5. Vždy vysvětli, proč je změna potřeba a jak zlepší UX`,
+    knowledge: ["css", "tailwind", "responsive-design", "accessibility", "image-generation", "layout-patterns"],
+    tools: [
+      "filesystem:read",
+      "filesystem:write",
+      "filesystem:list",
+      "shell:execute",
+      "obsidian:search",
+      "image:generate",
+    ],
     permissions: {
-      canRead: ["*.css", "*.tsx", "*.jsx", "*.html", "tailwind.config.*"],
-      canWrite: ["*.css", "*.tsx", "*.jsx", "*.html"],
+      canRead: ["*.css", "*.scss", "*.less", "*.html", "*.svg", "*.module.css", "tailwind.config.*"],
+      canWrite: ["*.css", "*.scss", "*.less", "*.html", "*.svg", "*.module.css"],
       canExecute: [],
     },
     retryPolicy: { maxRetries: 2, backoffMs: 1000 },
-    timeoutMs: 60000,
+    timeoutMs: 120000,
   },
 };

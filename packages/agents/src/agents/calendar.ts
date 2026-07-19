@@ -1,7 +1,7 @@
-import type { AgentDefinition, AgentStatus, AgentTask, LiveWorkExplanation } from "@milo/shared";
+import type { AgentDefinition, AgentTask, LiveWorkExplanation } from "@milo/shared";
+import type { AiMessage } from "@milo/ai";
 import { CalendarClient } from "@milo/tools";
 import { AgentEntityImpl } from "../agent.js";
-import { AgentStateMachine } from "../runtime/agent-state-machine.js";
 import type { AgentEntityDeps } from "../agent.js";
 import {
   DefaultCalendarService,
@@ -29,218 +29,17 @@ export interface CalendarAgentState {
   isDemoData?: boolean;
 }
 
-export interface CalendarSimulationStep {
-  status: AgentStatus;
-  progress: number;
-  activity: string;
-  goal: string;
-  reason: string;
-  findings: string;
-  evidence: string[];
-  toolsUsed: string[];
-  nextStep: string;
-  estimatedCompletion: string;
-  risks: string;
-  needsFromUser: string;
-  lastCompletedStep: string;
-  confidence: string;
-  alternativeApproach: string;
-  decision: string;
-  logs: string[];
-}
-
 export class CalendarAgent extends AgentEntityImpl {
-  private simulationInterval?: ReturnType<typeof setInterval>;
-  private runningTick?: Promise<void>;
-  private currentStepIndex = 0;
   private calendarService = new DefaultCalendarService(new MockCalendarProvider());
   private isDemoData = true;
-  private state: CalendarAgentState & { activeTask?: AgentTask; taskHistory: AgentTask[]; pendingQueue: AgentTask[] } = {
+  private state: CalendarAgentState = {
     calendars: [],
     todayEvents: [],
     conflicts: [],
     suggestions: [],
     upcoming: [],
     taskProgress: 0,
-    taskHistory: [],
-    pendingQueue: [],
   };
-
-  private readonly tasks: Omit<AgentTask, "id" | "createdAt">[] = [
-    {
-      title: "Synchronizovat kalendář",
-      description: "Načíst aktuální události z připojených kalendářů.",
-      priority: "high",
-      status: "pending",
-      ownerId: "calendar",
-      ownerType: "agent",
-      source: "schedule",
-      log: [],
-      toolsUsed: ["Calendar Service", "Mock Provider"],
-      citations: [],
-      retryCount: 0,
-      estimateMs: 30000,
-    },
-    {
-      title: "Analyzovat dnešní den",
-      description: "Vyhodnotit vytížení, focus time a kolize.",
-      priority: "high",
-      status: "pending",
-      ownerId: "calendar",
-      ownerType: "agent",
-      source: "dashboard",
-      log: [],
-      toolsUsed: ["Calendar Service", "Analytics"],
-      citations: [],
-      retryCount: 0,
-      estimateMs: 25000,
-    },
-    {
-      title: "Najít kolize a volné bloky",
-      description: "Identifikovat překrývající se události a navrhnout řešení.",
-      priority: "normal",
-      status: "pending",
-      ownerId: "calendar",
-      ownerType: "agent",
-      source: "system",
-      log: [],
-      toolsUsed: ["Calendar Service", "Conflict Detector"],
-      citations: [],
-      retryCount: 0,
-      estimateMs: 20000,
-    },
-    {
-      title: "Generovat doporučení",
-      description: "Vytvořit chytré návrhy pro optimalizaci dne.",
-      priority: "normal",
-      status: "pending",
-      ownerId: "calendar",
-      ownerType: "agent",
-      source: "dashboard",
-      log: [],
-      toolsUsed: ["Calendar Service", "Suggestion Engine"],
-      citations: [],
-      retryCount: 0,
-      estimateMs: 20000,
-    },
-  ];
-
-  private readonly steps: CalendarSimulationStep[] = [
-    {
-      status: "loading_calendar",
-      progress: 15,
-      activity: "Synchronizuji kalendáře a načítám události.",
-      goal: "Mít aktuální data ze všech připojených kalendářů.",
-      reason: "Bez aktuálních dat nemohu plánovat ani detekovat kolize.",
-      findings: "Začínám synchronizaci. Zatím nemám žádné události.",
-      evidence: ["Google Calendar", "Mock Provider"],
-      toolsUsed: ["Calendar Service", "Mock Provider"],
-      nextStep: "Načíst seznam kalendářů a událostí na dnešek.",
-      estimatedCompletion: "Za 5 sekund",
-      risks: "Pokud OAuth není nastaveno, použiji mock data.",
-      needsFromUser: "Nic.",
-      lastCompletedStep: "Přijetí úkolu",
-      confidence: "99 %",
-      alternativeApproach: "Pokud není dostupný Google Calendar, použiji lokální mock provider.",
-      decision: "Synchronizuji přes Calendar Service, který automaticky volí dostupného providera.",
-      logs: ["Začínám synchronizaci kalendáře.", "Připojuji se k dostupnému provideru."],
-    },
-    {
-      status: "analyzing",
-      progress: 40,
-      activity: "Analyzuji dnešní plán a vyhodnocuji vytížení.",
-      goal: "Zjistit, jak je den vytížený a kde jsou volné bloky.",
-      reason: "Uživatel potřebuje přehled, zda má den správné rozložení.",
-      findings: "Načteno {eventCount} událostí. Den je {overloaded}.",
-      evidence: ["Dnešní události", "Kalendáře"],
-      toolsUsed: ["Calendar Service", "Day Analyzer"],
-      nextStep: "Vyhodnotit focus time, deep work a přestávky.",
-      estimatedCompletion: "Za 10 sekund",
-      risks: "Mock data nemusí plně odpovídat reálnému kalendáři.",
-      needsFromUser: "Nic.",
-      lastCompletedStep: "Synchronizace kalendáře",
-      confidence: "96 %",
-      alternativeApproach: "Pokud chybí data, navrhnu strukturovaný plán bez konkrétních událostí.",
-      decision: "Použiji dnešní datum jako základ analýzy.",
-      logs: ["Načítám dnešní události.", "Počítám celkový čas schůzek."],
-    },
-    {
-      status: "analyzing",
-      progress: 60,
-      activity: "Kontroluji kolize a hledám volné termíny.",
-      goal: "Odhalit konflikty a nabídnout řešení.",
-      reason: "Kolize mohou způsobit zmeškané schůzky a zmatek.",
-      findings: "Nalezeno {conflictCount} kolizí a {freeSlotCount} vhodných volných bloků.",
-      evidence: ["Dnešní události", "Conflict Detector"],
-      toolsUsed: ["Calendar Service", "Conflict Detector", "Free Slot Finder"],
-      nextStep: "Generovat konkrétní doporučení pro uživatele.",
-      estimatedCompletion: "Za 8 sekund",
-      risks: "Překrývající se události vyžadují ruční potvrzení přesunu.",
-      needsFromUser: "Nic.",
-      lastCompletedStep: "Analýza vytížení",
-      confidence: "94 %",
-      alternativeApproach: "Pokud nelze najít volný slot, navrhnu přesun na jiný den.",
-      decision: "Kritické kolize řeším jako první, pak volné bloky.",
-      logs: ["Kontroluji překrývající se události.", "Hledám volné bloky pro focus time."],
-    },
-    {
-      status: "scheduling",
-      progress: 80,
-      activity: "Připravuji doporučení a optimalizuji plán.",
-      goal: "Vytvořit akcionabilní návrhy pro lepší rozložení dne.",
-      reason: "Doporučení šetří čas a zlepšují produktivitu.",
-      findings: "Připraveno {suggestionCount} doporučení včetně focus time a řešení kolizí.",
-      evidence: ["Analýza dne", "Nalezené kolize", "Volne bloky"],
-      toolsUsed: ["Calendar Service", "Suggestion Engine"],
-      nextStep: "Předat výsledek Chief of Staff a zobrazit v dashboardu.",
-      estimatedCompletion: "Za 5 sekund",
-      risks: "Některá doporučení mohou vyžadovat potvrzení uživatele.",
-      needsFromUser: "Nic.",
-      lastCompletedStep: "Detekce kolizí",
-      confidence: "97 %",
-      alternativeApproach: "Pokud uživatel má vlastní preference, upřednostním je před automatickým návrhem.",
-      decision: "Navrhuji přesun kolize, rezervaci focus time a deep work.",
-      logs: ["Generuji doporučení.", "Kontroluji preference uživatele."],
-    },
-    {
-      status: "reviewing",
-      progress: 95,
-      activity: "Kontroluji kvalitu plánu a finalizuji výstup.",
-      goal: "Mít jistotu, že plán je konzistentní a užitečný.",
-      reason: "Nechci uživateli navrhnout plán, který by mu spíše uškodil.",
-      findings: "Plán je připraven. Produktivní skóre dne je {productivityScore} %.",
-      evidence: ["Finalizovaný plán", "Doporučení"],
-      toolsUsed: ["Calendar Service", "Quality Check"],
-      nextStep: "Uložit výsledek a přejít do stavu čekání.",
-      estimatedCompletion: "Za 2 sekundy",
-      risks: "Žádná.",
-      needsFromUser: "Nic.",
-      lastCompletedStep: "Generování doporučení",
-      confidence: "99 %",
-      alternativeApproach: "Pokud skóre je nízké, navrhnu další úpravy.",
-      decision: "Výstup je připraven k prezentaci.",
-      logs: ["Kontroluji kvalitu plánu.", "Finalizuji výstup."],
-    },
-    {
-      status: "reporting",
-      progress: 100,
-      activity: "Dokončuji a předávání výsledek.",
-      goal: "Uložit výsledek a informovat Chief of Staff.",
-      reason: "Uživatel a ostatní agenti musí mít přístup k aktuálnímu plánu.",
-      findings: "Kalendář byl synchronizován a analyzován. Doporučení jsou připravena.",
-      evidence: ["Výsledek analýzy", "Doporučení"],
-      toolsUsed: ["Calendar Service", "Agent Manager"],
-      nextStep: "Přejít do stavu čekání na další synchronizaci.",
-      estimatedCompletion: "Dokončeno",
-      risks: "Žádná.",
-      needsFromUser: "Nic.",
-      lastCompletedStep: "Kontrola kvality",
-      confidence: "100 %",
-      alternativeApproach: "Pokud uživatel požaduje změny, upravím plán.",
-      decision: "Výsledek je hotový. Ukládám ho do paměti a historie úkolů.",
-      logs: ["Analýza dokončena.", "Výsledek uložen do historie."],
-    },
-  ];
 
   constructor(definition: AgentDefinition, deps: AgentEntityDeps) {
     super(definition, deps);
@@ -252,44 +51,139 @@ export class CalendarAgent extends AgentEntityImpl {
 
   async start(): Promise<void> {
     await super.start();
+
+    this.setExplanation({
+      currentActivity: "Synchronizuji kalendáře a načítám události.",
+      goal: "Mít aktuální data ze všech připojených kalendářů.",
+      reason: "Bez aktuálních dat nemohu plánovat ani detekovat kolize.",
+      findings: "Začínám synchronizaci.",
+      evidence: ["Google Calendar", "Mock Provider"],
+      toolsUsed: ["Calendar Service", "Mock Provider"],
+      nextStep: "Načíst seznam kalendářů a událostí na dnešek.",
+      estimatedCompletion: "Za několik sekund",
+      risks: "Pokud OAuth není nastaveno, použiji mock data.",
+      needsFromUser: "Nic.",
+      lastCompletedStep: "Inicializace",
+      confidence: "99 %",
+      alternativeApproach: "Pokud není dostupný Google Calendar, použiji lokální mock provider.",
+    });
+
     try {
-      await this.calendarService.sync();
+      await this.syncCalendar();
     } catch (err) {
       console.warn({ err }, "Initial calendar sync failed, using mock provider");
     }
-    this.startSimulation();
+
+    await this.runAIAnalysis();
+
+    this.setIdleExplanation();
+    await this.transitionTo("idle");
   }
 
   async stop(): Promise<void> {
-    this.stopSimulation();
-    this.runningTick?.catch(() => undefined);
     await super.stop();
   }
 
   async pause(): Promise<void> {
-    this.stopSimulation();
     await super.pause();
   }
 
   async resume(): Promise<void> {
     await super.resume();
-    this.startSimulation();
   }
 
   getTaskProgress(): number {
     return this.state.taskProgress;
   }
 
-  getTaskHistory(): AgentTask[] {
-    return [...this.state.taskHistory, ...this.taskHistory];
-  }
-
-  getPendingQueue(): AgentTask[] {
-    return [...this.state.pendingQueue, ...this.pendingQueue];
-  }
-
   getCalendarState(): CalendarAgentState {
     return { ...this.state, isDemoData: this.isDemoData };
+  }
+
+  async runTask(task: AgentTask): Promise<void> {
+    if (this.status === "offline") {
+      throw new Error(`Agent ${this.id} is offline`);
+    }
+
+    const startedAt = Date.now();
+    this.activeTaskId = task.id;
+    this.runningTasks += 1;
+    this.state.taskProgress = 0;
+    await this.transitionTo("working");
+    this.agent.metrics.totalTasks += 1;
+
+    await this.log("info", `Spouštím kalendářní úkol: ${task.title}`, { taskId: task.id });
+
+    this.setExplanation({
+      currentActivity: `Spouštím úkol: ${task.title}`,
+      goal: task.description ?? "Dokončit zadaný úkol",
+      reason: `Přijal jsem úkol od ${task.ownerType} ${task.ownerId}`,
+      findings: "Zatím začínám.",
+      evidence: ["interní fronta úkolů"],
+      toolsUsed: this.agent.config.tools.slice(0, 3),
+      nextStep: "Synchronizovat kalendář a spustit AI analýzu.",
+      estimatedCompletion: "Za několik sekund",
+      risks: "Žádné známé riziko.",
+      needsFromUser: "Nic.",
+      lastCompletedStep: "Přijetí úkolu",
+      confidence: "100 %",
+      alternativeApproach: "Žádný.",
+    });
+
+    try {
+      await this.syncCalendar();
+      this.state.taskProgress = 50;
+
+      const result = await this.runAIAnalysis();
+      this.state.taskProgress = 100;
+
+      const completedAt = new Date().toISOString();
+      this.completedTasks += 1;
+      this.agent.metrics.successfulTasks += 1;
+      this.consecutiveErrors = 0;
+
+      await this.log("info", `Úkol dokončen: ${task.title}`, { taskId: task.id, output: result });
+      this.setExplanation({
+        currentActivity: "Úkol dokončen.",
+        findings: `Úkol ${task.title} byl úspěšně dokončen.`,
+        lastCompletedStep: `Dokončil jsem úkol ${task.title}`,
+      });
+    } catch (error) {
+      this.failedTasks += 1;
+      this.agent.metrics.failedTasks += 1;
+      this.agent.metrics.errorCount += 1;
+      this.consecutiveErrors += 1;
+      this.state.taskProgress = 0;
+
+      const message = error instanceof Error ? error.message : String(error);
+      await this.log("error", `Úkol selhal: ${message}`, { taskId: task.id });
+      this.setExplanation({
+        currentActivity: "Úkol selhal.",
+        findings: `Úkol ${task.title} selhal: ${message}`,
+      });
+
+      if (this.consecutiveErrors >= this.deps.config.maxConsecutiveErrors) {
+        await this.transitionTo("error");
+      }
+    } finally {
+      this.runningTasks = Math.max(0, this.runningTasks - 1);
+      this.activeTaskId = undefined;
+      this.state.taskProgress = 0;
+      if (this.status !== "paused" && this.status !== "error") {
+        await this.transitionTo("idle");
+      }
+    }
+
+    const actualTimeMs = Date.now() - startedAt;
+    if (this.agent.metrics.averageDurationMs === 0) {
+      this.agent.metrics.averageDurationMs = actualTimeMs;
+    } else {
+      const total = this.agent.metrics.successfulTasks + this.agent.metrics.failedTasks;
+      this.agent.metrics.averageDurationMs = Math.round(
+        (this.agent.metrics.averageDurationMs * (total - 1) + actualTimeMs) / total,
+      );
+    }
+    this.agent.metrics.lastUpdatedAt = new Date().toISOString();
   }
 
   private async resolveProvider(): Promise<CalendarProvider> {
@@ -343,137 +237,96 @@ export class CalendarAgent extends AgentEntityImpl {
     this.state.upcoming = await this.calendarService.getUpcoming(10);
   }
 
-  private startSimulation(): void {
-    if (this.simulationInterval) return;
-    if (this.stopped) return;
+  private async runAIAnalysis(): Promise<string> {
+    if (!this.deps.aiRouter) {
+      const fallback = this.buildFallbackSummary();
+      this.setExplanation({
+        currentActivity: "AI není nakonfigurováno. Používám data z kalendáře bez AI analýzy.",
+        findings: fallback,
+        nextStep: "Nakonfigurujte ModelRouter pro AI analýzu kalendáře.",
+      });
+      return `[AI není nakonfigurováno]\n\n${fallback}`;
+    }
 
-    this.simulationInterval = setInterval(() => {
-      this.runningTick = this.simulateTick()
-        .catch((err) => {
-          console.error({ err }, "Calendar simulation tick failed");
-        })
-        .finally(() => { this.runningTick = undefined; });
-    }, 4000 + Math.random() * 4000);
+    this.setExplanation({
+      currentActivity: "Analyzuji den pomocí AI.",
+      nextStep: "Komunikuji s jazykovým modelem.",
+    });
 
-    this.runningTick = this.simulateTick()
-      .catch((err) => {
-        console.error({ err }, "Calendar simulation tick failed");
-      })
-      .finally(() => { this.runningTick = undefined; });
-  }
+    try {
+      const provider = this.deps.aiRouter.getProvider("analyze");
+      const today = new Date().toISOString().split("T")[0] ?? "dnes";
+      const eventList = this.state.todayEvents
+        .map((e) => `- ${e.summary ?? "Bez názvu"}: ${e.start ?? "?"}–${e.end ?? "?"}`)
+        .join("\n");
 
-  private stopSimulation(): void {
-    if (this.simulationInterval) {
-      clearInterval(this.simulationInterval);
-      this.simulationInterval = undefined;
+      const analysis = this.state.analysis;
+      const content = [
+        `Datum: ${today}`,
+        `Počet událostí: ${this.state.todayEvents.length}`,
+        `Přetížený den: ${analysis?.overloaded ? "ano" : "ne"}`,
+        `Skóre produktivity: ${analysis?.productivityScore ?? "?"} %`,
+        `Počet kolizí: ${this.state.conflicts.length}`,
+        `Počet doporučení: ${this.state.suggestions.length}`,
+        ``,
+        `Události:`,
+        eventList || "Žádné události",
+      ].join("\n");
+
+      const messages: AiMessage[] = [
+        {
+          role: "system",
+          content:
+            "Jsi kalendářový analytik. Analyzuj dnešní den uživatele: vyhodnoť vytížení, identifikuj kolize a volné bloky, navrhni focus time a deep work. Odpovídej česky, stručně a strukturovaně.",
+        },
+        { role: "user", content },
+      ];
+
+      const result = await provider.complete(messages, { temperature: 0.3 });
+
+      this.setExplanation({
+        currentActivity: "AI analýza dokončena.",
+        findings: `AI analýza dne ${today} dokončena. ${this.state.conflicts.length} kolizí nalezeno.`,
+        nextStep: "Čekám na další instrukce.",
+      });
+
+      return result;
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      const fallback = this.buildFallbackSummary();
+      this.setExplanation({
+        currentActivity: "AI analýza selhala, používám fallback.",
+        findings: `Chyba: ${message}. ${fallback}`,
+        nextStep: "Zkontrolujte AI připojení.",
+      });
+      return `[AI dočasně nedostupné: ${message}]\n\n${fallback}`;
     }
   }
 
-  private async simulateTick(): Promise<void> {
-    if (this.stopped || this.status === "paused" || AgentStateMachine.isTerminal(this.status)) return;
-
-    const activeTask = this.state.activeTask ?? this.nextTask();
-    if (!activeTask) {
-      await this.setIdleExplanation();
-      return;
-    }
-
-    this.state.activeTask = activeTask;
-    this.activeTaskId = activeTask.id;
-
-    const step = this.steps[this.currentStepIndex];
-    if (!step) {
-      await this.completeTask(activeTask);
-      return;
-    }
-
-    if (this.currentStepIndex === 0) {
-      await this.syncCalendar();
-    }
-
-    await this.applyStep(step, activeTask);
-    this.currentStepIndex += 1;
-  }
-
-  private nextTask(): AgentTask | undefined {
-    if (this.state.pendingQueue.length > 0) {
-      return this.state.pendingQueue.shift();
-    }
-
-    const template = this.tasks[this.state.taskHistory.length % this.tasks.length];
-    if (!template) return undefined;
-
-    return {
-      ...template,
-      id: `cal-task-${this.state.taskHistory.length + 1}`,
-      createdAt: new Date().toISOString(),
-    };
-  }
-
-  private async applyStep(step: CalendarSimulationStep, task: AgentTask): Promise<void> {
-    await this.updateAgentStatus(step.status);
-    this.state.taskProgress = step.progress;
-
-    const today = new Date().toISOString().split("T")[0] ?? "";
+  private buildFallbackSummary(): string {
+    const today = new Date().toISOString().split("T")[0] ?? "dnes";
+    const eventCount = this.state.todayEvents.length;
+    const conflictCount = this.state.conflicts.length;
+    const suggestionCount = this.state.suggestions.length;
     const analysis = this.state.analysis;
-    const freeSlots = today ? await this.calendarService.findFreeSlots(today, 60) : [];
+    const overloaded = analysis?.overloaded ? "přetížený" : "v normě";
+    const productivityScore = analysis?.productivityScore ?? "?";
 
-    const findings = step.findings
-      .replace("{eventCount}", String(this.state.todayEvents.length))
-      .replace("{overloaded}", analysis?.overloaded ? "přetížený" : "v normě")
-      .replace("{conflictCount}", String(this.state.conflicts.length))
-      .replace("{freeSlotCount}", String(freeSlots.length))
-      .replace("{suggestionCount}", String(this.state.suggestions.length))
-      .replace("{productivityScore}", String(analysis?.productivityScore ?? 0));
-
-    const nextStep = step.nextStep.replace("{freeSlotCount}", String(freeSlots.length));
-
-    const explanation: Partial<LiveWorkExplanation> = {
-      currentActivity: step.activity,
-      goal: step.goal,
-      reason: step.reason,
-      findings,
-      evidence: step.evidence,
-      toolsUsed: step.toolsUsed,
-      nextStep,
-      estimatedCompletion: step.estimatedCompletion,
-      risks: step.risks,
-      needsFromUser: step.needsFromUser,
-      lastCompletedStep: step.lastCompletedStep,
-      confidence: step.confidence,
-      alternativeApproach: step.alternativeApproach,
-      decisionLog: [
-        ...this.explanation.decisionLog,
-        { timestamp: new Date().toISOString(), thought: step.decision },
-      ].slice(-20),
-    };
-
-    this.setExplanation(explanation);
-
-    for (const message of step.logs) {
-      await this.log("info", message, { taskId: task.id, progress: step.progress });
-    }
-
-    await this.emit("agent:task:started", { taskId: task.id, progress: step.progress });
+    return [
+      `Shrnutí dne ${today} (bez AI):`,
+      `- Synchronizováno ${this.state.calendars.length} kalendářů`,
+      `- ${eventCount} událostí dnes`,
+      `- Den je ${overloaded}`,
+      `- Produktivní skóre: ${productivityScore} %`,
+      `- ${conflictCount} kolizí`,
+      `- ${suggestionCount} doporučení`,
+      this.isDemoData ? "- Kalendář není připojen. Připojte Google Calendar pro reálná data." : "",
+    ]
+      .filter(Boolean)
+      .join("\n");
   }
 
-  private async completeTask(task: AgentTask): Promise<void> {
-    this.state.taskProgress = 100;
-    this.completedTasks += 1;
-    this.runningTasks = Math.max(0, this.runningTasks - 1);
-    this.state.taskHistory.unshift({ ...task, status: "completed", completedAt: new Date().toISOString() });
-    this.state.activeTask = undefined;
-    this.activeTaskId = undefined;
-    this.currentStepIndex = 0;
-
-    await this.log("info", `Úkol dokončen: ${task.title}`, { taskId: task.id });
-    await this.emit("agent:task:completed", { taskId: task.id, title: task.title });
-
-    await this.setIdleExplanation();
-  }
-
-  private async setIdleExplanation(): Promise<void> {
-    await this.updateAgentStatus("idle");
+  private setIdleExplanation(): void {
     this.state.taskProgress = 0;
     this.setExplanation({
       currentActivity: "Čekám na další synchronizaci nebo instrukci.",
@@ -486,7 +339,7 @@ export class CalendarAgent extends AgentEntityImpl {
       estimatedCompletion: "Neurčito",
       risks: "Žádná.",
       needsFromUser: "Nic.",
-      lastCompletedStep: this.state.taskHistory[0]?.title ?? "Žádný",
+      lastCompletedStep: "Synchronizace kalendáře",
       confidence: "100 %",
       alternativeApproach: "Pokud není nový požadavek, provedu pravidelnou synchronizaci podle plánu.",
       decisionLog: this.explanation.decisionLog,

@@ -1,5 +1,5 @@
 import { apiClient } from "./client";
-import type { ObsidianNote, ObsidianStatus } from "@/lib/types";
+import type { ObsidianNote, ObsidianStatus, KnowledgeStats, SearchFilter } from "@/lib/types";
 
 export interface ObsidianListResponse {
   notes: ObsidianNote[];
@@ -8,6 +8,30 @@ export interface ObsidianListResponse {
 export interface ObsidianSearchResponse {
   notes: ObsidianNote[];
   query: string;
+}
+
+export interface HybridSearchResult {
+  docId: string;
+  title: string;
+  chunk: string;
+  score: number;
+  source: string;
+  path: string;
+  tags: string[];
+  heading?: string;
+}
+
+export interface HybridSearchResponse {
+  results: HybridSearchResult[];
+  query: string;
+}
+
+export interface IndexResponse {
+  message: string;
+  documents: number;
+  chunks: number;
+  skipped: number;
+  errors: string[];
 }
 
 export async function getObsidianNotes(query?: string, maxResults = 50): Promise<ObsidianNote[]> {
@@ -33,6 +57,22 @@ export async function searchObsidian(query: string): Promise<ObsidianNote[]> {
   }
 }
 
+export async function hybridSearch(
+  query: string,
+  topK = 10,
+  filters?: SearchFilter,
+): Promise<HybridSearchResult[]> {
+  try {
+    const response = await apiClient<HybridSearchResponse>("/knowledge/search", {
+      method: "POST",
+      body: JSON.stringify({ query, topK, filters }),
+    });
+    return response.results;
+  } catch {
+    return [];
+  }
+}
+
 export async function getObsidianNote(id: string): Promise<ObsidianNote | null> {
   try {
     const response = await apiClient<{ note: ObsidianNote }>(`/knowledge/obsidian/${id}`);
@@ -47,6 +87,31 @@ export async function reindexObsidian(): Promise<{ indexed: number }> {
     return apiClient<{ indexed: number }>("/knowledge/index", { method: "POST" });
   } catch {
     return { indexed: 0 };
+  }
+}
+
+export async function indexDirectory(path: string): Promise<IndexResponse> {
+  return apiClient<IndexResponse>("/knowledge/index/directory", {
+    method: "POST",
+    body: JSON.stringify({ path }),
+  });
+}
+
+export async function rebuildKnowledgeIndex(): Promise<IndexResponse> {
+  return apiClient<IndexResponse>("/knowledge/reindex", { method: "POST" });
+}
+
+export async function getKnowledgeStats(): Promise<KnowledgeStats> {
+  try {
+    return apiClient<KnowledgeStats>("/knowledge/stats");
+  } catch {
+    return {
+      indexedAt: new Date().toISOString(),
+      documents: 0,
+      chunks: 0,
+      vectors: 0,
+      provider: "keyword-only",
+    };
   }
 }
 

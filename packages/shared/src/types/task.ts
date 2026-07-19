@@ -16,6 +16,8 @@ export type TaskType =
   | "summarize"
   | "report"
   | "delegate"
+  | "email"
+  | "calendar"
   | "custom";
 
 export interface TaskResult {

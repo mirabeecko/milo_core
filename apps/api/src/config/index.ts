@@ -41,3 +41,10 @@ if (!parsed.success) {
 }
 
 export const config = parsed.data;
+
+if (!config.DEMO_MODE && (!config.SUPABASE_URL || !config.SUPABASE_SERVICE_ROLE_KEY)) {
+  console.warn(
+    "⚠ DEMO_MODE=false but SUPABASE_URL/SUPABASE_SERVICE_ROLE_KEY are missing. " +
+    "Falling back to demo mode. Auth will only accept demo-token.",
+  );
+}

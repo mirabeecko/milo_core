@@ -37,6 +37,9 @@ interface SseEvent {
   };
 }
 
+const INITIAL_RECONNECT_DELAY = 1000;
+const MAX_RECONNECT_DELAY = 30_000;
+
 export class SseExecutiveDataProvider implements RealtimeExecutiveDataProvider {
   readonly transport = "sse" as const;
 
@@ -44,6 +47,7 @@ export class SseExecutiveDataProvider implements RealtimeExecutiveDataProvider {
   private eventSource: EventSource | null = null;
   private _isConnected = false;
   private callbacks: Partial<StreamCallback> = {};
+  private reconnectDelay = INITIAL_RECONNECT_DELAY;
   private reconnectTimer: ReturnType<typeof setTimeout> | null = null;
   private activity: ActivityItem[] = [];
   private missions: Mission[] = [];
@@ -61,10 +65,17 @@ export class SseExecutiveDataProvider implements RealtimeExecutiveDataProvider {
     if (this.eventSource) return;
 
     try {
-      this.eventSource = new EventSource("/api/events/stream");
+      const token = typeof localStorage !== "undefined"
+        ? localStorage.getItem("milo:accessToken") ?? "demo-token"
+        : "demo-token";
+
+      this.eventSource = new EventSource(
+        `/api/events/stream?token=${encodeURIComponent(token)}`,
+      );
 
       this.eventSource.onopen = () => {
         this._isConnected = true;
+        this.reconnectDelay = INITIAL_RECONNECT_DELAY;
       };
 
       this.eventSource.onmessage = (evt: MessageEvent) => {
@@ -94,6 +105,7 @@ export class SseExecutiveDataProvider implements RealtimeExecutiveDataProvider {
       clearTimeout(this.reconnectTimer);
       this.reconnectTimer = null;
     }
+    this.reconnectDelay = INITIAL_RECONNECT_DELAY;
   }
 
   subscribe(callbacks: Partial<StreamCallback>): () => void {
@@ -108,7 +120,8 @@ export class SseExecutiveDataProvider implements RealtimeExecutiveDataProvider {
     this.reconnectTimer = setTimeout(() => {
       this.reconnectTimer = null;
       void this.connect();
-    }, 5000);
+      this.reconnectDelay = Math.min(this.reconnectDelay * 2, MAX_RECONNECT_DELAY);
+    }, this.reconnectDelay);
   }
 
   private handleEvent(event: SseEvent): void {

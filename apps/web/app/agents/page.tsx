@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -23,7 +23,84 @@ import {
   notifyAgentRestarted,
   notifyAgentError,
 } from "@/lib/notifications";
+import { useSSE } from "@/lib/hooks/useSSE";
+import type { SseEvent } from "@/lib/hooks/useSSE";
 import type { Agent } from "@/lib/types";
+
+const AGENT_EVENT_TYPES = [
+  "agent:status",
+  "agent:heartbeat",
+  "agent:registered",
+  "agent:error",
+  "agent:task:created",
+  "agent:task:started",
+  "agent:task:completed",
+  "agent:task:failed",
+  "agent:task:cancelled",
+];
+
+function updateAgentFromEvent(
+  agents: Agent[],
+  event: SseEvent,
+): Agent[] {
+  const agentId = event.agentId ?? (event.payload?.agentId as string | undefined);
+  if (!agentId) return agents;
+
+  return agents.map((agent) => {
+    if (agent.id !== agentId) return agent;
+
+    switch (event.type) {
+      case "agent:status":
+        return {
+          ...agent,
+          status: (event.payload?.status as Agent["status"]) ?? agent.status,
+          updatedAt: event.timestamp ?? agent.updatedAt,
+        };
+      case "agent:heartbeat":
+        return {
+          ...agent,
+          status: (event.payload?.status as Agent["status"]) ?? agent.status,
+          health: {
+            ...agent.health,
+            lastHeartbeat: event.timestamp ?? agent.health.lastHeartbeat,
+            status: "healthy" as const,
+          },
+          updatedAt: event.timestamp ?? agent.updatedAt,
+        };
+      case "agent:task:created":
+        return {
+          ...agent,
+          metrics: {
+            ...agent.metrics,
+            totalTasks: agent.metrics.totalTasks + 1,
+          },
+          updatedAt: event.timestamp ?? agent.updatedAt,
+        };
+      case "agent:task:started":
+        return {
+          ...agent,
+          updatedAt: event.timestamp ?? agent.updatedAt,
+        };
+      case "agent:task:completed":
+        return {
+          ...agent,
+          metrics: {
+            ...agent.metrics,
+            successfulTasks: agent.metrics.successfulTasks + 1,
+          },
+          updatedAt: event.timestamp ?? agent.updatedAt,
+        };
+      case "agent:task:failed":
+      case "agent:task:cancelled":
+        return {
+          ...agent,
+          updatedAt: event.timestamp ?? agent.updatedAt,
+        };
+      default:
+        return agent;
+    }
+  });
+}
 
 export default function AgentsPage() {
   const [agents, setAgents] = useState<Agent[]>([]);
@@ -31,7 +108,7 @@ export default function AgentsPage() {
   const [error, setError] = useState<Error | null>(null);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
 
-  const load = async () => {
+  const load = useCallback(async () => {
     try {
       setIsLoading(true);
       setError(null);
@@ -42,9 +119,17 @@ export default function AgentsPage() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, []);
 
-  useEffect(() => void load(), []);
+  useEffect(() => void load(), [load]);
+
+  const handleSseEvent = useCallback((event: SseEvent) => {
+    if (AGENT_EVENT_TYPES.includes(event.type)) {
+      setAgents((prev) => updateAgentFromEvent(prev, event));
+    }
+  }, []);
+
+  useSSE(handleSseEvent);
 
   const action = async (agentId: string, fn: (id: string) => Promise<void>, actionName: string) => {
     const agent = agents.find((a) => a.id === agentId);
@@ -52,6 +137,7 @@ export default function AgentsPage() {
     setActionLoading(actionName);
     try {
       await fn(agentId);
+      // SSE will handle the state update, but also fetch once for consistency
       await load();
 
       switch (actionName) {

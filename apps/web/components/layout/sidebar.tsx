@@ -4,9 +4,10 @@ import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
+  Radio,
   Home,
-  Sunrise,
   FolderKanban,
+  Sunrise,
   Bot,
   FileText,
   BookOpen,
@@ -23,13 +24,29 @@ import {
   GitBranch,
   Sparkles,
   Building2,
+  Cpu,
+  SlidersHorizontal,
+  BarChart3,
+  MapPin,
+  Eye,
+  ArrowRightLeft,
+  Rocket,
+  Zap,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 
 const navigation = [
+  { name: "MONITORING", href: "/realtime", icon: Radio, highlight: true, color: "text-red-400" },
+  { name: "TESTER", href: "/tester", icon: Zap, highlight: true, color: "text-yellow-400" },
+  { name: "Workspace", href: "/workspace", icon: Rocket, highlight: true, color: "text-purple-400" },
   { name: "Home", href: "/", icon: Home },
+  { name: "SPY_G", href: "/spyg", icon: Eye },
+  { name: "Projekty", href: "/projekty", icon: FolderKanban },
   { name: "Executive", href: "/executive", icon: Building2 },
+  { name: "J.A.R.V.I.S.", href: "/executive/jarvis", icon: Cpu },
+  { name: "Control Center", href: "/executive/control", icon: SlidersHorizontal },
+  { name: "Progress Pipeline", href: "/progress", icon: BarChart3 },
   { name: "Today's Brief", href: "/brief", icon: Sunrise },
   { name: "Projects", href: "/projects", icon: FolderKanban },
   { name: "Project Activity", href: "/projects/activity", icon: GitBranch },
@@ -45,6 +62,8 @@ const navigation = [
   { name: "Activity", href: "/activity", icon: Activity },
   { name: "Notifications", href: "/notifications", icon: Bell },
   { name: "Settings", href: "/settings", icon: Settings },
+  { name: "Delegace", href: "/delegations", icon: ArrowRightLeft },
+  { name: "Phone Tracker", href: "/phone-tracker", icon: MapPin },
   { name: "Better Agents", href: "/better-agents", icon: Sparkles },
 ];
 
@@ -92,6 +111,7 @@ export function Sidebar({ mobileOpen, onMobileClose }: SidebarProps): JSX.Elemen
                   ? "bg-primary/10 text-primary border-l-primary"
                   : "text-muted-foreground hover:bg-accent hover:text-foreground border-l-transparent",
               )}
+              style={item.highlight && item.color ? { color: item.color === "text-red-400" ? "#f87171" : item.color === "text-yellow-400" ? "#fbbf24" : "#a855f7", fontWeight: 700, borderLeftColor: item.color === "text-red-400" ? "#f87171" : item.color === "text-yellow-400" ? "#fbbf24" : "#a855f7", animation: "pulse 2s infinite" } : undefined}
             >
               <item.icon className="h-4 w-4" />
               {item.name}

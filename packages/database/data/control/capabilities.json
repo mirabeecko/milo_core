@@ -1,0 +1,134 @@
+[
+  {
+    "id": "cap-pdf-parsing",
+    "capability_code": "pdf_parsing",
+    "name": "PDF Parsing",
+    "description": "Extrakce textu, metadat a struktury z PDF dokumentů",
+    "status": "planned",
+    "maturity_level": "concept",
+    "owner": "engineering",
+    "created_at": "2026-07-11T02:11:07.344Z",
+    "updated_at": "2026-07-11T02:11:07.344Z"
+  },
+  {
+    "id": "cap-ocr",
+    "capability_code": "ocr",
+    "name": "OCR",
+    "description": "Optické rozpoznávání znaků z obrázků a naskenovaných dokumentů",
+    "status": "planned",
+    "maturity_level": "concept",
+    "owner": "engineering",
+    "created_at": "2026-07-11T02:11:07.344Z",
+    "updated_at": "2026-07-11T02:11:07.344Z"
+  },
+  {
+    "id": "cap-metadata-extraction",
+    "capability_code": "metadata_extraction",
+    "name": "Metadata Extraction",
+    "description": "Extrakce strukturovaných metadat z dokumentů (lhůty, osoby, organizace, částky)",
+    "status": "planned",
+    "maturity_level": "concept",
+    "owner": "engineering",
+    "created_at": "2026-07-11T02:11:07.344Z",
+    "updated_at": "2026-07-11T02:11:07.344Z"
+  },
+  {
+    "id": "cap-deadline-extraction",
+    "capability_code": "deadline_extraction",
+    "name": "Deadline Extraction",
+    "description": "Vytěžení lhůt a termínů z dokumentů",
+    "status": "planned",
+    "maturity_level": "concept",
+    "owner": "engineering",
+    "created_at": "2026-07-11T02:11:07.344Z",
+    "updated_at": "2026-07-11T02:11:07.344Z"
+  },
+  {
+    "id": "cap-legal-entity-extraction",
+    "capability_code": "legal_entity_extraction",
+    "name": "Legal Entity Extraction",
+    "description": "Vytěžení osob, organizací, částek a právních ustanovení",
+    "status": "planned",
+    "maturity_level": "concept",
+    "owner": "engineering",
+    "created_at": "2026-07-11T02:11:07.344Z",
+    "updated_at": "2026-07-11T02:11:07.344Z"
+  },
+  {
+    "id": "cap-timeline-generation",
+    "capability_code": "timeline_generation",
+    "name": "Timeline Generation",
+    "description": "Vytvoření časové osy z událostí a lhůt",
+    "status": "planned",
+    "maturity_level": "concept",
+    "owner": "engineering",
+    "created_at": "2026-07-11T02:11:07.344Z",
+    "updated_at": "2026-07-11T02:11:07.344Z"
+  },
+  {
+    "id": "cap-evidence-linking",
+    "capability_code": "evidence_linking",
+    "name": "Evidence Linking",
+    "description": "Propojování důkazních dokumentů s entitami a tvrzeními",
+    "status": "planned",
+    "maturity_level": "concept",
+    "owner": "engineering",
+    "created_at": "2026-07-11T02:11:07.344Z",
+    "updated_at": "2026-07-11T02:11:07.344Z"
+  },
+  {
+    "id": "cap-email-triage",
+    "capability_code": "email_triage",
+    "name": "Email Triage",
+    "description": "Třídění Gmailu, vytváření štítků a nastavování filtrů",
+    "status": "planned",
+    "maturity_level": "concept",
+    "owner": "engineering",
+    "created_at": "2026-07-11T02:11:07.344Z",
+    "updated_at": "2026-07-11T02:11:07.344Z"
+  },
+  {
+    "id": "cap-ai-summary",
+    "capability_code": "ai_summary",
+    "name": "AI Summary",
+    "description": "AI shrnutí zpráv, dokumentů a konverzací",
+    "status": "planned",
+    "maturity_level": "concept",
+    "owner": "engineering",
+    "created_at": "2026-07-11T02:11:07.344Z",
+    "updated_at": "2026-07-11T02:11:07.344Z"
+  },
+  {
+    "id": "cap-code-search",
+    "capability_code": "code_search",
+    "name": "Code Search",
+    "description": "Vyhledávání v kódu, diagnostika chyb",
+    "status": "planned",
+    "maturity_level": "concept",
+    "owner": "engineering",
+    "created_at": "2026-07-11T02:11:07.344Z",
+    "updated_at": "2026-07-11T02:11:07.344Z"
+  },
+  {
+    "id": "cap-git-operations",
+    "capability_code": "git_operations",
+    "name": "Git Operations",
+    "description": "Práce s gitem — branch, commit, push, pull request",
+    "status": "planned",
+    "maturity_level": "concept",
+    "owner": "engineering",
+    "created_at": "2026-07-11T02:11:07.344Z",
+    "updated_at": "2026-07-11T02:11:07.344Z"
+  },
+  {
+    "id": "cap-payment-matching",
+    "capability_code": "payment_matching",
+    "name": "Payment Matching",
+    "description": "Automatické párování plateb s fakturami",
+    "status": "planned",
+    "maturity_level": "concept",
+    "owner": "engineering",
+    "created_at": "2026-07-11T02:11:07.344Z",
+    "updated_at": "2026-07-11T02:11:07.344Z"
+  }
+]

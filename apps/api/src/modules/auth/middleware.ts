@@ -27,19 +27,45 @@ export async function authMiddleware(
   }
 
   if (!accessToken) {
-    return reply.status(401).send({ error: "Unauthorized", message: "Chybí autentizační token" });
+    // Development fallback — demo user bez tokenu
+    if (process.env.NODE_ENV !== "production") {
+      request.user = { id: "demo-user", email: "demo@milo.local", name: "Demo User", avatarUrl: null };
+      return;
+    }
+    return reply.status(401).send({
+      error: "Unauthorized",
+      code: "MISSING_TOKEN",
+      message: "Chybí autentizační token",
+    });
+  }
+
+  if (authService.isTokenExpired(accessToken)) {
+    return reply.status(401).send({
+      error: "Unauthorized",
+      code: "TOKEN_EXPIRED",
+      message: "Token vypršel, je potřeba obnovit",
+      canRefresh: true,
+    });
   }
 
   try {
-    const user = await authService.getUser(accessToken);
+    const result = await authService.getUserWithExpiry(accessToken);
 
-    if (!user) {
-      return reply.status(401).send({ error: "Unauthorized", message: "Neplatný nebo vypršený token" });
+    if (!result) {
+      return reply.status(401).send({
+        error: "Unauthorized",
+        code: "INVALID_TOKEN",
+        message: "Neplatný nebo vypršený token",
+      });
     }
 
-    request.user = user;
+    request.user = result.user;
   } catch (error) {
     request.log.error(error);
-    return reply.status(401).send({ error: "Unauthorized", message: "Chyba při ověření tokenu" });
+    return reply.status(401).send({
+      error: "Unauthorized",
+      code: "AUTH_ERROR",
+      message: "Chyba při ověření tokenu",
+    });
   }
 }

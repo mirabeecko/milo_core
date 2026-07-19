@@ -29,6 +29,7 @@ import { AgentScheduler } from "./runtime/agent-scheduler.js";
 import { BackgroundRunner } from "./runtime/background-runner.js";
 import { HealthMonitor } from "./runtime/health-monitor.js";
 import { PriorityTaskQueue } from "./runtime/task-queue-v2.js";
+import type { ModelRouter } from "@milo/ai";
 import type {
   AgentEntity,
   AgentEventBus,
@@ -50,6 +51,7 @@ export interface AgentManagerDeps {
   };
   eventBus?: AgentEventBus;
   queue?: TaskQueue;
+  aiRouter?: ModelRouter;
   config?: AgentFrameworkConfig;
   vaultPath?: string;
   projectPath?: string;
@@ -68,6 +70,9 @@ export class AgentManager {
   private runtimeConfig: AgentRuntimeConfig;
   private heartbeatInterval?: ReturnType<typeof setInterval>;
   private deadlineInterval?: ReturnType<typeof setInterval>;
+  private healthEmitInterval?: ReturnType<typeof setInterval>;
+  private processInterval?: ReturnType<typeof setInterval>;
+  private taskRunner: ExecutionTaskRunner;
 
   private toolRegistry: ToolRegistry;
 
@@ -108,6 +113,7 @@ export class AgentManager {
       queue: this.queue,
       eventBus: this.eventBus,
       toolRegistry: this.toolRegistry,
+      aiRouter: this.deps.aiRouter,
       vaultPath: this.deps.vaultPath,
       projectPath: this.deps.projectPath,
     });
@@ -128,6 +134,7 @@ export class AgentManager {
       scheduler: this.scheduler,
       backgroundRunner: this.backgroundRunner,
       toolRegistry: this.toolRegistry,
+      aiRouter: this.deps.aiRouter,
       agentMemory: new AgentMemoryImpl(definition.id, new RepositoryMemoryStorage(this.deps.repositories.memory)),
       config: this.runtimeConfig,
       vaultPath: this.deps.vaultPath,
@@ -187,6 +194,7 @@ export class AgentManager {
   async startAll(): Promise<void> {
     this.scheduler.start();
     this.startDeadlineChecker();
+    this.startProcessingLoop();
     const results = await Promise.allSettled(
       this.listAgents().map((agent) => agent.start()),
     );
@@ -200,25 +208,26 @@ export class AgentManager {
       throw new Error(`All ${results.length} agents failed to start`);
     }
     this.startHeartbeat(this.runtimeConfig.heartbeatIntervalMs);
+    this.startHealthEmit(30_000);
   }
 
   async stopAll(): Promise<void> {
     this.stopHeartbeat();
     this.stopDeadlineChecker();
+    this.stopHealthEmit();
     this.scheduler.stop();
     await Promise.all(this.listAgents().map((agent) => agent.stop()));
   }
 
   async delegate(task: Omit<AgentTask, "id" | "createdAt">): Promise<AgentTask> {
+    process.stderr.write(`[AGENT] delegate CALLED: ${task.title}\n`);
     const full = await this.deps.repositories.tasks.create(task);
-    if (full.ownerType === "user") {
-      return full;
-    }
     await this.runDelegatedTask(full);
     return full;
   }
 
   private async runDelegatedTask(full: AgentTask): Promise<void> {
+    process.stderr.write(`[AGENT] runDelegatedTask START: ${full.id} ${full.title}\n`);
     const entity = this.selectAgentForTask(full);
     if (!entity) {
       this.priorityQueue.enqueue(full, { priority: full.priority, maxRetries: this.runtimeConfig.maxRetries });
@@ -279,6 +288,13 @@ export class AgentManager {
       startedAt: new Date().toISOString(),
     });
 
+    await this.eventBus.publish({
+      type: "agent:mission:created",
+      agentId: "chief-of-staff",
+      timestamp: new Date().toISOString(),
+      payload: { missionId: mission.id, title: mission.title, status: "running" },
+    }).catch(() => undefined);
+
     try {
       await this.runDelegatedTask(task);
     } catch {
@@ -326,7 +342,6 @@ export class AgentManager {
     }
     const requeued = this.priorityQueue.retry(taskId);
     if (!requeued) {
-      // If not in priority queue anymore, enqueue again
       this.priorityQueue.enqueue(task, { priority: task.priority, maxRetries: this.runtimeConfig.maxRetries });
     }
     await entity.retry(taskId);
@@ -334,6 +349,24 @@ export class AgentManager {
     if (queued) {
       void entity.runTask(queued.task);
     }
+  }
+
+  async updateTask(taskId: string, updates: Partial<Pick<AgentTask, "title" | "description" | "priority" | "status">>): Promise<AgentTask> {
+    await this.deps.repositories.tasks.update(taskId, updates);
+    const task = await this.deps.repositories.tasks.findById(taskId);
+    if (!task) throw new Error(`Task ${taskId} not found`);
+    return task;
+  }
+
+  async completeTask(taskId: string, result?: string): Promise<AgentTask> {
+    await this.deps.repositories.tasks.update(taskId, { status: "completed", result, completedAt: new Date().toISOString() });
+    const task = await this.deps.repositories.tasks.findById(taskId);
+    if (!task) throw new Error(`Task ${taskId} not found`);
+    return task;
+  }
+
+  async deleteTask(taskId: string): Promise<void> {
+    await this.cancelTask(taskId);
   }
 
   async heartbeat(): Promise<void> {
@@ -374,9 +407,86 @@ export class AgentManager {
     }
   }
 
+  startHealthEmit(intervalMs = 30_000): void {
+    this.stopHealthEmit();
+    this.healthEmitInterval = setInterval(() => {
+      const usage = process.memoryUsage();
+      void this.eventBus.publish({
+        type: "system:health",
+        agentId: "system",
+        timestamp: new Date().toISOString(),
+        payload: {
+          cpu: process.cpuUsage(),
+          memory: {
+            rss: usage.rss,
+            heapTotal: usage.heapTotal,
+            heapUsed: usage.heapUsed,
+            external: usage.external,
+          },
+          uptime: process.uptime(),
+          activeAgents: this.listAgents().filter((a) => a.agent.status !== "offline").length,
+          totalAgents: this.listAgents().length,
+        },
+      }).catch(() => undefined);
+    }, intervalMs);
+  }
+
+  stopHealthEmit(): void {
+    if (this.healthEmitInterval) {
+      clearInterval(this.healthEmitInterval);
+      this.healthEmitInterval = undefined;
+    }
+  }
+
+  startProcessingLoop(intervalMs = 3_000): void {
+    this.stopProcessingLoop();
+    this.processInterval = setInterval(() => {
+      const waiting = this.priorityQueue.getWaiting();
+      for (const queued of waiting) {
+        const entity = this.selectAgentForTask(queued.task);
+        if (!entity) continue;
+
+        const dequeued = this.priorityQueue.dequeue();
+        if (!dequeued) continue;
+
+        entity.runTask(dequeued.task).catch((error) => {
+          const message = error instanceof Error ? error.message : String(error);
+          this.deps.repositories.tasks
+            .update(dequeued.task.id, { status: "failed" })
+            .catch(() => undefined);
+          this.eventBus
+            .publish({
+              type: "agent:task:failed",
+              agentId: entity.id,
+              timestamp: new Date().toISOString(),
+              payload: { taskId: dequeued.task.id, error: message },
+            })
+            .catch(() => undefined);
+        });
+      }
+    }, intervalMs);
+  }
+
+  stopProcessingLoop(): void {
+    if (this.processInterval) {
+      clearInterval(this.processInterval);
+      this.processInterval = undefined;
+    }
+  }
+
   async getExplanation(agentId: string): Promise<LiveWorkExplanation> {
     const entity = this.requireAgent(agentId);
     return entity.explain();
+  }
+
+  getAvailableTools(agentId: string): string[] {
+    const definition = this.definitions.get(agentId);
+    if (!definition) return [];
+    const allowedToolPrefixes = definition.config.tools;
+    const allTools = this.toolRegistry.list();
+    return allTools
+      .filter((t) => allowedToolPrefixes.some((prefix) => t.id === prefix || t.id.startsWith(`${prefix}:`)))
+      .map((t) => t.id);
   }
 
   async getLogs(agentId: string, limit?: number): Promise<AgentLogEntry[]> {
@@ -442,6 +552,8 @@ export class AgentManager {
   async close(): Promise<void> {
     this.stopHeartbeat();
     this.stopDeadlineChecker();
+    this.stopHealthEmit();
+    this.stopProcessingLoop();
     this.scheduler.stop();
     await this.stopAll();
     await this.queue.close();
@@ -477,6 +589,20 @@ export class AgentManager {
   }
 
   private async handleMissionLifecycleEvent(event: AgentFrameworkEvent): Promise<void> {
+    if (event.type === "agent:task:progress" || event.type === "agent:task:started") {
+      const taskId = typeof event.payload.taskId === "string" ? event.payload.taskId : undefined;
+      if (!taskId) return;
+      const task = await this.deps.repositories.tasks.findById(taskId);
+      if (!task?.missionId) return;
+      await this.eventBus.publish({
+        type: "agent:mission:progress",
+        agentId: event.agentId,
+        timestamp: new Date().toISOString(),
+        payload: { missionId: task.missionId, taskId, progress: event.payload.progress ?? 0, title: event.payload.title },
+      }).catch(() => undefined);
+      return;
+    }
+
     if (event.type === "agent:task:completed") {
       const taskId = typeof event.payload.taskId === "string" ? event.payload.taskId : undefined;
       if (!taskId) return;

@@ -6,6 +6,7 @@ export default function ControlLayout({ children }: { children: React.ReactNode 
     { href: "/control/agents", label: "Agenti" },
     { href: "/control/use-cases", label: "Use Cases" },
     { href: "/control/capabilities", label: "Capabilities" },
+    { href: "/control/development", label: "Development" },
   ];
 
   return (

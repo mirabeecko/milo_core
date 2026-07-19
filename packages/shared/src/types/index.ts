@@ -19,10 +19,38 @@ export interface ApiError {
 }
 
 export * from "./agent.js";
+export * from "./agent-models.js";
 export * from "./task.js";
 export * from "./mission.js";
 export * from "./agent-event.js";
-export * from "./component.js";
-export type { UseCase, UseCaseVersion, CreateUseCaseInput, UpdateUseCaseInput } from "./use-case.js";
-export type { UseCaseStatus, UseCaseImplStatus } from "./use-case.js";
-export type { CreateAgentInput, UpdateAgentInput } from "./agent.js";
+export * from "./spec-status.js";
+
+export type {
+  AgentSpec,
+  AgentSpecVersion,
+  UseCase,
+  UseCaseVersion,
+  AgentCapability,
+  Tool,
+  AgentTool,
+  Integration,
+  DevTask,
+  TaskDependency,
+  ChangeRequest,
+  DevMission,
+  DevelopmentRun,
+  AuditRun,
+  TestCase,
+  TestRun,
+  Approval,
+  Deployment,
+  RuntimeRun,
+  ActivityLogEntry,
+  ImplComponent,
+  AgentWithRelations,
+  UseCaseWithRelations,
+  AgentReadinessMatrix,
+  ImpactAnalysis,
+  SpecDiff,
+  DeveloperPromptContext,
+} from "./control-center.js";

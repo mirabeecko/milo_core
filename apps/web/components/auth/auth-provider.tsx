@@ -17,6 +17,7 @@ interface AuthContextValue {
   accessToken: string | null;
   isLoading: boolean;
   signIn: (email: string, password: string) => Promise<void>;
+  signInWithGoogle: () => Promise<void>;
   signOut: () => Promise<void>;
 }
 
@@ -132,8 +133,30 @@ export function AuthProvider({ children }: { children: ReactNode }): JSX.Element
     storeToken(null);
   };
 
+  const signInWithGoogle = async (): Promise<void> => {
+    if (!isSupabaseConfigured) {
+      throw new Error("Supabase není nakonfigurováno");
+    }
+
+    const supabase = createSupabaseClient();
+    if (!supabase) {
+      throw new Error("Supabase není nakonfigurováno");
+    }
+
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: "google",
+      options: {
+        redirectTo: `${window.location.origin}/login`,
+      },
+    });
+
+    if (error) {
+      throw error;
+    }
+  };
+
   return (
-    <AuthContext.Provider value={{ user, accessToken, isLoading, signIn, signOut }}>
+    <AuthContext.Provider value={{ user, accessToken, isLoading, signIn, signInWithGoogle, signOut }}>
       {children}
     </AuthContext.Provider>
   );

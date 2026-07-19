@@ -8,3 +8,5 @@ export * from "./documents.api";
 export * from "./home.api";
 export * from "./knowledge.api";
 export * from "./notifier.api";
+export * from "./export.api";
+export * from "./approvals.api";

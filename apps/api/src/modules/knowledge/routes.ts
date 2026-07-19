@@ -16,6 +16,31 @@ const settingsSchema = z.object({
   vaultPath: z.string().min(1),
 });
 
+const searchBodySchema = z.object({
+  query: z.string().min(1),
+  topK: z.coerce.number().default(10),
+  filters: z
+    .object({
+      source: z.string().optional(),
+      tags: z.array(z.string()).optional(),
+      modifiedAfter: z.string().optional(),
+    })
+    .optional(),
+});
+
+const indexDocSchema = z.object({
+  docId: z.string(),
+  content: z.string(),
+  title: z.string(),
+  source: z.string().default("manual"),
+  path: z.string().optional(),
+  tags: z.array(z.string()).optional(),
+});
+
+const indexDirSchema = z.object({
+  path: z.string().min(1),
+});
+
 export async function knowledgeRoutes(
   app: FastifyInstance,
   _options: FastifyPluginOptions,
@@ -43,7 +68,7 @@ export async function knowledgeRoutes(
         });
       } catch (error) {
         app.log.error(error);
-        return reply.status(500).send({ error: "Failed to fetch Obsidian notes" });
+        return reply.status(500).send({ error: "Nepodařilo se načíst Obsidian poznámky" });
       }
     },
   );
@@ -61,12 +86,12 @@ export async function knowledgeRoutes(
       try {
         const note = await knowledgeService.getObsidianNote(parsed.data.id);
         if (!note) {
-          return reply.status(404).send({ error: "Note not found" });
+          return reply.status(404).send({ error: "Poznámka nenalezena" });
         }
         return reply.send({ note });
       } catch (error) {
         app.log.error(error);
-        return reply.status(500).send({ error: "Failed to fetch Obsidian note" });
+        return reply.status(500).send({ error: "Nepodařilo se načíst Obsidian poznámku" });
       }
     },
   );
@@ -83,7 +108,7 @@ export async function knowledgeRoutes(
 
       const { q } = parsed.data;
       if (!q) {
-        return reply.status(400).send({ error: "Missing search query" });
+        return reply.status(400).send({ error: "Chybí vyhledávací dotaz" });
       }
 
       try {
@@ -97,7 +122,28 @@ export async function knowledgeRoutes(
         });
       } catch (error) {
         app.log.error(error);
-        return reply.status(500).send({ error: "Failed to search Obsidian notes" });
+        return reply.status(500).send({ error: "Nepodařilo se vyhledat v Obsidianu" });
+      }
+    },
+  );
+
+  app.post(
+    "/search",
+    { preHandler: authMiddleware },
+    async (request: AuthenticatedRequest, reply) => {
+      const parsed = searchBodySchema.safeParse(request.body);
+
+      if (!parsed.success) {
+        return reply.status(400).send({ error: "Invalid input", details: parsed.error.format() });
+      }
+
+      try {
+        const { query, topK, filters } = parsed.data;
+        const results = await knowledgeService.hybridSearch(query, topK, filters);
+        return reply.send({ results, query });
+      } catch (error) {
+        app.log.error(error);
+        return reply.status(500).send({ error: "Nepodařilo se provést sémantické vyhledávání" });
       }
     },
   );
@@ -105,13 +151,96 @@ export async function knowledgeRoutes(
   app.post(
     "/index",
     { preHandler: authMiddleware },
-    async (_request: AuthenticatedRequest, reply) => {
+    async (request: AuthenticatedRequest, reply) => {
       try {
-        const notes = await knowledgeService.reindex();
-        return reply.send({ indexed: notes.length });
+        const result = await knowledgeService.rebuildIndex();
+        return reply.send({
+          message: "Indexace dokončena",
+          ...result,
+        });
       } catch (error) {
         app.log.error(error);
-        return reply.status(500).send({ error: "Failed to index Obsidian vault" });
+        const message = error instanceof Error ? error.message : String(error);
+        return reply.status(500).send({ error: message });
+      }
+    },
+  );
+
+  app.post(
+    "/index/document",
+    { preHandler: authMiddleware },
+    async (request: AuthenticatedRequest, reply) => {
+      const parsed = indexDocSchema.safeParse(request.body);
+
+      if (!parsed.success) {
+        return reply.status(400).send({ error: "Invalid input", details: parsed.error.format() });
+      }
+
+      try {
+        const { docId, content, title, source, path: docPath, tags } = parsed.data;
+        const result = await knowledgeService.indexDocument(docId, content, {
+          title,
+          source,
+          path: docPath ?? docId,
+          tags,
+          modifiedAt: new Date().toISOString(),
+        });
+
+        return reply.send({ message: "Dokument indexován", ...result });
+      } catch (error) {
+        app.log.error(error);
+        const message = error instanceof Error ? error.message : String(error);
+        return reply.status(500).send({ error: message });
+      }
+    },
+  );
+
+  app.post(
+    "/index/directory",
+    { preHandler: authMiddleware },
+    async (request: AuthenticatedRequest, reply) => {
+      const parsed = indexDirSchema.safeParse(request.body);
+
+      if (!parsed.success) {
+        return reply.status(400).send({ error: "Invalid input", details: parsed.error.format() });
+      }
+
+      try {
+        const result = await knowledgeService.indexDirectory(parsed.data.path);
+        return reply.send({ message: "Adresář indexován", ...result });
+      } catch (error) {
+        app.log.error(error);
+        const message = error instanceof Error ? error.message : String(error);
+        return reply.status(500).send({ error: message });
+      }
+    },
+  );
+
+  app.get(
+    "/stats",
+    { preHandler: authMiddleware },
+    async (_request: AuthenticatedRequest, reply) => {
+      try {
+        const stats = await knowledgeService.getKnowledgeStats();
+        return reply.send(stats);
+      } catch (error) {
+        app.log.error(error);
+        return reply.status(500).send({ error: "Nepodařilo se načíst statistiky" });
+      }
+    },
+  );
+
+  app.post(
+    "/reindex",
+    { preHandler: authMiddleware },
+    async (_request: AuthenticatedRequest, reply) => {
+      try {
+        const result = await knowledgeService.rebuildIndex();
+        return reply.send({ message: "Reindexace dokončena", ...result });
+      } catch (error) {
+        app.log.error(error);
+        const message = error instanceof Error ? error.message : String(error);
+        return reply.status(500).send({ error: message });
       }
     },
   );
@@ -125,7 +254,7 @@ export async function knowledgeRoutes(
         return reply.send(status);
       } catch (error) {
         app.log.error(error);
-        return reply.status(500).send({ error: "Failed to fetch Obsidian settings" });
+        return reply.status(500).send({ error: "Nepodařilo se načíst nastavení Obsidianu" });
       }
     },
   );
@@ -148,7 +277,7 @@ export async function knowledgeRoutes(
         return reply.send(status);
       } catch (error) {
         app.log.error(error);
-        return reply.status(500).send({ error: "Failed to save Obsidian settings" });
+        return reply.status(500).send({ error: "Nepodařilo se uložit nastavení Obsidianu" });
       }
     },
   );

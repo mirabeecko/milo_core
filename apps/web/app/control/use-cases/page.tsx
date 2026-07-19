@@ -16,7 +16,7 @@ export default function UseCasesPage() {
     ? useCases.filter((uc) => uc.agent_id === filterAgent)
     : useCases;
 
-  const agents = [...new Set(useCases.map((uc) => uc.agent_id))];
+  const agents = Array.from(new Set(useCases.map((uc: any) => uc.agent_id)));
 
   return (
     <div className="p-6 space-y-6">

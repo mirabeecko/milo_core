@@ -212,7 +212,7 @@ export class AgentEntityImpl implements AgentEntity {
     this.runningTasks += 1;
     this.taskProgress = 0;
     await this.transitionTo("working");
-    process.stdout.write(`[AGENT] runTask transitioned to working`);
+    process.stdout.write(`[AGENT] runTask transitioned to working\n`);
 
     this.agent.metrics.totalTasks += 1;
 

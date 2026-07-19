@@ -1,7 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 import {
   ArrowUpRight,
   Bell,
@@ -13,6 +15,7 @@ import {
   Command,
   Database,
   FolderKanban,
+  Loader2,
   Mail,
   MapPin,
   ShieldCheck,
@@ -28,10 +31,14 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
 import { getHomeData, type HomeData } from "@/lib/api/home.api";
+import type { ActivityLogItem } from "@/lib/types";
+import { sendMessage } from "@/lib/api/chat.api";
 import { LoadingState } from "@/components/common/loading-state";
 import { EmptyState } from "@/components/common/empty-state";
 import { LiveClock } from "@/components/widgets/live-clock";
 import { RemindersWidget } from "@/components/widgets/reminders-widget";
+import { useSSE } from "@/lib/hooks/useSSE";
+import type { SseEvent } from "@/lib/hooks/useSSE";
 import { cn } from "@/lib/utils";
 
 function dataSourceLabel(source: string): string {
@@ -60,8 +67,10 @@ export function HomeView(): JSX.Element {
   const [command, setCommand] = useState("");
   const [data, setData] = useState<HomeData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isSending, setIsSending] = useState(false);
   const [error, setError] = useState<Error | null>(null);
   const [calendarView, setCalendarView] = useState<"today" | "tomorrow" | "week">("today");
+  const router = useRouter();
 
   useEffect(() => {
     async function load(): Promise<void> {
@@ -79,10 +88,82 @@ export function HomeView(): JSX.Element {
     void load();
   }, []);
 
+  const handleSseEvent = useCallback((event: SseEvent) => {
+    const ts = event.timestamp ?? new Date().toISOString();
+
+    setData((prev) => {
+      if (!prev) return prev;
+
+      // Update agent state indicators
+      if (event.type === "agent:status" || event.type === "agent:heartbeat") {
+        const agentCount = prev.snapshot.activeAgents;
+        const status = event.payload?.status as string | undefined;
+        const newCount = status === "offline"
+          ? Math.max(0, agentCount - 1)
+          : event.type === "agent:registered"
+            ? agentCount + 1
+            : agentCount;
+
+        return {
+          ...prev,
+          snapshot: {
+            ...prev.snapshot,
+            activeAgents: newCount,
+          },
+        };
+      }
+
+      // Append to activity feed
+      const typeMap: Record<string, string> = {
+        agent: "agent",
+        mission: "system",
+        task: "system",
+        approval: "integration",
+        risk: "integration",
+        artifact: "integration",
+        system: "system",
+      };
+      const activityType = (typeMap[event.type.split(":")[0]] ?? "system") as ActivityLogItem["type"];
+
+      const newActivity: ActivityLogItem = {
+        id: `sse-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+        type: activityType,
+        title: (event.payload?.title as string) ?? event.type.replace(/_/g, " ").replace("agent:", ""),
+        description: (event.payload?.summary as string) ?? (event.payload?.description as string) ?? "",
+        timestamp: ts,
+      };
+
+      return {
+        ...prev,
+        activityLog: [newActivity, ...prev.activityLog].slice(0, 30),
+      };
+    });
+  }, []);
+
+  useSSE(handleSseEvent);
+
   const handleCommandSubmit = (event: React.FormEvent): void => {
     event.preventDefault();
-    if (!command.trim()) return;
-    window.location.href = `/chat?prompt=${encodeURIComponent(command)}`;
+    const text = command.trim();
+    if (!text || isSending) return;
+
+    setIsSending(true);
+
+    void sendMessage({ message: text }).then((response) => {
+      setIsSending(false);
+      setCommand("");
+
+      toast(response.message.content, {
+        description: response.missionId ? "Mise vytvořena, přesměrovávám..." : undefined,
+      });
+
+      if (response.missionId) {
+        router.push(`/missions/${response.missionId}`);
+      }
+    }).catch(() => {
+      setIsSending(false);
+      toast.error("Nepodařilo se odeslat zprávu. Zkontrolujte připojení.");
+    });
   };
 
   if (isLoading) {
@@ -211,9 +292,9 @@ export function HomeView(): JSX.Element {
           type="submit"
           size="sm"
           className="absolute right-2 top-1/2 -translate-y-1/2"
-          disabled={!command.trim()}
+          disabled={!command.trim() || isSending}
         >
-          Poslat
+          {isSending ? <Loader2 className="h-4 w-4 animate-spin" /> : "Poslat"}
         </Button>
       </form>
 

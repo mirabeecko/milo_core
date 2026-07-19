@@ -82,12 +82,22 @@ export interface AgentFrameworkEvent {
     | "agent:explanation"
     | "agent:task:created"
     | "agent:task:started"
+    | "agent:task:progress"
     | "agent:task:completed"
     | "agent:task:failed"
     | "agent:task:cancelled"
     | "agent:task:delegated"
+    | "agent:mission:created"
+    | "agent:mission:progress"
     | "agent:mission:completed"
     | "agent:mission:failed"
+    | "agent:approval:requested"
+    | "agent:approval:approved"
+    | "agent:approval:rejected"
+    | "agent:risk:raised"
+    | "agent:risk:mitigated"
+    | "agent:artifact:created"
+    | "system:health"
     | "agent:error";
   agentId: string;
   timestamp: string;

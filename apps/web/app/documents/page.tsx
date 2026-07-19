@@ -52,7 +52,7 @@ export default function DocumentsPage() {
           (od) => !docs.some((d) => d.id === od.id),
         ),
       ];
-      setDocuments(merged);
+      setDocuments(merged as any);
     } catch (err) {
       setError(err instanceof Error ? err : new Error("Nepodařilo se načíst dokumenty"));
     } finally {

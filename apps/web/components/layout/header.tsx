@@ -9,6 +9,8 @@ import { VoiceControls } from "../voice/voice-controls";
 const pageTitles: Record<string, string> = {
   "/": "Dashboard",
   "/executive": "Executive Overview",
+  "/executive/control": "Control Center",
+  "/executive/control/agents": "Control Center — Agenti",
   "/executive/missions": "Mise",
   "/executive/departments": "Executive Departments",
   "/executive/artifacts": "Artifacts & Decisions",
@@ -38,7 +40,25 @@ interface HeaderProps {
 
 export function Header({ children }: HeaderProps): JSX.Element {
   const pathname = usePathname();
-  const title = pageTitles[pathname] ?? "Dashboard";
+
+  let title = pageTitles[pathname];
+  if (!title && pathname.startsWith("/executive/control/")) {
+    const segment = pathname.replace("/executive/control/", "").split("/")[0];
+    const subTitles: Record<string, string> = {
+      agents: "Control Center — Agenti",
+      "use-cases": "Control Center — Use Cases",
+      capabilities: "Control Center — Capabilities",
+      tasks: "Control Center — Vývojové úkoly",
+      missions: "Control Center — Mise",
+      deployments: "Control Center — Deployments",
+      audit: "Control Center — Audit",
+    };
+    title = subTitles[segment] || "Control Center";
+  }
+  if (!title && pathname.startsWith("/executive/")) {
+    title = "Executive Control";
+  }
+  if (!title) title = "Dashboard";
 
   const triggerCommandPalette = () => {
     document.dispatchEvent(new KeyboardEvent("keydown", { key: "k", metaKey: true }));

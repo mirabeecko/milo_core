@@ -311,3 +311,135 @@
 .animate-number-pop {
   animation: number-pop 0.3s ease-out;
 }
+
+/* ------------------------------------------------------------------ */
+/*  JARVIS THEME                                                      */
+/* ------------------------------------------------------------------ */
+
+:root .jarvis {
+  --jarvis-cyan: #00f0ff;
+  --jarvis-blue: #0088ff;
+  --jarvis-teal: #00ccaa;
+  --jarvis-amber: #ffaa00;
+  --jarvis-red: #ff3344;
+  --jarvis-bg: #050d14;
+  --jarvis-card: #071520;
+  --jarvis-border: rgba(0, 240, 255, 0.12);
+  --jarvis-glow: rgba(0, 240, 255, 0.15);
+}
+
+/* Hex grid background */
+.bg-jarvis-grid {
+  background-color: #050d14;
+  background-image:
+    linear-gradient(rgba(0, 240, 255, 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 240, 255, 0.03) 1px, transparent 1px);
+  background-size: 32px 32px;
+}
+
+/* Rotating scan ring */
+@keyframes jarvis-scan {
+  0%   { transform: rotate(0deg); stroke-dashoffset: 0; }
+  100% { transform: rotate(360deg); stroke-dashoffset: -565; }
+}
+
+@keyframes jarvis-scan2 {
+  0%   { transform: rotate(180deg); stroke-dashoffset: 0; }
+  100% { transform: rotate(540deg); stroke-dashoffset: -400; }
+}
+
+.jarvis-scan-ring {
+  animation: jarvis-scan 8s linear infinite;
+}
+
+.jarvis-scan-ring2 {
+  animation: jarvis-scan2 12s linear infinite;
+}
+
+/* Pulse glow */
+@keyframes jarvis-pulse {
+  0%, 100% { opacity: 0.4; transform: scale(1); }
+  50%      { opacity: 1;   transform: scale(1.05); }
+}
+
+.jarvis-pulse {
+  animation: jarvis-pulse 3s ease-in-out infinite;
+}
+
+/* Data stream dots */
+@keyframes jarvis-dot-pulse {
+  0%, 100% { opacity: 0.2; transform: scale(0.8); }
+  50%      { opacity: 1;   transform: scale(1.4); }
+}
+
+.jarvis-dot {
+  animation: jarvis-dot-pulse 2s ease-in-out infinite;
+}
+
+/* Border glow */
+@keyframes jarvis-border-glow {
+  0%, 100% { border-color: rgba(0, 240, 255, 0.1); box-shadow: 0 0 5px rgba(0, 240, 255, 0.05); }
+  50%      { border-color: rgba(0, 240, 255, 0.3); box-shadow: 0 0 15px rgba(0, 240, 255, 0.1); }
+}
+
+.jarvis-card-glow {
+  animation: jarvis-border-glow 4s ease-in-out infinite;
+}
+
+/* Gauge fill */
+@keyframes jarvis-gauge-fill {
+  from { width: 0%; }
+}
+
+.jarvis-gauge {
+  animation: jarvis-gauge-fill 1.5s ease-out both;
+}
+
+/* Text shimmer */
+@keyframes jarvis-shimmer {
+  0%   { background-position: -200% center; }
+  100% { background-position: 200% center; }
+}
+
+.jarvis-shimmer {
+  background: linear-gradient(90deg, var(--jarvis-cyan), var(--jarvis-blue), var(--jarvis-cyan));
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: jarvis-shimmer 3s linear infinite;
+}
+
+/* Particle float */
+@keyframes jarvis-float {
+  0%, 100% { transform: translateY(0) translateX(0); opacity: 0; }
+  20%      { opacity: 0.6; }
+  80%      { opacity: 0.6; }
+  100%     { opacity: 0; transform: translateY(-40px) translateX(10px); }
+}
+
+.jarvis-particle {
+  animation: jarvis-float 6s ease-in-out infinite;
+}
+
+/* Typewriter terminal cursor */
+@keyframes jarvis-cursor {
+  0%, 100% { opacity: 1; }
+  50%      { opacity: 0; }
+}
+
+.jarvis-cursor::after {
+  content: "▌";
+  animation: jarvis-cursor 1s step-end infinite;
+  color: var(--jarvis-cyan);
+}
+
+/* Number tick */
+@keyframes jarvis-tick {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.jarvis-tick {
+  animation: jarvis-tick 0.3s ease-out both;
+}

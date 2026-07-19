@@ -1,20 +1,43 @@
 import { FastifyInstance, FastifyPluginOptions } from "fastify";
 import { z } from "zod";
+import { ModelRouter } from "@milo/ai";
 import { ChatService } from "./service.js";
 import { AuthenticatedRequest, authMiddleware } from "../auth/middleware.js";
 import { getAgentManager } from "../agents/manager.js";
+import { config } from "../../config/index.js";
 
 const chatRequestSchema = z.object({
   message: z.string().min(1),
   conversationId: z.string().optional(),
 });
 
+function createModelRouter(): ModelRouter | undefined {
+  const hasOpenAi = Boolean(config.OPENAI_API_KEY);
+
+  if (!hasOpenAi) return undefined;
+
+  return new ModelRouter({
+    openai: {
+      apiKey: config.OPENAI_API_KEY!,
+      baseURL: config.OPENAI_BASE_URL,
+      defaultModel: "gpt-4o-mini",
+    },
+    ollama: {
+      host: "http://localhost:11434",
+      defaultModel: "llama3.1",
+    },
+    defaultProvider: "openai",
+    taskPreferences: { chat: "openai", default: "openai" },
+  });
+}
+
 export async function chatRoutes(
   app: FastifyInstance,
   _options: FastifyPluginOptions,
 ): Promise<void> {
   const manager = await getAgentManager();
-  const chatService = new ChatService(manager);
+  const modelRouter = createModelRouter();
+  const chatService = new ChatService(manager, modelRouter);
 
   app.post(
     "/",

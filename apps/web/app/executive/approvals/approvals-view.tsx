@@ -7,6 +7,7 @@ import {
   FileText,
   ArrowUpRight,
   ShieldCheck,
+  Loader2,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -15,6 +16,10 @@ import { PageHeader } from "@/components/common/page-header";
 import type { Approval } from "@/lib/data/executive/types";
 import { useExecutiveApprovals } from "@/lib/data/executive/use-executive-queries";
 import { LiveIndicator } from "@/app/executive/live-indicator";
+import { approveApproval, rejectApproval } from "@/lib/api/approvals.api";
+import { toast } from "sonner";
+import { useQueryClient } from "@tanstack/react-query";
+import { useState } from "react";
 
 interface Props {
   approvals: Approval[];
@@ -45,7 +50,44 @@ const typeIcons: Record<string, React.ElementType> = {
 
 export function ApprovalsView({ approvals: initialApprovals }: Props) {
   const { data: approvals = initialApprovals, isFetching, isStale, dataUpdatedAt } = useExecutiveApprovals(initialApprovals);
+  const queryClient = useQueryClient();
+  const [actingIds, setActingIds] = useState<Set<string>>(new Set());
+
   const pending = approvals.filter((a) => a.status === "pending");
+
+  async function handleApprove(id: string) {
+    setActingIds((prev) => new Set(prev).add(id));
+    try {
+      await approveApproval(id);
+      toast.success("Schválení potvrzeno");
+      queryClient.invalidateQueries({ queryKey: ["executive", "approvals"] });
+    } catch (e: any) {
+      toast.error(e?.message ?? "Nepodařilo se schválit");
+    } finally {
+      setActingIds((prev) => {
+        const next = new Set(prev);
+        next.delete(id);
+        return next;
+      });
+    }
+  }
+
+  async function handleReject(id: string) {
+    setActingIds((prev) => new Set(prev).add(id));
+    try {
+      await rejectApproval(id);
+      toast.success("Schválení zamítnuto");
+      queryClient.invalidateQueries({ queryKey: ["executive", "approvals"] });
+    } catch (e: any) {
+      toast.error(e?.message ?? "Nepodařilo se zamítnout");
+    } finally {
+      setActingIds((prev) => {
+        const next = new Set(prev);
+        next.delete(id);
+        return next;
+      });
+    }
+  }
 
   return (
     <div className="mx-auto max-w-7xl space-y-6">
@@ -116,6 +158,8 @@ export function ApprovalsView({ approvals: initialApprovals }: Props) {
 
           {approvals.map((approval) => {
             const TypeIcon = typeIcons[approval.type] ?? Clock;
+            const isActing = actingIds.has(approval.id);
+            const isDecided = approval.status !== "pending";
             return (
               <div
                 key={approval.id}
@@ -128,6 +172,14 @@ export function ApprovalsView({ approvals: initialApprovals }: Props) {
                     </Badge>
                     <Badge variant="secondary" className="text-xs">{approval.department}</Badge>
                     <Badge variant="outline" className="text-xs capitalize">{approval.type}</Badge>
+                    {isDecided && (
+                      <Badge
+                        variant="outline"
+                        className={`text-xs ${approval.status === "approved" ? "text-emerald-500 border-emerald-500/30 bg-emerald-500/10" : "text-rose-500 border-rose-500/30 bg-rose-500/10"}`}
+                      >
+                        {approval.status === "approved" ? "Schváleno" : "Zamítnuto"}
+                      </Badge>
+                    )}
                   </div>
                   <p className="text-sm font-medium">{approval.title}</p>
                   <p className="text-xs text-muted-foreground mt-1">{approval.description}</p>
@@ -138,32 +190,34 @@ export function ApprovalsView({ approvals: initialApprovals }: Props) {
                     {new Date(approval.createdAt).toLocaleDateString("cs-CZ")}
                   </p>
                 </div>
-                <div className="flex gap-2 shrink-0">
-                  <Button variant="outline" size="sm" className="h-8 text-xs" disabled>
-                    Odložit
-                  </Button>
-                  <Button size="sm" className="h-8 text-xs gap-1" disabled>
-                    <ClipboardCheck className="h-3 w-3" />
-                    Schválit
-                  </Button>
-                </div>
+                {!isDecided && (
+                  <div className="flex gap-2 shrink-0">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="h-8 text-xs"
+                      onClick={() => handleReject(approval.id)}
+                      disabled={isActing}
+                    >
+                      {isActing ? <Loader2 className="h-3 w-3 animate-spin" /> : null}
+                      Odložit
+                    </Button>
+                    <Button
+                      size="sm"
+                      className="h-8 text-xs gap-1"
+                      onClick={() => handleApprove(approval.id)}
+                      disabled={isActing}
+                    >
+                      {isActing ? <Loader2 className="h-3 w-3 animate-spin" /> : <ClipboardCheck className="h-3 w-3" />}
+                      Schválit
+                    </Button>
+                  </div>
+                )}
               </div>
             );
           })}
         </CardContent>
       </Card>
-
-      <div className="rounded-lg border border-amber-500/20 bg-amber-500/5 p-4">
-        <div className="flex items-start gap-3">
-          <AlertTriangle className="h-5 w-5 text-amber-500 shrink-0 mt-0.5" />
-          <div>
-            <p className="text-sm font-medium text-amber-500">Read-only režim</p>
-            <p className="text-xs text-muted-foreground mt-1">
-              Tlačítka pro schvalování jsou deaktivována — MVP je read-only. Phase 2 přidá interaktivní workflow pro schvalování.
-            </p>
-          </div>
-        </div>
-      </div>
 
       <p className="text-xs text-muted-foreground text-center">
         Zdroj: Executive API — live data z /executive/approvals

@@ -30,6 +30,7 @@ export async function tasksRoutes(
     { preHandler: authMiddleware },
     async (request: AuthenticatedRequest<{ Body: Omit<AgentTask, "id" | "createdAt"> }>, reply) => {
       try {
+        process.stderr.write(`[TASKS] delegate CALLED: ${JSON.stringify(request.body)}\n`);
         const task = await manager.delegate(request.body);
         return reply.status(201).send(task);
       } catch (error) {
@@ -54,6 +55,48 @@ export async function tasksRoutes(
     async (request: AuthenticatedRequest<{ Params: { id: string } }>, reply) => {
       await manager.retry(request.params.id);
       return reply.send({ status: "retried" });
+    },
+  );
+
+  app.patch<{ Params: { id: string }; Body: Partial<AgentTask> }>(
+    "/:id",
+    { preHandler: authMiddleware },
+    async (request: AuthenticatedRequest<{ Params: { id: string }; Body: Partial<AgentTask> }>, reply) => {
+      try {
+        const task = await manager.updateTask(request.params.id, request.body);
+        return reply.send(task);
+      } catch (error) {
+        const message = error instanceof Error ? error.message : String(error);
+        return reply.status(404).send({ error: message });
+      }
+    },
+  );
+
+  app.post<{ Params: { id: string }; Body: { result?: string } }>(
+    "/:id/complete",
+    { preHandler: authMiddleware },
+    async (request: AuthenticatedRequest<{ Params: { id: string }; Body: { result?: string } }>, reply) => {
+      try {
+        const task = await manager.completeTask(request.params.id, request.body?.result);
+        return reply.send(task);
+      } catch (error) {
+        const message = error instanceof Error ? error.message : String(error);
+        return reply.status(404).send({ error: message });
+      }
+    },
+  );
+
+  app.delete<{ Params: { id: string } }>(
+    "/:id",
+    { preHandler: authMiddleware },
+    async (request: AuthenticatedRequest<{ Params: { id: string } }>, reply) => {
+      try {
+        await manager.deleteTask(request.params.id);
+        return reply.send({ status: "deleted" });
+      } catch (error) {
+        const message = error instanceof Error ? error.message : String(error);
+        return reply.status(404).send({ error: message });
+      }
     },
   );
 }

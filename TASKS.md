@@ -2,11 +2,32 @@
 
 ## Aktuální focus
 
-Milestone 2: Agent Operating System — **dokončeno**.
+Milestone 2: Agent Operating System — **dokončeno a schváleno (APPROVED)**.
 
-Další fáze: Milestone 3: Real data & sync — **začíná**.
+Milestone 3: Real data & sync — **aktivní**.
 
 První napojený zdroj: **Obsidian vault** (lokální indexing a search bez AI embeddingů).
+
+---
+
+## Milestone 2 — Architecture Review
+
+- **Datum:** 2026-07-17
+- **Reviewer:** AI Architecture Reviewer
+- **Stav:** APPROVED s podmínkami
+- **Dokument:** `docs/reviews/MILESTONE_2_REVIEW.md`
+
+**Podmínky pro M3:**
+1. BullMQ musí být nastaveno před M3.
+2. Auth musí být hardnut před production nasazením (Supabase SSR na webu je již hotový).
+3. Test coverage se musí zlepšit v M3 (cíl min. 60 %).
+
+**Klíčové nálezy:**
+- Architektura čistá — Entity pattern, Event bus, Repository pattern s PG + in-memory fallbackem
+- 14 agentů registrováno v `packages/agents/src/registry/`
+- SSE stream implementován přes `lib/hooks/useSSE.ts`
+- Některé služby (Gmail, Calendar, Drive) jsou stále skeleton — očekávané pro M2
+- Tech debt: nízké code coverage, BullMQ chybí
 
 ---
 
@@ -65,8 +86,17 @@ První napojený zdroj: **Obsidian vault** (lokální indexing a search bez AI e
 - [x] Přidat loading, error a empty stavy na hlavní stránky
 - [x] Přidat globální error boundary (`app/error.tsx`)
 - [x] Přepnout frontend do API režimu v developmentu
-- [ ] Nastavit TanStack Query
+- [x] Nastavit TanStack Query (QueryProvider v layout.tsx + @tanstack/react-query)
 - [x] Nastavit Zustand (TTS store)
+
+### Refaktory (REFACTOR_PLAN.md)
+
+- [x] Refaktor #1: Centrální data / API layer na frontendu
+- [x] Refaktor #2: Sjednotit demo / reálná data strategii na backendu
+- [x] Refaktor #3: `/api/chat` endpoint a command processor
+- [x] Refaktor #4: Extrahovat znovupoužitelné UI komponenty
+- [x] Refaktor #5: Loading, error a empty stavy
+- [x] Všech 5 refaktorů dokončeno
 
 ### Backend
 
@@ -112,8 +142,8 @@ První napojený zdroj: **Obsidian vault** (lokální indexing a search bez AI e
 - [x] Agent entity lifecycle
 - [x] Live work explanation
 - [x] Event bus a Agent Manager
-- [x] 9 skeleton agentů v registry
-- [x] API routes pro agenty, úkoly a události
+- [x] 14 agentů v registry
+- [x] API routes pro agenty, úkoly a události (včetně SSE streamu)
 - [x] CLI commands pro agenty a úkoly
 - [x] NOC dashboard UI
 - [x] Mock simulace všech agentů
@@ -131,9 +161,6 @@ První napojený zdroj: **Obsidian vault** (lokální indexing a search bez AI e
 
 ### Integrace (Milestone 3)
 
-- [ ] Gmail (`/api/email`) – pouze skeleton
-- [ ] Google Calendar (`/api/calendar`) – pouze skeleton
-- [ ] Google Drive (`/api/documents`) – pouze skeleton
 - [x] Obsidian (`/api/knowledge`):
   - [x] Lokální scan .md souborů v zadaném vault path.
   - [x] Indexování názvů, cest, obsahu a tagů.
@@ -141,8 +168,20 @@ První napojený zdroj: **Obsidian vault** (lokální indexing a search bez AI e
   - [x] Jednoduché full-text vyhledávání bez embeddingů.
   - [x] Zobrazení v Knowledge a Documents.
   - [x] Nastavení vault path z UI.
-
-Ostatní integrace zůstávají v demo/skeleton režimu.
+- [ ] BullMQ setup + worker registrace
+- [ ] Supabase schema (accounts, emails, calendar_events, drive_files, obsidian_notes, knowledge_chunks, briefings, chat tables)
+- [ ] Google OAuth flow dokončení (exchange code → store tokens → refresh)
+- [ ] Gmail sync job (BullMQ)
+- [ ] Calendar sync job (BullMQ)
+- [ ] Drive sync job (BullMQ)
+- [ ] Obsidian sync job (periodic scan → Supabase)
+- [ ] Knowledge base chunking pipeline
+- [ ] Embeddings + pgvector integration
+- [ ] Universal search endpoint
+- [ ] Source citations v chat responses
+- [ ] Types tightening (string → union types pro Agent.icon, Document.type, DecisionItem.source)
+- [ ] Test coverage min. 60 %
+- [ ] Milestone 3 Architecture Review
 
 ### CI
 
@@ -154,7 +193,7 @@ Ostatní integrace zůstávají v demo/skeleton režimu.
 - [x] Vytvořit proces Architecture Review do dokumentace
 - [x] Milestone 0 Review — APPROVED
 - [x] Milestone 1 Review — APPROVED
-- [x] Milestone 2 Review — připravit (AOS dokončeno)
+- [x] Milestone 2 Review — APPROVED (2026-07-17)
 - [ ] Milestone 3 Review — připravit
 
 ---
@@ -163,12 +202,20 @@ Ostatní integrace zůstávají v demo/skeleton režimu.
 
 ### Milestone 3: Real data & sync
 
-- [ ] Real-time synchronizace Gmail (webhook / polling)
-- [ ] Real-time synchronizace Google Calendar
-- [ ] Real-time synchronizace Google Drive
-- [ ] Indexace Obsidian vaultu do vector databáze
+- [ ] BullMQ setup + worker registrace
+- [ ] Supabase schema
+- [ ] Google OAuth flow dokončení
+- [ ] Real-time synchronizace Gmail (BullMQ job)
+- [ ] Real-time synchronizace Google Calendar (BullMQ job)
+- [ ] Real-time synchronizace Google Drive (BullMQ job)
+- [ ] Indexace Obsidian vaultu do Supabase + vector databáze
+- [ ] Knowledge base chunking pipeline
+- [ ] Embeddings + pgvector integration
 - [ ] Universal search napříč zdroji
-- [ ] Zdroje u každé odpovědi AI
+- [ ] Source citations u každé odpovědi AI
+- [ ] Types tightening
+- [ ] Test coverage min. 60 %
+- [ ] Milestone 3 Architecture Review
 
 ### Milestone 4: Production readiness
 

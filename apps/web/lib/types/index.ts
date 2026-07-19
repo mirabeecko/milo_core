@@ -27,6 +27,11 @@ export type AgentStatus =
   | "offline"
   | "error";
 
+export type AgentIcon = "briefcase" | "code" | "search" | "book" | "scale" | "file" | "calendar" | "mail" | "gear" | "bot" | "home" | "settings" | "chart";
+export type DocumentType = "pdf" | "md" | "email" | "note" | "drive" | "obsidian";
+export type DecisionSource = "agent" | "system" | "integration" | "user";
+export type ProjectSource = "github" | "local" | "milo-os";
+
 export interface AgentHealth {
   status: "healthy" | "degraded" | "unhealthy";
   lastHeartbeat: string;
@@ -122,7 +127,7 @@ export interface DecisionItem {
   title: string;
   description: string;
   status: DecisionStatus;
-  source: string;
+  source: DecisionSource;
   date: string;
 }
 
@@ -140,6 +145,7 @@ export interface Agent {
   description: string;
   role: string;
   specialization: string;
+  icon?: AgentIcon;
   priority: "critical" | "high" | "normal" | "low";
   status: AgentStatus;
   health: AgentHealth;
@@ -247,7 +253,7 @@ export interface ProjectUsage {
 export interface Document {
   id: string;
   title: string;
-  type: string;
+  type: DocumentType;
   source: DocumentSource;
   date: string;
   project?: string;
@@ -665,4 +671,29 @@ export interface AiSummary {
   siteVisits: Ga4SiteVisit[];
   totalVisits: number;
   insight: string;
+}
+
+export interface SearchFilter {
+  source?: string;
+  tags?: string[];
+  modifiedAfter?: string;
+}
+
+export interface KnowledgeStats {
+  indexedAt: string;
+  documents: number;
+  chunks: number;
+  vectors: number;
+  provider: string;
+}
+
+export interface HybridSearchResult {
+  docId: string;
+  title: string;
+  chunk: string;
+  score: number;
+  source: string;
+  path: string;
+  tags: string[];
+  heading?: string;
 }

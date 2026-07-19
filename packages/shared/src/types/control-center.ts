@@ -32,9 +32,10 @@ export interface AgentSpec {
   createdAt: string;
   updatedAt: string;
   archivedAt: string | null;
+  tags: string[];
 }
 
-export interface AgentVersion {
+export interface AgentSpecVersion {
   id: string;
   agentId: string;
   versionNumber: number;
@@ -102,7 +103,7 @@ export interface UseCaseVersion {
 
 // ─── Capability ───────────────────────────────────────────────
 
-export interface Capability {
+export interface AgentCapability {
   id: string;
   capabilityCode: string;
   name: string;
@@ -162,7 +163,7 @@ export interface Integration {
 
 // ─── Development Task ─────────────────────────────────────────
 
-export interface DevelopmentTask {
+export interface DevTask {
   id: string;
   agentId: string | null;
   useCaseId: string | null;
@@ -217,7 +218,7 @@ export interface ChangeRequest {
 
 // ─── Mission ──────────────────────────────────────────────────
 
-export interface Mission {
+export interface DevMission {
   id: string;
   title: string;
   description: string | null;
@@ -365,7 +366,7 @@ export interface ActivityLogEntry {
 
 // ─── Implementation Component ─────────────────────────────────
 
-export interface ImplementationComponent {
+export interface ImplComponent {
   id: string;
   agentId: string | null;
   useCaseId: string | null;
@@ -388,17 +389,17 @@ export interface ImplementationComponent {
 
 export interface AgentWithRelations extends AgentSpec {
   useCases?: UseCase[];
-  versions?: AgentVersion[];
-  capabilities?: Capability[];
-  developmentTasks?: DevelopmentTask[];
-  implementationComponents?: ImplementationComponent[];
+  versions?: AgentSpecVersion[];
+  capabilities?: AgentCapability[];
+  developmentTasks?: DevTask[];
+  implementationComponents?: ImplComponent[];
   tools?: (Tool & { agentTool: AgentTool })[];
 }
 
 export interface UseCaseWithRelations extends UseCase {
   versions?: UseCaseVersion[];
-  capabilities?: Capability[];
-  developmentTasks?: DevelopmentTask[];
+  capabilities?: AgentCapability[];
+  developmentTasks?: DevTask[];
   testCases?: TestCase[];
 }
 
@@ -426,7 +427,7 @@ export interface ImpactAnalysis {
     oldValue: unknown;
     newValue: unknown;
   }>;
-  affectedComponents: ImplementationComponent[];
+  affectedComponents: ImplComponent[];
   newDevelopmentTasks: string[];
   modifiedDevelopmentTasks: string[];
   obsoleteDevelopmentTasks: string[];
@@ -456,8 +457,8 @@ export interface DeveloperPromptContext {
   completeSpecification: Record<string, unknown>;
   latestChanges: SpecDiff | null;
   impactAnalysis: ImpactAnalysis | null;
-  implementationComponents: ImplementationComponent[];
-  selectedTasks: DevelopmentTask[];
+  implementationComponents: ImplComponent[];
+  selectedTasks: DevTask[];
   taskDependencies: TaskDependency[];
   repositoryInfo: Record<string, unknown>;
   relevantFiles: string[];

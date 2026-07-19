@@ -101,15 +101,17 @@ export class ExecutiveAgent extends AgentEntityImpl {
       id: `task-${mission.id}-${Date.now()}`,
       title: mission.title,
       description: mission.description ?? mission.title,
-      type: "executive:mission",
+      type: "custom",
       status: "pending",
       priority: "normal",
       ownerId: mission.id,
-      ownerType: "department",
-      agentId: this.id,
+      ownerType: "agent",
+      source: "executive",
       log: [],
+      toolsUsed: [],
+      citations: [],
+      retryCount: 0,
       createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
     };
 
     await this.runTask(task);

@@ -14,6 +14,11 @@ export interface AuthTokens {
   expiresAt: number;
 }
 
+export interface AuthMode {
+  mode: "demo" | "supabase";
+  configured: boolean;
+}
+
 const DEMO_USER: AuthUser = {
   id: "demo-user",
   email: "demo@milo.local",
@@ -84,6 +89,52 @@ export class AuthService {
     return this.mapUser(data.user);
   }
 
+  async getUserWithExpiry(accessToken: string): Promise<{ user: AuthUser; expired: boolean } | null> {
+    if (this.isDemo && accessToken === "demo-token") {
+      return { user: DEMO_USER, expired: false };
+    }
+
+    if (!this.supabase) {
+      return null;
+    }
+
+    const payload = decodeJwtPayload(accessToken);
+    const isExpired = payload ? (payload.exp ?? 0) * 1000 < Date.now() : false;
+
+    if (isExpired) {
+      return null;
+    }
+
+    const { data, error } = await this.supabase.auth.getUser(accessToken);
+
+    if (error || !data.user) {
+      return null;
+    }
+
+    return { user: this.mapUser(data.user), expired: false };
+  }
+
+  isTokenExpired(accessToken: string): boolean {
+    if (this.isDemo) return false;
+    const payload = decodeJwtPayload(accessToken);
+    if (!payload?.exp) return false;
+    return payload.exp * 1000 < Date.now();
+  }
+
+  getAuthMode(): AuthMode {
+    if (this.isDemo) {
+      return {
+        mode: "demo",
+        configured: Boolean(config.SUPABASE_URL && config.SUPABASE_SERVICE_ROLE_KEY),
+      };
+    }
+
+    return {
+      mode: "supabase",
+      configured: true,
+    };
+  }
+
   async refreshSession(refreshToken: string): Promise<AuthTokens> {
     if (this.isDemo) {
       return {
@@ -143,5 +194,16 @@ export class AuthService {
       refreshToken: session.refresh_token,
       expiresAt: session.expires_at ?? 0,
     };
+  }
+}
+
+function decodeJwtPayload(token: string): { exp?: number } | null {
+  try {
+    const parts = token.split(".");
+    if (parts.length !== 3) return null;
+    const payload = JSON.parse(Buffer.from(parts[1], "base64url").toString("utf8"));
+    return payload as { exp?: number };
+  } catch {
+    return null;
   }
 }

@@ -8,7 +8,7 @@
  *   - State recovery po restartu
  */
 import type { AgentManager } from "@milo/agents";
-import { AgentEntityImpl } from "@milo/agents";
+import { AgentEntityImpl, buildExecutionPlan } from "@milo/agents";
 import type { AgentDefinition, Mission, CreateMissionInput } from "@milo/shared";
 import { logExecutiveEvent } from "./event-logger.js";
 import { createApproval, decideApproval } from "./approval-store.js";
@@ -78,6 +78,16 @@ function routeToDepartment(title: string, description?: string): string {
   return "OC";
 }
 
+function mapSkillToTaskType(skill: string): "search" | "analyze" | "summarize" | "report" | "delegate" | "custom" {
+  const s = skill.toLowerCase();
+  if (s.includes("search") || s.includes("find")) return "search";
+  if (s.includes("analyze") || s.includes("analysis")) return "analyze";
+  if (s.includes("summarize") || s.includes("summary")) return "summarize";
+  if (s.includes("report") || s.includes("coord")) return "report";
+  if (s.includes("delegate") || s.includes("route")) return "delegate";
+  return "custom";
+}
+
 // ─── Executive Runtime ───────────────────────────────────────────────
 
 export class ExecutiveRuntime {
@@ -113,12 +123,47 @@ export class ExecutiveRuntime {
     if (!em) throw new Error(`Mission ${missionId} not found`);
     em.lifecycleStatus = "running";
     logExecutiveEvent("mission_progress", { mission_id: missionId, department: em.department, new_status: "running", summary: "Mise spuštěna" });
+
     if (options?.workerSkill) {
       const worker = await this.createWorker(missionId, options.workerSkill);
       em.workerAgentId = worker.id;
       em.assignedAgent = worker.id;
       logExecutiveEvent("agent_created", { agent_id: worker.id, department: em.department, summary: `Worker ${worker.name}` });
+
+      const toolRegistry = this.manager.getToolRegistry();
+      const taskType = mapSkillToTaskType(options.workerSkill);
+
+      const dummyTask = {
+        id: `plan-${missionId}`,
+        title: em.title,
+        description: em.description ?? em.title,
+        type: taskType,
+        priority: em.priority,
+        status: "pending" as const,
+        ownerId: worker.id,
+        ownerType: "agent" as const,
+        source: "chief-of-staff",
+        createdAt: new Date().toISOString(),
+        log: [],
+        toolsUsed: this.manager.getAvailableTools(worker.id),
+        citations: [],
+        retryCount: 0,
+      };
+
+      const plan = buildExecutionPlan(taskType, dummyTask, toolRegistry);
+
+      const task = await this.manager.getTasks({}).then((tasks) => tasks.find((t) => t.missionId === missionId));
+      if (task) {
+        task.toolsUsed = plan.steps.map((s) => s.toolId);
+      }
+
+      logExecutiveEvent("mission_progress", {
+        mission_id: missionId,
+        department: em.department,
+        summary: `Plán: ${plan.steps.length} kroků — ${plan.steps.map((s) => s.description).join(" → ")}`,
+      });
     }
+
     return em;
   }
 
@@ -165,20 +210,25 @@ export class ExecutiveRuntime {
 
   private async createWorker(missionId: string, skill: string): Promise<{ id: string; name: string }> {
     const workerId = `worker-${missionId}-${Date.now()}`;
+    const toolRegistry = this.manager.getToolRegistry();
+    const allTools = toolRegistry.list().map((t) => t.id);
+    const workerTools = allTools.length > 0 ? allTools : ["obsidian:list", "obsidian:search", "obsidian:read", "filesystem:list", "filesystem:read", "shell:execute"];
+
     const def: AgentDefinition = {
       id: workerId, name: `Worker: ${skill}`, description: `Dočasný worker pro misi ${missionId}`,
       role: "worker", specialization: skill, priority: "normal",
       config: {
         model: "provider-agnostic", temperature: 0.3,
         systemPrompt: `Jsi Worker Agent: ${skill}. Mise: ${missionId}.`,
-        knowledge: [], tools: ["shell:exec", "fs:read"],
-        permissions: { canRead: ["*"], canWrite: [], canExecute: ["shell:exec"] },
+        knowledge: [],
+        tools: workerTools,
+        permissions: { canRead: ["*"], canWrite: [], canExecute: ["shell:execute"] },
         retryPolicy: { maxRetries: 2, backoffMs: 1000 }, timeoutMs: 120000,
       },
     };
     await this.manager.register(def, (agentDef, deps) => new AgentEntityImpl(agentDef, deps));
     await this.manager.start(workerId);
-    logExecutiveEvent("agent_started", { agent_id: workerId, summary: `Worker ${def.name} nastartován` });
+    logExecutiveEvent("agent_started", { agent_id: workerId, summary: `Worker ${def.name} nastartován s ${workerTools.length} nástroji` });
     return { id: workerId, name: def.name };
   }
 

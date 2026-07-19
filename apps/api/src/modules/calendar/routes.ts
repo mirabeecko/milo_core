@@ -3,6 +3,7 @@ import { z } from "zod";
 import { CalendarService } from "./service.js";
 import { AuthenticatedRequest, authMiddleware } from "../auth/middleware.js";
 import { getGoogleTokens, setGoogleTokens } from "../../config/google-tokens.js";
+import { getCalendarClient } from "../../services/gws-bridge.js";
 
 const connectSchema = z.object({
   code: z.string(),
@@ -89,6 +90,54 @@ export async function calendarRoutes(
       } catch (error) {
         request.log.error(error);
         return reply.status(500).send({ error: "Failed to fetch events" });
+      }
+    },
+  );
+
+  // ─── Bridge: Calendar events + AI shrnutí (přes existující OAuth token) ───
+
+  app.get(
+    "/events",
+    { preHandler: authMiddleware },
+    async (_request, reply) => {
+      try {
+        const calendar = getCalendarClient();
+
+        const now = new Date().toISOString();
+        const res = await calendar.events.list({
+          calendarId: "primary",
+          timeMin: now,
+          maxResults: 20,
+          singleEvents: true,
+          orderBy: "startTime",
+        });
+
+        const events = (res.data.items ?? []).map((e) => ({
+          id: e.id ?? "",
+          summary: e.summary ?? "",
+          start: e.start?.dateTime ?? e.start?.date ?? "",
+          end: e.end?.dateTime ?? e.end?.date ?? "",
+          location: e.location ?? undefined,
+          htmlLink: e.htmlLink ?? "",
+        }));
+
+        const today = new Date().toISOString().slice(0, 10);
+        const todayEvents = events.filter((e: any) => e.start?.startsWith(today));
+        const upcomingEvents = events.filter((e: any) => e.start > today);
+
+        return reply.send({
+          events,
+          total: events.length,
+          summary: {
+            today: todayEvents.length,
+            upcoming: upcomingEvents.length,
+            aiSummary: todayEvents.length > 0
+              ? `Dnes ${todayEvents.length} událost${todayEvents.length > 1 ? "i" : ""}: ${todayEvents.map((e: any) => e.summary).join(", ")}. Celkem ${events.length} událostí v kalendáři.`
+              : `Dnes žádné události. Nejbližší: ${upcomingEvents.slice(0, 3).map((e: any) => `${e.summary} (${e.start?.slice(0, 10)})`).join(", ") || "žádné"}.`,
+          },
+        });
+      } catch (err) {
+        return reply.status(500).send({ error: "Calendar bridge failed", detail: String(err) });
       }
     },
   );

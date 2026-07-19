@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { Suspense, useEffect, useState, useRef, useCallback } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Send, Bot, User, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -10,6 +11,14 @@ import type { ChatMessage } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
 export default function ChatPage() {
+  return (
+    <Suspense fallback={<div className="mx-auto flex h-full max-w-3xl items-center justify-center"><Loader2 className="h-6 w-6 animate-spin" /></div>}>
+      <ChatPageInner />
+    </Suspense>
+  );
+}
+
+function ChatPageInner() {
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
       id: "welcome",
@@ -21,14 +30,16 @@ export default function ChatPage() {
   const [input, setInput] = useState("");
   const [isSending, setIsSending] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const sentRef = useRef(false);
+  const searchParams = useSearchParams();
+  const router = useRouter();
 
   useEffect(() => {
     scrollRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  const handleSend = async () => {
-    const text = input.trim();
-    if (!text || isSending) return;
+  const handleSend = useCallback(async (text: string) => {
+    if (!text.trim() || isSending) return;
 
     const userMsg: ChatMessage = {
       id: `msg-${Date.now()}`,
@@ -37,12 +48,15 @@ export default function ChatPage() {
       timestamp: new Date().toISOString(),
     };
     setMessages((prev) => [...prev, userMsg]);
-    setInput("");
     setIsSending(true);
 
     try {
-      const reply = await sendMessage({ message: text });
-      setMessages((prev) => [...prev, reply]);
+      const response = await sendMessage({ message: text });
+      setMessages((prev) => [...prev, response.message]);
+
+      if (response.missionId) {
+        router.push(`/missions/${response.missionId}`);
+      }
     } catch {
       setMessages((prev) => [
         ...prev,
@@ -56,6 +70,21 @@ export default function ChatPage() {
     } finally {
       setIsSending(false);
     }
+  }, [isSending, router]);
+
+  useEffect(() => {
+    const prompt = searchParams.get("prompt");
+    if (prompt && !sentRef.current) {
+      sentRef.current = true;
+      void handleSend(prompt);
+    }
+  }, [searchParams, handleSend]);
+
+  const handleSubmit = () => {
+    const text = input.trim();
+    if (!text) return;
+    setInput("");
+    void handleSend(text);
   };
 
   return (
@@ -92,7 +121,7 @@ export default function ChatPage() {
 
       <div className="border-t border-border p-4">
         <form
-          onSubmit={(e) => { e.preventDefault(); void handleSend(); }}
+          onSubmit={(e) => { e.preventDefault(); handleSubmit(); }}
           className="flex gap-2"
         >
           <Input

@@ -1,166 +1,17 @@
-import type { AgentDefinition, AgentStatus, AgentTask, LiveWorkExplanation } from "@milo/shared";
+import type { AgentDefinition, AgentTask, LiveWorkExplanation } from "@milo/shared";
+import type { AiMessage } from "@milo/ai";
 import { AgentEntityImpl } from "../agent.js";
-import { AgentStateMachine } from "../runtime/agent-state-machine.js";
 import type { AgentEntityDeps } from "../agent.js";
 import { DefaultNotifierService } from "../services/notifier/index.js";
-import type { NotifierAgentState, NotifierCheckResult, ReminderItem } from "../services/notifier/types.js";
-
-export interface NotifierSimulationStep {
-  status: AgentStatus;
-  progress: number;
-  activity: string;
-  goal: string;
-  reason: string;
-  findings: string;
-  evidence: string[];
-  toolsUsed: string[];
-  nextStep: string;
-  estimatedCompletion: string;
-  risks: string;
-  needsFromUser: string;
-  lastCompletedStep: string;
-  confidence: string;
-  alternativeApproach: string;
-  decision: string;
-  logs: string[];
-}
+import type { NotifierAgentState, ReminderItem } from "../services/notifier/types.js";
 
 export class NotifierAgent extends AgentEntityImpl {
-  private simulationInterval?: ReturnType<typeof setInterval>;
-  private runningTick?: Promise<void>;
-  private currentStepIndex = 0;
   private notifierService = new DefaultNotifierService();
-  private state: NotifierAgentState & { activeTask?: AgentTask; taskHistory: AgentTask[]; pendingQueue: AgentTask[] } = {
+  private state: NotifierAgentState = {
     reminders: [],
     todayDate: new Date().toISOString().split("T")[0]!,
     taskProgress: 0,
-    taskHistory: [],
-    pendingQueue: [],
   };
-
-  private readonly tasks: Omit<AgentTask, "id" | "createdAt">[] = [
-    {
-      title: "Synchronizovat připomínky",
-      description: "Načíst aktuální události, úkoly a emaily a vytvořit připomínky na dnešek.",
-      priority: "high",
-      status: "pending",
-      ownerId: "notifier",
-      ownerType: "agent",
-      source: "schedule",
-      log: [],
-      toolsUsed: ["Notifier Service", "Calendar Service", "Task Service"],
-      citations: [],
-      retryCount: 0,
-      estimateMs: 15000,
-    },
-    {
-      title: "Zkontrolovat připomínky",
-      description: "Projít dnešní připomínky a zjistit, které je třeba odeslat.",
-      priority: "high",
-      status: "pending",
-      ownerId: "notifier",
-      ownerType: "agent",
-      source: "schedule",
-      log: [],
-      toolsUsed: ["Notifier Service"],
-      citations: [],
-      retryCount: 0,
-      estimateMs: 10000,
-    },
-    {
-      title: "Odeslat notifikace",
-      description: "Odeslat notifikace pro připomínky, které nastaly.",
-      priority: "normal",
-      status: "pending",
-      ownerId: "notifier",
-      ownerType: "agent",
-      source: "system",
-      log: [],
-      toolsUsed: ["Notifier Service", "Notification Service"],
-      citations: [],
-      retryCount: 0,
-      estimateMs: 15000,
-    },
-  ];
-
-  private readonly steps: NotifierSimulationStep[] = [
-    {
-      status: "loading_calendar",
-      progress: 20,
-      activity: "Synchronizuji připomínky z kalendáře, úkolů a emailů.",
-      goal: "Mít aktuální seznam všech připomínek na dnešek.",
-      reason: "Bez aktuálních dat nemohu správně notifikovat uživatele.",
-      findings: "Začínám synchronizaci. Zatím nemám žádné připomínky.",
-      evidence: ["Calendar Service", "Task Service", "Email Service"],
-      toolsUsed: ["Notifier Service"],
-      nextStep: "Vytvořit položky pro dnešní události, úkoly a emaily.",
-      estimatedCompletion: "Za 3 sekundy",
-      risks: "Pokud nejsou data z kalendáře, použiji pouze úkoly a emaily.",
-      needsFromUser: "Nic.",
-      lastCompletedStep: "Přijetí úkolu",
-      confidence: "99 %",
-      alternativeApproach: "Pokud selže synchronizace, načtu poslední uložená data.",
-      decision: "Synchronizuji přes Notifier Service s daty z ostatních agentů.",
-      logs: ["Začínám synchronizaci připomínek.", "Načítám data z kalendáře, úkolů a emailů."],
-    },
-    {
-      status: "analyzing",
-      progress: 40,
-      activity: "Kontroluji, které připomínky je třeba odeslat.",
-      goal: "Zjistit, zda nastal čas pro odeslání notifikace.",
-      reason: "Notifikace musí přijít ve správný čas, aby uživatel nebyl obtěžován.",
-      findings: "Nalezeno {totalCount} připomínek, z toho {triggeredCount} ke spuštění.",
-      evidence: ["Dnešní připomínky", "Aktuální čas"],
-      toolsUsed: ["Notifier Service", "Check Engine"],
-      nextStep: "Odeslat notifikace pro spuštěné připomínky.",
-      estimatedCompletion: "Za 5 sekund",
-      risks: "Některé připomínky mohou být už neaktuální.",
-      needsFromUser: "Nic.",
-      lastCompletedStep: "Synchronizace připomínek",
-      confidence: "97 %",
-      alternativeApproach: "Pokud je připomínek příliš mnoho, priorizuji ty s bližším termínem.",
-      decision: "Kontroluji všechny aktivní připomínky proti aktuálnímu času.",
-      logs: ["Kontroluji připomínky proti aktuálnímu času.", "Vyhodnocuji prioritu."],
-    },
-    {
-      status: "working",
-      progress: 70,
-      activity: "Odesílám notifikace pro spuštěné připomínky.",
-      goal: "Upozornit uživatele na blížící se události a deadliny.",
-      reason: "Včasná notifikace zvyšuje šanci, že uživatel stihne termín.",
-      findings: "Odesláno {notifiedCount} notifikací.",
-      evidence: ["Spuštěné připomínky", "Notification Service"],
-      toolsUsed: ["Notifier Service", "Notification Service"],
-      nextStep: "Označit odeslané připomínky jako notified.",
-      estimatedCompletion: "Za 3 sekundy",
-      risks: "Pokud notifikační služba není dostupná, připomínky zůstanou pending.",
-      needsFromUser: "Nic.",
-      lastCompletedStep: "Kontrola připomínek",
-      confidence: "98 %",
-      alternativeApproach: "Pokud nelze odeslat notifikaci, označím ji pro retry.",
-      decision: "Odesílám notifikace a aktualizuji stav připomínek.",
-      logs: ["Odesílám notifikace.", "Aktualizuji stav připomínek."],
-    },
-    {
-      status: "reporting",
-      progress: 100,
-      activity: "Dokončuji a předávám výsledek.",
-      goal: "Uložit výsledek a přejít do stavu čekání.",
-      reason: "Po odeslání notifikací je potřeba uložit stav a čekat na další cyklus.",
-      findings: "Kontrola a odeslání notifikací dokončeny.",
-      evidence: ["Výsledek kontroly", "Odeslané notifikace"],
-      toolsUsed: ["Notifier Service", "Agent Manager"],
-      nextStep: "Přejít do stavu čekání na další kontrolu.",
-      estimatedCompletion: "Dokončeno",
-      risks: "Žádná.",
-      needsFromUser: "Nic.",
-      lastCompletedStep: "Odeslání notifikací",
-      confidence: "100 %",
-      alternativeApproach: "Pokud uživatel požaduje úpravy, upravím nastavení připomínek.",
-      decision: "Výsledek je hotový. Ukládám ho do historie.",
-      logs: ["Kontrola připomínek dokončena.", "Výsledek uložen do historie."],
-    },
-  ];
 
   constructor(definition: AgentDefinition, deps: AgentEntityDeps) {
     super(definition, deps);
@@ -175,42 +26,54 @@ export class NotifierAgent extends AgentEntityImpl {
 
   async start(): Promise<void> {
     await super.start();
+
+    this.setExplanation({
+      currentActivity: "Synchronizuji připomínky z kalendáře, úkolů a emailů.",
+      goal: "Mít aktuální seznam všech připomínek na dnešek.",
+      reason: "Bez aktuálních dat nemohu správně notifikovat uživatele.",
+      findings: "Začínám synchronizaci.",
+      evidence: ["Calendar Service", "Task Service", "Email Service"],
+      toolsUsed: ["Notifier Service"],
+      nextStep: "Vytvořit položky pro dnešní události.",
+      estimatedCompletion: "Za několik sekund",
+      risks: "Pokud nejsou data z kalendáře, použiji pouze úkoly a emaily.",
+      needsFromUser: "Nic.",
+      lastCompletedStep: "Inicializace",
+      confidence: "99 %",
+      alternativeApproach: "Pokud selže synchronizace, načtu poslední uložená data.",
+    });
+
     try {
       await this.notifierService.load();
     } catch (err) {
       console.warn({ err }, "Initial notifier load failed");
     }
+
     this.state.todayDate = new Date().toISOString().split("T")[0]!;
     this.state.reminders = this.notifierService.getAllReminders();
-    this.startSimulation();
+
+    await this.runNotifierCheck();
+
+    await this.runAIAnalysis();
+
+    this.setIdleExplanation();
+    await this.transitionTo("idle");
   }
 
   async stop(): Promise<void> {
-    this.stopSimulation();
-    this.runningTick?.catch(() => undefined);
     await super.stop();
   }
 
   async pause(): Promise<void> {
-    this.stopSimulation();
     await super.pause();
   }
 
   async resume(): Promise<void> {
     await super.resume();
-    this.startSimulation();
   }
 
   getTaskProgress(): number {
     return this.state.taskProgress;
-  }
-
-  getTaskHistory(): AgentTask[] {
-    return [...this.state.taskHistory, ...this.taskHistory];
-  }
-
-  getPendingQueue(): AgentTask[] {
-    return [...this.state.pendingQueue, ...this.pendingQueue];
   }
 
   getNotifierState(): NotifierAgentState {
@@ -256,56 +119,89 @@ export class NotifierAgent extends AgentEntityImpl {
     return null;
   }
 
-  private startSimulation(): void {
-    if (this.simulationInterval) return;
-    if (this.stopped) return;
-
-    this.simulationInterval = setInterval(() => {
-      this.runningTick = this.simulateTick()
-        .catch((err) => {
-          console.error({ err }, "Notifier simulation tick failed");
-        })
-        .finally(() => { this.runningTick = undefined; });
-    }, 60000);
-
-    this.runningTick = this.simulateTick()
-      .catch((err) => {
-        console.error({ err }, "Notifier simulation tick failed");
-      })
-      .finally(() => { this.runningTick = undefined; });
-  }
-
-  private stopSimulation(): void {
-    if (this.simulationInterval) {
-      clearInterval(this.simulationInterval);
-      this.simulationInterval = undefined;
-    }
-  }
-
-  private async simulateTick(): Promise<void> {
-    if (this.stopped || this.status === "paused" || AgentStateMachine.isTerminal(this.status)) return;
-
-    const activeTask = this.state.activeTask ?? this.nextTask();
-    if (!activeTask) {
-      await this.setIdleExplanation();
-      return;
+  async runTask(task: AgentTask): Promise<void> {
+    if (this.status === "offline") {
+      throw new Error(`Agent ${this.id} is offline`);
     }
 
-    this.state.activeTask = activeTask;
-    this.activeTaskId = activeTask.id;
+    const startedAt = Date.now();
+    this.activeTaskId = task.id;
+    this.runningTasks += 1;
+    this.state.taskProgress = 0;
+    await this.transitionTo("working");
+    this.agent.metrics.totalTasks += 1;
 
-    const step = this.steps[this.currentStepIndex];
-    if (!step) {
-      await this.completeTask(activeTask);
-      return;
-    }
+    await this.log("info", `Spouštím notifikační úkol: ${task.title}`, { taskId: task.id });
 
-    if (this.currentStepIndex === 0) {
+    this.setExplanation({
+      currentActivity: `Spouštím úkol: ${task.title}`,
+      goal: task.description ?? "Dokončit zadaný úkol",
+      reason: `Přijal jsem úkol od ${task.ownerType} ${task.ownerId}`,
+      findings: "Zatím začínám.",
+      evidence: ["interní fronta úkolů"],
+      toolsUsed: this.agent.config.tools.slice(0, 3),
+      nextStep: "Synchronizovat připomínky a spustit AI analýzu.",
+      estimatedCompletion: "Za několik sekund",
+      risks: "Žádné známé riziko.",
+      needsFromUser: "Nic.",
+      lastCompletedStep: "Přijetí úkolu",
+      confidence: "100 %",
+      alternativeApproach: "Žádný.",
+    });
+
+    try {
       await this.runNotifierCheck();
+      this.state.taskProgress = 50;
+
+      const result = await this.runAIAnalysis();
+      this.state.taskProgress = 100;
+
+      this.completedTasks += 1;
+      this.agent.metrics.successfulTasks += 1;
+      this.consecutiveErrors = 0;
+
+      await this.log("info", `Úkol dokončen: ${task.title}`, { taskId: task.id, output: result });
+      this.setExplanation({
+        currentActivity: "Úkol dokončen.",
+        findings: `Úkol ${task.title} byl úspěšně dokončen.`,
+        lastCompletedStep: `Dokončil jsem úkol ${task.title}`,
+      });
+    } catch (error) {
+      this.failedTasks += 1;
+      this.agent.metrics.failedTasks += 1;
+      this.agent.metrics.errorCount += 1;
+      this.consecutiveErrors += 1;
+      this.state.taskProgress = 0;
+
+      const message = error instanceof Error ? error.message : String(error);
+      await this.log("error", `Úkol selhal: ${message}`, { taskId: task.id });
+      this.setExplanation({
+        currentActivity: "Úkol selhal.",
+        findings: `Úkol ${task.title} selhal: ${message}`,
+      });
+
+      if (this.consecutiveErrors >= this.deps.config.maxConsecutiveErrors) {
+        await this.transitionTo("error");
+      }
+    } finally {
+      this.runningTasks = Math.max(0, this.runningTasks - 1);
+      this.activeTaskId = undefined;
+      this.state.taskProgress = 0;
+      if (this.status !== "paused" && this.status !== "error") {
+        await this.transitionTo("idle");
+      }
     }
 
-    await this.applyStep(step, activeTask);
-    this.currentStepIndex += 1;
+    const actualTimeMs = Date.now() - startedAt;
+    if (this.agent.metrics.averageDurationMs === 0) {
+      this.agent.metrics.averageDurationMs = actualTimeMs;
+    } else {
+      const total = this.agent.metrics.successfulTasks + this.agent.metrics.failedTasks;
+      this.agent.metrics.averageDurationMs = Math.round(
+        (this.agent.metrics.averageDurationMs * (total - 1) + actualTimeMs) / total,
+      );
+    }
+    this.agent.metrics.lastUpdatedAt = new Date().toISOString();
   }
 
   private async runNotifierCheck(): Promise<void> {
@@ -320,81 +216,94 @@ export class NotifierAgent extends AgentEntityImpl {
     this.state.reminders = this.notifierService.getTodayReminders();
   }
 
-  private nextTask(): AgentTask | undefined {
-    if (this.state.pendingQueue.length > 0) {
-      return this.state.pendingQueue.shift();
+  private async runAIAnalysis(): Promise<string> {
+    if (!this.deps.aiRouter) {
+      const fallback = this.buildFallbackSummary();
+      this.setExplanation({
+        currentActivity: "AI není nakonfigurováno. Používám data bez AI analýzy.",
+        findings: fallback,
+        nextStep: "Nakonfigurujte ModelRouter pro AI prioritizaci připomínek.",
+      });
+      return `[AI není nakonfigurováno]\n\n${fallback}`;
     }
 
-    const template = this.tasks[this.state.taskHistory.length % this.tasks.length];
-    if (!template) return undefined;
+    this.setExplanation({
+      currentActivity: "Analyzuji a prioritizuji připomínky pomocí AI.",
+      nextStep: "Komunikuji s jazykovým modelem.",
+    });
 
-    return {
-      ...template,
-      id: `notifier-task-${this.state.taskHistory.length + 1}`,
-      createdAt: new Date().toISOString(),
-    };
-  }
+    try {
+      const provider = this.deps.aiRouter.getProvider("analyze");
+      const pending = this.state.reminders.filter((r) => r.status === "pending");
+      const notified = this.state.reminders.filter((r) => r.status === "notified");
 
-  private async applyStep(step: NotifierSimulationStep, task: AgentTask): Promise<void> {
-    await this.updateAgentStatus(step.status);
-    this.state.taskProgress = step.progress;
+      const reminderList = this.state.reminders
+        .map(
+          (r) =>
+            `- [${r.status}] ${r.time} – ${r.description} (${r.source}, priorita: ${r.priority ?? "normal"})`,
+        )
+        .join("\n");
 
-    const result = this.notifierService.checkReminders(new Date());
-    const totalCount = this.state.reminders.length;
-    const triggeredCount = result.triggered.length;
-    const notifiedCount = result.triggered.filter((r) => r.status === "notified").length;
+      const content = [
+        `Datum: ${this.state.todayDate}`,
+        `Celkem připomínek: ${this.state.reminders.length}`,
+        `Čekajících: ${pending.length}`,
+        `Odeslaných: ${notified.length}`,
+        ``,
+        `Seznam připomínek:`,
+        reminderList || "Žádné připomínky",
+      ].join("\n");
 
-    const findings = step.findings
-      .replace("{totalCount}", String(totalCount))
-      .replace("{triggeredCount}", String(triggeredCount))
-      .replace("{notifiedCount}", String(notifiedCount));
+      const messages: AiMessage[] = [
+        {
+          role: "system",
+          content:
+            "Jsi asistent pro správu připomínek. Analyzuj dnešní připomínky: prioritizuj je podle důležitosti a urgency, navrhni optimální časy pro notifikace, identifikuj konflikty a navrhni pořadí. Odpovídej česky, stručně a strukturovaně.",
+        },
+        { role: "user", content },
+      ];
 
-    const explanation: Partial<LiveWorkExplanation> = {
-      currentActivity: step.activity,
-      goal: step.goal,
-      reason: step.reason,
-      findings,
-      evidence: step.evidence,
-      toolsUsed: step.toolsUsed,
-      nextStep: step.nextStep,
-      estimatedCompletion: step.estimatedCompletion,
-      risks: step.risks,
-      needsFromUser: step.needsFromUser,
-      lastCompletedStep: step.lastCompletedStep,
-      confidence: step.confidence,
-      alternativeApproach: step.alternativeApproach,
-      decisionLog: [
-        ...this.explanation.decisionLog,
-        { timestamp: new Date().toISOString(), thought: step.decision },
-      ].slice(-20),
-    };
+      const result = await provider.complete(messages, { temperature: 0.3 });
 
-    this.setExplanation(explanation);
+      this.setExplanation({
+        currentActivity: "AI analýza připomínek dokončena.",
+        findings: `Analyzováno ${this.state.reminders.length} připomínek. ${pending.length} čeká na odeslání.`,
+        nextStep: "Čekám na další instrukce.",
+      });
 
-    for (const message of step.logs) {
-      await this.log("info", message, { taskId: task.id, progress: step.progress });
+      return result;
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      const fallback = this.buildFallbackSummary();
+      this.setExplanation({
+        currentActivity: "AI analýza selhala, používám fallback.",
+        findings: `Chyba: ${message}. ${fallback}`,
+        nextStep: "Zkontrolujte AI připojení.",
+      });
+      return `[AI dočasně nedostupné: ${message}]\n\n${fallback}`;
     }
-
-    await this.emit("agent:task:started", { taskId: task.id, progress: step.progress });
   }
 
-  private async completeTask(task: AgentTask): Promise<void> {
-    this.state.taskProgress = 100;
-    this.completedTasks += 1;
-    this.runningTasks = Math.max(0, this.runningTasks - 1);
-    this.state.taskHistory.unshift({ ...task, status: "completed", completedAt: new Date().toISOString() });
-    this.state.activeTask = undefined;
-    this.activeTaskId = undefined;
-    this.currentStepIndex = 0;
+  private buildFallbackSummary(): string {
+    const pendingCount = this.state.reminders.filter((r) => r.status === "pending").length;
+    const notifiedCount = this.state.reminders.filter((r) => r.status === "notified").length;
+    const dismissedCount = this.state.reminders.filter((r) => r.status === "dismissed").length;
 
-    await this.log("info", `Úkol dokončen: ${task.title}`, { taskId: task.id });
-    await this.emit("agent:task:completed", { taskId: task.id, title: task.title });
-
-    await this.setIdleExplanation();
+    return [
+      `Přehled připomínek (bez AI):`,
+      `- Celkem: ${this.state.reminders.length}`,
+      `- Čeká: ${pendingCount}`,
+      `- Odesláno: ${notifiedCount}`,
+      `- Zahozeno: ${dismissedCount}`,
+      ``,
+      `Připomínky:`,
+      ...this.state.reminders.map(
+        (r) => `  [${r.status}] ${r.time} – ${r.description} (${r.priority ?? "normal"})`,
+      ),
+    ].join("\n");
   }
 
-  private async setIdleExplanation(): Promise<void> {
-    await this.updateAgentStatus("idle");
+  private setIdleExplanation(): void {
     this.state.taskProgress = 0;
     const pendingCount = this.state.reminders.filter((r) => r.status === "pending").length;
     const notifiedCount = this.state.reminders.filter((r) => r.status === "notified").length;
@@ -411,7 +320,7 @@ export class NotifierAgent extends AgentEntityImpl {
       estimatedCompletion: "Neurčito",
       risks: "Žádná.",
       needsFromUser: "Nic.",
-      lastCompletedStep: this.state.taskHistory[0]?.title ?? "Žádný",
+      lastCompletedStep: "Kontrola připomínek",
       confidence: "100 %",
       alternativeApproach: "Pokud není nový požadavek, provedu pravidelnou kontrolu.",
       decisionLog: this.explanation.decisionLog,

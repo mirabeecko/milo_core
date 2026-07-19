@@ -43,6 +43,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { EmptyState } from "@/components/common/empty-state";
 import { PageHeader } from "@/components/common/page-header";
+import { AgentDefinitionEditor } from "@/components/agents/agent-definition-editor";
 import {
   getAgent,
   getAgentExplanation,
@@ -817,6 +818,11 @@ export default function AgentDetailPage(): JSX.Element {
                 )}
                 Restart
               </Button>
+              <AgentDefinitionEditor
+                agentId={agent.id}
+                agentName={agent.name}
+                onSaved={() => { void loadAgent(); }}
+              />
             </div>
           </div>
         </CardHeader>

@@ -28,7 +28,7 @@ function buildTransitions(): Record<AgentStatus, AgentStatus[]> {
 
   map.set("offline", ["starting"]);
   map.set("starting", ["idle", "error"]);
-  map.set("idle", [...OPERATIONAL_STATUSES, ...NON_OPERATIONAL_TARGETS]);
+  map.set("idle", ["starting", ...OPERATIONAL_STATUSES, ...NON_OPERATIONAL_TARGETS]);
   map.set("paused", [...OPERATIONAL_STATUSES, ...NON_OPERATIONAL_TARGETS]);
   map.set("stopping", ["offline", "error"]);
   map.set("recovering", ["idle", "error", "offline"]);

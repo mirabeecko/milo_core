@@ -13,12 +13,13 @@ export * from "./runtime/execution-task-runner.js";
 export * from "./runtime/executive-task-runner.js";
 export * from "./agents/executive-agent.js";
 export * from "./registry/index.js";
-export * from "./simulation.js";
-export * from "./agents/chief-of-staff.js";
+export * from "./orchestrator/index.js";
+
 export * from "./agents/calendar.js";
 export * from "./agents/communication.js";
 export * from "./agents/developer.js";
 export * from "./agents/notifier.js";
+export * from "./agents/knowledge.js";
 export * from "./services/calendar/index.js";
 export * from "./services/communication/index.js";
 export * from "./services/developer/index.js";

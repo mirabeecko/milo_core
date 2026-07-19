@@ -836,3 +836,46 @@ Spolehlivost má přednost před:
 - automatickými změnami.
 
 Pokud si agent není jistý, musí zastavit a zeptat se CEO.
+
+# 32. Circuit breaker a limity session
+
+## 32.1 STOP po opakovaném selhání
+
+Pokud stejná akce (příkaz, endpoint, nástroj) selže 3x za sebou se stejnou
+chybou, agent musí:
+
+- okamžitě přestat akci opakovat,
+- nezkoušet kosmeticky pozměněnou variantu téhož příkazu,
+- napsat CEO přesně: co zkusil, kolikrát, jaká byla chyba, co potřebuje.
+
+Zakázáno pokračovat ve smyčce pokus-selhání-pokus bez zásahu CEO.
+
+**Implementováno:** Guardian plugin (`~/.hermes/plugins/guardian/`) —
+`ActionTracker` s SHA256 signaturou tool callu, po 3 selháních natvrdo
+blokuje a eskaluje na CEO.
+
+## 32.2 Limit délky session
+
+Session nesmí běžet neomezeně dlouho.
+
+Pokud session přesáhne:
+- 3 hodiny aktivity,
+
+agent musí navrhnout restart session a shrnout dosavadní stav do
+trvalého souboru (ne jen do kontextu, který zmizí s restartem).
+
+**Implementováno:** Guardian plugin — `SessionGuard` kontroluje elapsed
+čas od startu session. Token counter není implementován (Hermes provádí
+vlastní context compression nezávisle).
+
+## 32.3 Zákaz výpisu credentials
+
+Agent nesmí nikdy vypsat, vytisknout ani zalogovat hodnotu tokenu,
+klíče, secretu nebo hesla — ani za účelem debugu.
+
+Pro diagnostiku smí zjišťovat pouze:
+- je token platný / neplatný,
+- kdy expiruje,
+- zda existuje.
+
+Hodnota samotná se nikdy neobjeví ve výstupu, logu ani zprávě CEO.

@@ -16,4 +16,5 @@ export interface ChatResponse {
   message: ChatMessage;
   demo?: boolean;
   missionId?: string;
+  conversationId?: string;
 }

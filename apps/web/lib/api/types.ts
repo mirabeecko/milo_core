@@ -1,5 +1,6 @@
 export interface ApiResponse<T> {
   data: T;
+  demo?: boolean;
   meta?: Record<string, unknown>;
 }
 

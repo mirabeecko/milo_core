@@ -15,6 +15,9 @@ import { designAgentDefinition } from "./design.js";
 import { notifierAgentDefinition } from "./notifier.js";
 import { knowledgeAgentDefinition } from "./knowledge.js";
 import { spokespersonAgentDefinition } from "./spokesperson.js";
+import { testerBossDefinition } from "./tester-boss.js";
+import { spyGDefinition } from "./spy-g.js";
+import { phoneTrackerDefinition } from "./phone-tracker.js";
 import { registerExecutiveAgents } from "./executive.js";
 
 export * from "./chief-of-staff.js";
@@ -25,6 +28,9 @@ export * from "./design.js";
 export * from "./notifier.js";
 export * from "./knowledge.js";
 export * from "./spokesperson.js";
+export * from "./tester-boss.js";
+export * from "./spy-g.js";
+export * from "./phone-tracker.js";
 export * from "./executive.js";
 
 export const activeAgentDefinitions = [
@@ -36,6 +42,9 @@ export const activeAgentDefinitions = [
   notifierAgentDefinition,
   knowledgeAgentDefinition,
   spokespersonAgentDefinition,
+  testerBossDefinition,
+  spyGDefinition,
+  phoneTrackerDefinition,
 ];
 
 export async function registerDefaultAgents(manager: AgentManager): Promise<void> {

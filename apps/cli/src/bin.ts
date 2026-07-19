@@ -1,6 +1,8 @@
 #!/usr/bin/env node
 import { program } from "commander";
 import dotenv from "dotenv";
+import { writeFileSync } from "node:fs";
+import { resolve } from "node:path";
 import {
   InMemoryAgentEventRepository,
   InMemoryAgentLogRepository,
@@ -57,6 +59,87 @@ async function speakIfRequested(text: string, speak: boolean): Promise<void> {
   }
 
   await registry.speak(text, { rate: 1.0 });
+}
+
+// --- Export helpers (Markdown formatting) ---
+
+function agentsToMarkdown(meta: Record<string, unknown>, agents: unknown[]): string {
+  const lines = [
+    "# Export agentů MiLO",
+    "",
+    `**Exportováno:** ${meta.exportDate}`,
+    `**Verze schématu:** ${meta.schemaVersion}`,
+    "",
+    "---",
+    "",
+  ];
+  for (const agent of agents) {
+    const a = agent as Record<string, unknown>;
+    const def = a.agent as Record<string, unknown> | undefined;
+    const state = a.state as Record<string, unknown> | undefined;
+    lines.push(`## ${def?.name ?? a.id}`, "");
+    lines.push(`- **ID:** \`${a.id}\``);
+    lines.push(`- **Role:** ${def?.role ?? "—"}`);
+    lines.push(`- **Status:** ${state?.status ?? "—"}`);
+    lines.push(`- **Dokončené úkoly:** ${state?.completedTasks ?? 0}`);
+    lines.push(`- **Selhané úkoly:** ${state?.failedTasks ?? 0}`);
+    lines.push("");
+  }
+  return lines.join("\n");
+}
+
+function missionsToMarkdown(meta: Record<string, unknown>, missions: unknown[]): string {
+  const lines = [
+    "# Export misí MiLO",
+    "",
+    `**Exportováno:** ${meta.exportDate}`,
+    `**Verze schématu:** ${meta.schemaVersion}`,
+    "",
+    "---",
+    "",
+  ];
+  for (const mission of missions) {
+    const m = mission as Record<string, unknown>;
+    lines.push(`## ${m.title}`, "");
+    lines.push(`- **ID:** \`${m.id}\``);
+    lines.push(`- **Status:** ${m.status}`);
+    lines.push(`- **Priorita:** ${m.priority}`);
+    lines.push("");
+  }
+  return lines.join("\n");
+}
+
+function fullBundleToMarkdown(bundle: Record<string, unknown>): string {
+  const lines = [
+    "# Kompletní export MiLO",
+    "",
+    `**Exportováno:** ${bundle.exportDate}`,
+    `**Verze schématu:** ${bundle.schemaVersion}`,
+    "",
+    "---",
+    "",
+  ];
+  const agents = bundle.agents as unknown[] | undefined;
+  if (agents) {
+    lines.push(`## Agenti (${agents.length})`, "");
+    for (const agent of agents) {
+      const a = agent as Record<string, unknown>;
+      const def = a.agent as Record<string, unknown> | undefined;
+      const state = a.state as Record<string, unknown> | undefined;
+      lines.push(`- [${state?.status ?? "?"}] ${def?.name ?? a.id}`);
+    }
+    lines.push("");
+  }
+  const missions = bundle.missions as unknown[] | undefined;
+  if (missions) {
+    lines.push(`## Mise (${missions.length})`, "");
+    for (const mission of missions) {
+      const m = mission as Record<string, unknown>;
+      lines.push(`- [${m.status}] ${m.title}`);
+    }
+    lines.push("");
+  }
+  return lines.join("\n");
 }
 
 program.name("milo").description("MiLO_Core CLI").version("0.1.0");
@@ -224,6 +307,80 @@ taskCommand
     const mgr = await getManager();
     await mgr.cancelTask(id);
     console.log(`Task ${id} cancelled`);
+  });
+
+program
+  .command("export")
+  .description("Exportuj všechna data MiLO v otevřeném formátu")
+  .option("-f, --format <format>", "Výstupní formát (json, markdown)", "json")
+  .option("-o, --output <path>", "Cesta k výstupnímu souboru")
+  .option("-t, --type <type>", "Co exportovat (all, agents, missions, knowledge)", "all")
+  .action(async (options: { format: string; output?: string; type: string }) => {
+    const format = options.format === "markdown" ? "markdown" : "json";
+    const type = ["all", "agents", "missions", "knowledge"].includes(options.type) ? options.type : "all";
+    const mgr = await getManager();
+
+    let result: string;
+    let filename: string;
+
+    const exportData = {
+      exportDate: new Date().toISOString(),
+      miLOVersion: "0.1.0",
+      schemaVersion: "1.0",
+    };
+
+    if (type === "agents" || type === "all") {
+      const agents = mgr.listAgents();
+      const agentsData = await Promise.all(
+        agents.map(async (entity) => ({
+          id: entity.id,
+          agent: entity.agent,
+          state: entity.getState(),
+          logs: await mgr.getLogs(entity.id),
+          memory: await mgr.getMemory(entity.id),
+          metrics: await mgr.getMetrics(entity.id),
+          taskHistory: entity.getTaskHistory(),
+          pendingQueue: entity.getPendingQueue(),
+        })),
+      );
+
+      if (type === "agents") {
+        result = format === "json"
+          ? JSON.stringify({ ...exportData, agents: agentsData }, null, 2)
+          : agentsToMarkdown(exportData, agentsData);
+        filename = `milo-agents-export.${format === "json" ? "json" : "md"}`;
+      } else {
+        const missions = await mgr.getMissions();
+        const tasks = await mgr.getTasks();
+        const events = await mgr.getEvents();
+        const bundle = { ...exportData, agents: agentsData, missions, tasks, events };
+        result = format === "json"
+          ? JSON.stringify(bundle, null, 2)
+          : fullBundleToMarkdown(bundle);
+        filename = `milo-full-export.${format === "json" ? "json" : "md"}`;
+      }
+    } else if (type === "missions") {
+      const missions = await mgr.getMissions();
+      result = format === "json"
+        ? JSON.stringify({ ...exportData, missions }, null, 2)
+        : missionsToMarkdown(exportData, missions);
+      filename = `milo-missions-export.${format === "json" ? "json" : "md"}`;
+    } else if (type === "knowledge") {
+      result = format === "json"
+        ? JSON.stringify({ ...exportData, knowledge: {} }, null, 2)
+        : `# Export znalostí MiLO\n\n**Exportováno:** ${exportData.exportDate}\n\nKnowledge export is only available via the API server with Obsidian configured.\n`;
+      filename = `milo-knowledge-export.${format === "json" ? "json" : "md"}`;
+    } else {
+      result = "{}";
+      filename = "milo-export.json";
+    }
+
+    if (options.output) {
+      writeFileSync(resolve(options.output), result, "utf-8");
+      console.log(`Export uložen do: ${resolve(options.output)}`);
+    } else {
+      console.log(result);
+    }
   });
 
 program.parse();

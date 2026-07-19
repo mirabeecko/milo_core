@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { CheckCircle2, ChevronDown, ChevronUp, Clock, Plus, RefreshCw, Search, Bot, User, Filter } from "lucide-react";
+import { CheckCircle2, ChevronDown, ChevronUp, Clock, Plus, RefreshCw, Search, Bot, User, Filter, Wrench, AlertTriangle, XCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -9,12 +9,13 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PageHeader } from "@/components/common/page-header";
 import { EmptyState } from "@/components/common/empty-state";
-import { getTasks, createTask } from "@/lib/api/tasks.api";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import type { AgentTask } from "@/lib/types";
 import { formatRelative, getStatusLabel, getStatusColor, getSourceLabel } from "@/lib/format";
 import { cn } from "@/lib/utils";
+
+const API = "http://localhost:4000";
 
 const priorityColors: Record<string, string> = {
   critical: "border-rose-500/30 bg-rose-500/10 text-rose-500",
@@ -44,13 +45,15 @@ export default function TasksPage() {
   const [newPriority, setNewPriority] = useState("normal");
   const [creating, setCreating] = useState(false);
   const [expandedTask, setExpandedTask] = useState<string | null>(null);
+  const [resolvingTask, setResolvingTask] = useState<string | null>(null);
 
   const load = async () => {
     try {
       setIsLoading(true);
       setError(null);
-      const data = await getTasks({ limit: 50 });
-      setTasks(data);
+      const res = await fetch(`${API}/tasks`);
+      const data = await res.json();
+      setTasks(Array.isArray(data) ? data : []);
     } catch (err) {
       setError(err instanceof Error ? err : new Error("Nepodařilo se načíst úkoly"));
     } finally {
@@ -58,7 +61,43 @@ export default function TasksPage() {
     }
   };
 
-  useEffect(() => void load(), []);
+  useEffect(() => { load(); }, []);
+
+  const handleResolve = async (task: AgentTask) => {
+    setResolvingTask(task.id);
+    try {
+      // Vytvoř nový task pro chief-of-staff s popisem původního selhání
+      const title = `Opravit: ${task.title}`;
+      const description = [
+        `Původní task selhal: ${task.id}`,
+        `Název: ${task.title}`,
+        task.description ? `Popis: ${task.description}` : null,
+        task.result?.error ? `Chyba: ${task.result.error}` : null,
+        `Vytvořeno: ${task.createdAt}`,
+      ].filter(Boolean).join("\n");
+
+      await fetch(`${API}/tasks`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          title,
+          description,
+          priority: task.priority || "high",
+          ownerId: "chief-of-staff",
+          ownerType: "agent",
+          status: "pending",
+          source: "resolve-failed",
+        }),
+      });
+
+      // Reload
+      await load();
+    } catch (e) {
+      console.error("Resolve error:", e);
+    } finally {
+      setResolvingTask(null);
+    }
+  };
 
   const userTasksCount = tasks.filter((t) => t.ownerType === "user").length;
   const agentTasksCount = tasks.filter((t) => t.ownerType === "agent").length;
@@ -90,12 +129,18 @@ export default function TasksPage() {
     if (!newTitle.trim()) return;
     setCreating(true);
     try {
-      await createTask({
-        title: newTitle.trim(),
-        description: newDescription.trim() || undefined,
-        priority: newPriority as AgentTask["priority"],
-        ownerId: "user",
-        ownerType: "user",
+      await fetch(`${API}/tasks`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          title: newTitle.trim(),
+          description: newDescription.trim() || undefined,
+          priority: newPriority,
+          ownerId: "user",
+          ownerType: "user",
+          status: "pending",
+          source: "user",
+        }),
       });
       setDialogOpen(false);
       setNewTitle("");
@@ -134,7 +179,7 @@ export default function TasksPage() {
         title="Nepodařilo se načíst úkoly"
         description={error.message}
         action={
-          <Button onClick={() => void load()} className="gap-2">
+          <Button onClick={() => { load(); }} className="gap-2">
             <RefreshCw className="h-4 w-4" /> Zkusit znovu
           </Button>
         }
@@ -150,14 +195,14 @@ export default function TasksPage() {
 
   return (
     <div className="mx-auto max-w-7xl space-y-6">
-      <PageHeader title="Úkoly" description="Všechny úkoly napříč agenty a projekty">
+      <PageHeader title="Úkoly" description="Všechny úkoly napříč agenty">
         <Button className="gap-2" onClick={() => setDialogOpen(true)}>
           <Plus className="h-4 w-4" /> Nový úkol
         </Button>
       </PageHeader>
 
       {/* Stats bar */}
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-4 gap-4">
         <Card>
           <CardContent className="flex items-center gap-3 p-4">
             <div className="flex h-10 w-10 items-center justify-center rounded-full bg-purple-500/10">
@@ -182,12 +227,23 @@ export default function TasksPage() {
         </Card>
         <Card>
           <CardContent className="flex items-center gap-3 p-4">
-            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-muted">
-              <Filter className="h-5 w-5 text-muted-foreground" />
+            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-green-500/10">
+              <CheckCircle2 className="h-5 w-5 text-green-500" />
             </div>
             <div>
-              <p className="text-2xl font-bold">{totalCount}</p>
-              <p className="text-xs text-muted-foreground">Celkem</p>
+              <p className="text-2xl font-bold">{tasks.filter(t => t.status === "completed").length}</p>
+              <p className="text-xs text-muted-foreground">Splněno</p>
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="flex items-center gap-3 p-4">
+            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-red-500/10">
+              <AlertTriangle className="h-5 w-5 text-red-500" />
+            </div>
+            <div>
+              <p className="text-2xl font-bold">{tasks.filter(t => t.status === "failed").length}</p>
+              <p className="text-xs text-muted-foreground">Selhalo</p>
             </div>
           </CardContent>
         </Card>
@@ -238,6 +294,12 @@ export default function TasksPage() {
         <div className="space-y-3">
           {filtered.map((task) => {
             const isAgentTask = task.ownerType === "agent";
+            const isExpanded = expandedTask === task.id;
+            const isFailed = task.status === "failed";
+            const isCompleted = task.status === "completed";
+            const hasLog = (task.log && task.log.length > 0);
+            const hasResult = task.result && (task.result.output || task.result.error);
+
             return (
               <Card
                 key={task.id}
@@ -251,40 +313,25 @@ export default function TasksPage() {
                 <CardContent className="p-4">
                   <div className="flex items-start gap-3">
                     <div className="flex-1 min-w-0">
+                      {/* Badges row */}
                       <div className="flex items-center gap-2 flex-wrap">
-                        {/* Owner indicator */}
                         {isAgentTask ? (
-                          <Badge
-                            variant="outline"
-                            className="gap-1 border-indigo-500/20 bg-indigo-500/10 text-indigo-500"
-                          >
+                          <Badge variant="outline" className="gap-1 border-indigo-500/20 bg-indigo-500/10 text-indigo-500">
                             <Bot className="h-3 w-3" />
                             Agent: {task.ownerId}
                           </Badge>
                         ) : (
-                          <Badge
-                            variant="outline"
-                            className="gap-1 border-purple-500/20 bg-purple-500/10 text-purple-500"
-                          >
+                          <Badge variant="outline" className="gap-1 border-purple-500/20 bg-purple-500/10 text-purple-500">
                             <User className="h-3 w-3" />
                             Můj úkol
                           </Badge>
                         )}
-                        {/* Priority */}
-                        <Badge
-                          variant="outline"
-                          className={cn("text-xs", priorityColors[task.priority] ?? priorityColors.normal)}
-                        >
+                        <Badge variant="outline" className={cn("text-xs", priorityColors[task.priority] ?? priorityColors.normal)}>
                           {priorityLabels[task.priority] ?? task.priority}
                         </Badge>
-                        {/* Status */}
-                        <Badge
-                          variant="outline"
-                          className={cn("text-xs", getStatusColor(task.status))}
-                        >
+                        <Badge variant="outline" className={cn("text-xs", getStatusColor(task.status))}>
                           {getStatusLabel(task.status)}
                         </Badge>
-                        {/* Source */}
                         {task.source && (
                           <Badge variant="outline" className="text-xs text-muted-foreground">
                             {getSourceLabel(task.source)}
@@ -292,12 +339,33 @@ export default function TasksPage() {
                         )}
                       </div>
 
-                      <h3 className="mt-2 font-medium truncate">{task.title}</h3>
-                      {task.description && (
+                      {/* Title + expand toggle */}
+                      <div className="flex items-center gap-2 mt-2">
+                        <h3 className="font-medium truncate flex-1">{task.title}</h3>
+                        <button
+                          onClick={() => setExpandedTask(isExpanded ? null : task.id)}
+                          className="shrink-0 inline-flex items-center gap-1 text-xs text-primary hover:underline"
+                        >
+                          {isExpanded ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
+                          {isExpanded ? "Skrýt detail" : "Detail"}
+                        </button>
+                      </div>
+
+                      {/* Description (always visible, clamped) */}
+                      {task.description && !isExpanded && (
                         <p className="mt-1 text-sm text-muted-foreground line-clamp-2">{task.description}</p>
                       )}
 
+                      {/* Meta row */}
                       <div className="mt-2 flex items-center gap-3 flex-wrap text-xs text-muted-foreground">
+                        <span>{formatRelative(task.createdAt)}</span>
+                        {task.actualTimeMs != null && (
+                          <span className="text-muted-foreground/70">
+                            {task.actualTimeMs < 1000
+                              ? `${task.actualTimeMs}ms`
+                              : `${(task.actualTimeMs / 1000).toFixed(1)}s`}
+                          </span>
+                        )}
                         {(task.toolsUsed || []).length > 0 && (
                           <div className="flex items-center gap-1 flex-wrap">
                             {(task.toolsUsed || []).map((tool) => (
@@ -307,22 +375,109 @@ export default function TasksPage() {
                             ))}
                           </div>
                         )}
-                        <span>{formatRelative(task.createdAt)}</span>
-                        {task.result && (
-                          <button
-                            onClick={() => setExpandedTask(expandedTask === task.id ? null : task.id)}
-                            className="ml-auto inline-flex items-center gap-1 text-primary hover:underline"
+                        {/* Vyřešit button for failed tasks */}
+                        {isFailed && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="ml-auto gap-1 text-xs h-7"
+                            onClick={() => handleResolve(task)}
+                            disabled={resolvingTask === task.id}
                           >
-                            {expandedTask === task.id ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
-                            Výsledek
-                          </button>
+                            <Wrench className="h-3 w-3" />
+                            {resolvingTask === task.id ? "Vytvářím..." : "Vyřešit"}
+                          </Button>
                         )}
                       </div>
-                      {expandedTask === task.id && task.result && (
-                        <div className="mt-3 rounded-md bg-muted/50 p-3 text-xs font-mono whitespace-pre-wrap break-all max-h-48 overflow-y-auto">
-                          {typeof task.result === "string"
-                            ? task.result
-                            : JSON.stringify(task.result, null, 2)}
+
+                      {/* ===== EXPANDED DETAIL ===== */}
+                      {isExpanded && (
+                        <div className="mt-3 space-y-3 border-t border-border pt-3">
+                          {/* Description full */}
+                          {task.description && (
+                            <div>
+                              <div className="text-xs font-medium text-muted-foreground mb-1">Popis</div>
+                              <p className="text-sm bg-muted/30 rounded-md p-3 whitespace-pre-wrap">{task.description}</p>
+                            </div>
+                          )}
+
+                          {/* Timing */}
+                          <div className="flex gap-4 text-xs text-muted-foreground">
+                            <div>
+                              <span className="font-medium">Vytvořeno: </span>
+                              {new Date(task.createdAt).toLocaleString("cs-CZ")}
+                            </div>
+                            {task.startedAt && (
+                              <div>
+                                <span className="font-medium">Spuštěno: </span>
+                                {new Date(task.startedAt).toLocaleString("cs-CZ")}
+                              </div>
+                            )}
+                            {task.completedAt && (
+                              <div>
+                                <span className="font-medium">Dokončeno: </span>
+                                {new Date(task.completedAt).toLocaleString("cs-CZ")}
+                              </div>
+                            )}
+                            {task.actualTimeMs != null && (
+                              <div>
+                                <span className="font-medium">Trvání: </span>
+                                {task.actualTimeMs < 1000
+                                  ? `${task.actualTimeMs}ms`
+                                  : `${(task.actualTimeMs / 1000).toFixed(1)}s`}
+                              </div>
+                            )}
+                          </div>
+
+                          {/* Log */}
+                          {hasLog && (
+                            <div>
+                              <div className="text-xs font-medium text-muted-foreground mb-1">
+                                Log ({task.log!.length} záznamů)
+                              </div>
+                              <div className="bg-muted/30 rounded-md p-3 max-h-48 overflow-y-auto space-y-1">
+                                {task.log!.map((entry: any, i: number) => {
+                                  const levelColors: Record<string, string> = {
+                                    info: "text-blue-400",
+                                    warn: "text-amber-400",
+                                    error: "text-red-400",
+                                  };
+                                  const time = entry.timestamp
+                                    ? new Date(entry.timestamp).toLocaleTimeString("cs-CZ", { hour: "2-digit", minute: "2-digit", second: "2-digit" })
+                                    : "";
+                                  return (
+                                    <div key={i} className="text-xs font-mono flex gap-2">
+                                      <span className="text-muted-foreground shrink-0">{time}</span>
+                                      <span className={cn("shrink-0 w-8", levelColors[entry.level] || "text-muted-foreground")}>
+                                        [{entry.level?.toUpperCase()}]
+                                      </span>
+                                      <span className="text-foreground/80">{entry.message}</span>
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            </div>
+                          )}
+
+                          {/* Output / Error */}
+                          {hasResult && (
+                            <div>
+                              <div className="text-xs font-medium text-muted-foreground mb-1">
+                                {task.result?.error ? "Chyba" : "Výstup"}
+                              </div>
+                              <div className={cn(
+                                "rounded-md p-3 text-xs font-mono whitespace-pre-wrap break-all max-h-48 overflow-y-auto",
+                                task.result?.error ? "bg-red-500/5 text-red-400" : "bg-emerald-500/5 text-emerald-400"
+                              )}>
+                                {task.result?.error || task.result?.output || JSON.stringify(task.result, null, 2)}
+                              </div>
+                            </div>
+                          )}
+
+                          {/* No log, no result */}
+                          {!hasLog && !hasResult && !task.description && (
+                            <p className="text-xs text-muted-foreground">Žádné další informace.</p>
+                          )}
                         </div>
                       )}
                     </div>
