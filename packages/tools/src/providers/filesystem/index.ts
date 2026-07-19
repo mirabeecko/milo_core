@@ -12,7 +12,7 @@ const readFileSchema = z.object({
 const listFilesSchema = z.object({
   dirPath: z.string(),
   recursive: z.boolean().optional(),
-  maxDepth: z.number().int().min(1).max(50).optional().default(DEFAULT_MAX_DEPTH),
+  maxDepth: z.number().int().min(1).max(50).optional(),
 });
 
 const statFileSchema = z.object({
@@ -123,9 +123,10 @@ export class FilesystemListTool implements Tool<z.infer<typeof listFilesSchema>,
 
   async execute(input: z.infer<typeof listFilesSchema>): Promise<FileEntry[]> {
     const maxDepth = input.maxDepth ?? DEFAULT_MAX_DEPTH;
-    const skipHidden = true; // Always skip dot-prefixed dirs/files for safety
+    const recursive = input.recursive ?? false;
+    const skipHidden = true; // Vždy přeskakujeme skryté soubory/adresáře (bezpečnost)
 
-    if (input.recursive) {
+    if (recursive) {
       return this.executeRecursive(input.dirPath, maxDepth, 0, new Set(), skipHidden);
     }
 

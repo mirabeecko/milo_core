@@ -1,0 +1,11 @@
+{
+  "functions": {
+    "api/index.js": {
+      "memory": 512,
+      "maxDuration": 60
+    }
+  },
+  "buildCommand": "cd ../.. && pnpm install --no-frozen-lockfile && pnpm --filter @milo/api build",
+  "installCommand": "cd ../.. && pnpm install --no-frozen-lockfile",
+  "outputDirectory": "."
+}
