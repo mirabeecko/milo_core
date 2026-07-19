@@ -1,7 +1,6 @@
 {
-  "version": 2,
-  "buildCommand": "cd ../.. && pnpm install --filter @milo/web && pnpm --filter @milo/web build",
+  "buildCommand": "cd ../.. && pnpm install --no-frozen-lockfile && pnpm --filter @milo/web build",
   "outputDirectory": ".next",
-  "installCommand": "pnpm install",
+  "installCommand": "cd ../.. && pnpm install --no-frozen-lockfile",
   "framework": "nextjs"
 }
