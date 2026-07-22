@@ -32,6 +32,7 @@ import {
   ArrowRightLeft,
   Rocket,
   Zap,
+  Tag,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -65,6 +66,8 @@ const navigation = [
   { name: "Delegace", href: "/delegations", icon: ArrowRightLeft },
   { name: "Phone Tracker", href: "/phone-tracker", icon: MapPin },
   { name: "Better Agents", href: "/better-agents", icon: Sparkles },
+  { name: "systém", header: true },
+  { name: "Gmail TAGS", href: "/system/gmail-tags", icon: Tag },
 ];
 
 interface SidebarProps {
@@ -99,6 +102,15 @@ export function Sidebar({ mobileOpen, onMobileClose }: SidebarProps): JSX.Elemen
       </div>
       <nav className="flex-1 space-y-1 overflow-auto p-4">
         {navigation.map((item) => {
+          if ("header" in item) {
+            return (
+              <div key={item.name} className="px-3 pt-4 pb-1">
+                <span className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/50">
+                  {item.name}
+                </span>
+              </div>
+            );
+          }
           const isActive = pathname === item.href || (item.href !== "/" && pathname.startsWith(item.href));
           return (
             <Link
