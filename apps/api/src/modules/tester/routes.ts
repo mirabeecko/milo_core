@@ -272,9 +272,15 @@ export async function testerRoutes(
 ): Promise<void> {
   const sseManager = SSEManager.getInstance();
 
-  // POST /tester/run — spustí testy
-  app.post("/run", async (_request, reply) => {
-    app.log.info("[tester] Starting test run...");
+  // POST /tester/run — spustí testy (volitelně se speciálním úkolem)
+  app.post("/run", async (request, reply) => {
+    const body = request.body as { task?: string } | undefined;
+    const specialTask = body?.task?.trim();
+    const taskMsg = specialTask
+      ? `🎯 Speciální úkol: "${specialTask}" — spouštím testy...`
+      : "Spouštím testy celého MiLO systému...";
+
+    app.log.info(`[tester] Starting test run${specialTask ? ` with task: ${specialTask}` : ""}...`);
 
     // Broadcast start event
     sseManager.broadcast({
@@ -283,11 +289,16 @@ export async function testerRoutes(
       agentId: "tester",
       agentName: "MiLO Tester",
       type: "agent:started",
-      message: "Spouštím testy celého MiLO systému...",
+      message: taskMsg,
     });
 
     try {
       const run = await runAllTests();
+
+      // Attach special task if provided
+      if (specialTask) {
+        (run as any).specialTask = specialTask;
+      }
 
       const summary = `Testy dokončeny: ${run.passed}/${run.totalTests} prošlo, ${run.failed} selhalo, ${run.skipped} přeskočeno (${run.durationMs}ms)`;
 

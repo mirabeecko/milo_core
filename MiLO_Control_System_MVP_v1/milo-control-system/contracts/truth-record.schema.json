@@ -1,0 +1,82 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://milo.local/schemas/truth-record.schema.json",
+  "title": "MiLO Append-only Truth Record v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "record_id",
+    "project_id",
+    "information_type",
+    "status",
+    "atomic_statement",
+    "date_precision",
+    "entity_refs",
+    "evidence_refs",
+    "created_at",
+    "created_by",
+    "reviewed_by",
+    "review_id",
+    "rules_version",
+    "record_hash",
+    "previous_hash"
+  ],
+  "properties": {
+    "record_id": {"type": "string", "pattern": "^REC-[A-Z0-9-]+$"},
+    "project_id": {"type": "string", "minLength": 1},
+    "information_type": {"enum": ["VERIFIED_FACT", "DOCUMENTED_STATEMENT", "ALLEGATION", "OPINION", "EMOTION", "LEGAL_ASSESSMENT", "HYPOTHESIS", "DECISION", "FORECAST", "UNKNOWN"]},
+    "status": {"enum": ["PROPOSED", "VERIFIED", "APPROVED", "DISPUTED", "SUPERSEDED", "WITHDRAWN"]},
+    "atomic_statement": {"type": "string", "minLength": 1},
+    "occurred_at": {"type": ["string", "null"], "format": "date-time"},
+    "date_precision": {"enum": ["EXACT_TIME", "EXACT_DATE", "MONTH", "YEAR", "APPROXIMATE", "UNKNOWN"]},
+    "entity_refs": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["people", "organizations", "places", "events"],
+      "properties": {
+        "people": {"type": "array", "items": {"type": "string"}},
+        "organizations": {"type": "array", "items": {"type": "string"}},
+        "places": {"type": "array", "items": {"type": "string"}},
+        "events": {"type": "array", "items": {"type": "string"}}
+      }
+    },
+    "evidence_refs": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["evidence_id", "locator", "source_hash"],
+        "properties": {
+          "evidence_id": {"type": "string"},
+          "locator": {"type": "string", "description": "Page, paragraph, timestamp, cell, message ID or URL fragment."},
+          "source_hash": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+          "supports_scope": {"type": ["string", "null"]}
+        }
+      }
+    },
+    "relations": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["relation", "target_record_id"],
+        "properties": {
+          "relation": {"enum": ["SUPPORTS", "CONTRADICTS", "SUPERSEDES", "CORRECTS", "RETRACTS", "DERIVED_FROM"]},
+          "target_record_id": {"type": "string"}
+        }
+      }
+    },
+    "created_at": {"type": "string", "format": "date-time"},
+    "created_by": {"type": "string"},
+    "reviewed_at": {"type": ["string", "null"], "format": "date-time"},
+    "reviewed_by": {"type": "string"},
+    "review_id": {"type": "string"},
+    "approved_at": {"type": ["string", "null"], "format": "date-time"},
+    "approved_by": {"type": ["string", "null"]},
+    "approval_id": {"type": ["string", "null"]},
+    "rules_version": {"type": "string"},
+    "record_hash": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "previous_hash": {"type": ["string", "null"], "pattern": "^[a-f0-9]{64}$"}
+  }
+}
+

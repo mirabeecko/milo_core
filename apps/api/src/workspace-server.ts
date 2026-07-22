@@ -15,7 +15,7 @@ import Fastify from "fastify";
 import cors from "@fastify/cors";
 import { readFileSync, writeFileSync, existsSync } from "node:fs";
 import { resolve } from "node:path";
-import { execSync } from "node:child_process";
+import { execSync, spawnSync } from "node:child_process";
 
 // ─── Types ───────────────────────────────────────────────────────────
 
@@ -57,9 +57,6 @@ interface MissionStore {
 const STORE_PATH = "/tmp/milo-missions.json";
 
 function loadStore(): MissionStore {
-  if (!existsSync(STORE_PATH)) {
-    return { missions: [] };
-  }
   try {
     return JSON.parse(readFileSync(STORE_PATH, "utf-8"));
   } catch {
@@ -159,13 +156,18 @@ async function executeMission(mission: Mission): Promise<void> {
 }
 
 function delegateToHermes(task: MissionTask): string {
-  // Zkus delegovat přes Hermes CLI
+  // Bezpečné volání hermes CLI — používáme spawnSync s polem argumentů,
+  // čímž se vyhneme shell injection přes task.description nebo task.assignedAgent.
   try {
-    const result = execSync(
-      `hermes delegate_task '${task.description.replace(/'/g, "'\\''")}' --agent ${task.assignedAgent}`,
+    const result = spawnSync(
+      "hermes",
+      ["delegate_task", task.description, "--agent", task.assignedAgent],
       { timeout: 15000, encoding: "utf-8", env: { ...process.env, HOME: process.env.HOME } }
     );
-    return `Hermes: ${result.trim().slice(0, 200)}`;
+    if (result.error) {
+      throw result.error;
+    }
+    return `Hermes: ${(result.stdout || result.stderr || "").trim().slice(0, 200)}`;
   } catch (err: any) {
     throw new Error(`Hermes delegace selhala: ${err.message}`);
   }
@@ -360,32 +362,38 @@ async function start() {
     };
   });
 
-  // ─── Start ───────────────────────────────────────────────────────
-  const port = 4002;
-  try {
-    await 
-  // ─── KANBAN ─────────────────────────────────────────────
+  // ─── KANBAN ───────────────────────────────────────────────────────
   app.get("/workspace/kanban", async (_req, reply) => {
     try {
-      const { execSync } = await import("node:child_process");
+      const dbPath = process.env.MILO_KANBAN_DB_PATH || resolve(process.env.HOME || "/tmp", ".hermes/kanban.db");
+      if (!existsSync(dbPath)) {
+        return reply.send([]);
+      }
+      // Bezpečné: execSync s pevně danou SQL query, dbPath escapován přes JSON.stringify
+      const safeQuery = "SELECT id, title, status, assignee, priority, created_at FROM tasks ORDER BY status, priority DESC LIMIT 20";
       const out = execSync(
-        "sqlite3 -json /Users/mb/.hermes/kanban.db "SELECT id, title, status, assignee, priority, created_at FROM tasks ORDER BY status, priority DESC LIMIT 20"",
-        { timeout: 5000 }
-      ).toString();
+        `sqlite3 -json ${JSON.stringify(dbPath)} ${JSON.stringify(safeQuery)}`,
+        { timeout: 5000, encoding: "utf-8" }
+      );
       const tasks = JSON.parse(out || "[]");
       return reply.send(tasks);
-    } catch {
+    } catch (err) {
+      console.error("Kanban query failed:", err);
       return reply.send([]);
     }
   });
 
-app.listen({ port, host: "0.0.0.0" });
+  // ─── Start ───────────────────────────────────────────────────────
+  const port = 4002;
+  try {
+    await app.listen({ port, host: "0.0.0.0" });
     console.log(`\n🖥️  MiLO Workspace běží na http://localhost:${port}`);
     console.log(`   Health:         GET  /workspace/health`);
     console.log(`   Mise:           GET  /workspace/missions`);
     console.log(`   Vytvořit misi:  POST /workspace/missions`);
     console.log(`   Spustit misi:   POST /workspace/missions/:id/run`);
     console.log(`   Status mise:    GET  /workspace/missions/:id/status`);
+    console.log(`   Kanban:         GET  /workspace/kanban`);
     console.log(`   Agenti:         GET  /workspace/agents`);
     console.log(`   Statistiky:     GET  /workspace/stats\n`);
   } catch (err) {

@@ -161,5 +161,39 @@
     },
     "created_at": "2026-07-11T00:00:00.000Z",
     "updated_at": "2026-07-11T00:00:00.000Z"
+  },
+  {
+    "id": "komarka-agent",
+    "slug": "komarka-agent",
+    "name": "Komárka Agent",
+    "description": "Projektová dokumentace, majetková mapa, harmonogram, dotace",
+    "purpose": "Správa projektu Komárka — od dokumentace po dotační příležitosti",
+    "category": "project",
+    "owner": "owner",
+    "status": "specified",
+    "lifecycle_status": "specified",
+    "risk_level": "medium",
+    "priority": "high",
+    "implementation_progress": 3,
+    "runtime_status": "offline",
+    "created_at": "2026-07-11T02:11:07.344Z",
+    "updated_at": "2026-07-11T02:11:07.344Z"
+  },
+  {
+    "id": "krupka-agent",
+    "slug": "krupka-agent",
+    "name": "Město Krupka Agent",
+    "description": "Monitoring rady a zastupitelstva, kontrola usnesení, žádosti podle 106/1999 Sb.",
+    "purpose": "Monitoring a analýza městské samosprávy",
+    "category": "legal",
+    "owner": "owner",
+    "status": "specified",
+    "lifecycle_status": "specified",
+    "risk_level": "low",
+    "priority": "normal",
+    "implementation_progress": 3,
+    "runtime_status": "offline",
+    "created_at": "2026-07-11T02:11:07.344Z",
+    "updated_at": "2026-07-11T02:11:07.344Z"
   }
 ]

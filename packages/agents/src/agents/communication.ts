@@ -7,7 +7,8 @@ import {
   DefaultCommunicationService,
   GoogleGmailProvider,
   MockGmailProvider,
-  MockWhatsAppProvider,
+  createWhatsAppProvider,
+  resolveWhatsAppModeLabel,
 } from "../services/communication/index.js";
 import type {
   CommunicationProvider,
@@ -33,9 +34,10 @@ export interface SecretaryAgentState {
 }
 
 export class SecretaryAgent extends AgentEntityImpl {
+  private whatsAppProvider = createWhatsAppProvider();
   private communicationService = new DefaultCommunicationService([
     new MockGmailProvider(),
-    new MockWhatsAppProvider(),
+    this.whatsAppProvider,
   ]);
   private isDemoData = true;
   private state: SecretaryAgentState = {
@@ -214,17 +216,17 @@ export class SecretaryAgent extends AgentEntityImpl {
           onTokensRefreshed: (refreshed) => void googleAuth.saveTokens("email", refreshed),
         });
         this.isDemoData = false;
-        return [new GoogleGmailProvider(client), new MockWhatsAppProvider()];
+        return [new GoogleGmailProvider(client), this.whatsAppProvider];
       }
     }
     this.isDemoData = true;
-    return [new MockGmailProvider(), new MockWhatsAppProvider()];
+    return [new MockGmailProvider(), this.whatsAppProvider];
   }
 
   async syncSecretary(): Promise<void> {
     try {
       this.communicationService = new DefaultCommunicationService(
-        this.isDemoData ? [new MockGmailProvider(), new MockWhatsAppProvider()] : await this.resolveProviders(),
+        this.isDemoData ? [new MockGmailProvider(), this.whatsAppProvider] : await this.resolveProviders(),
       );
       await this.communicationService.sync();
     } catch (err) {
@@ -233,7 +235,7 @@ export class SecretaryAgent extends AgentEntityImpl {
         this.isDemoData = true;
         this.communicationService = new DefaultCommunicationService([
           new MockGmailProvider(),
-          new MockWhatsAppProvider(),
+          this.whatsAppProvider,
         ]);
         await this.communicationService.sync();
       } else {
@@ -363,7 +365,7 @@ export class SecretaryAgent extends AgentEntityImpl {
       currentActivity: "Čekám na novou komunikaci nebo instrukci.",
       goal: "Být připraven okamžitě reagovat na nové zprávy.",
       reason: "Secretary musí být vždy připraven hlídat příchozí komunikaci.",
-      findings: `Synchronizováno ${this.state.messages.length} zpráv. ${this.state.stats.waitingForReply} čeká na odpověď, ${this.state.drafts.length} AI konceptů připraveno, ${this.state.contacts.length} kontaktů v Relationship Intelligence.${this.isDemoData ? " Gmail není připojen. Připojte účet pro reálná data." : " (reálná data z Gmailu; WhatsApp zůstává demo, integrace zatím neexistuje)"}`,
+      findings: `Synchronizováno ${this.state.messages.length} zpráv. ${this.state.stats.waitingForReply} čeká na odpověď, ${this.state.drafts.length} AI konceptů připraveno, ${this.state.contacts.length} kontaktů v Relationship Intelligence.${this.isDemoData ? " Gmail není připojen. Připojte účet pro reálná data." : ""} WhatsApp je v režimu ${resolveWhatsAppModeLabel()}.`,
       evidence: ["Gmail", "WhatsApp", "Kontakty", "Knowledge Index"],
       toolsUsed: this.isDemoData ? ["Communication Service", "Mock Provider"] : ["Communication Service", "Gmail API"],
       nextStep: "Synchronizovat komunikaci nebo reagovat na nový požadavek.",

@@ -81,8 +81,8 @@ export default function ControlCenterPage() {
     setError(null);
     try {
       const [sysRes, cronRes] = await Promise.all([
-        fetch("http://127.0.0.1:4000/api/system").then(r => r.json()).catch(() => null),
-        fetch("http://127.0.0.1:4000/api/hermes/cron").then(r => r.json()).catch(() => []),
+        fetch("http://127.0.0.1:4001/api/system").then(r => r.json()).catch(() => null),
+        fetch("http://127.0.0.1:4001/api/hermes/cron").then(r => r.json()).catch(() => []),
       ]);
 
       setSystem(sysRes);
@@ -131,7 +131,7 @@ export default function ControlCenterPage() {
       const agent = agents.find(a => a.id === agentId);
       if (agent?.type === "cron") {
         const op = action === "pause" ? "pause" : action === "resume" ? "resume" : "run";
-        await fetch(`http://127.0.0.1:4000/api/hermes/cron/${agentId}/${op}`, { method: "POST" });
+        await fetch(`http://127.0.0.1:4001/api/hermes/cron/${agentId}/${op}`, { method: "POST" });
       }
       await loadAll();
     } catch (e) {
@@ -422,7 +422,7 @@ export default function ControlCenterPage() {
               icon={Power}
               label="Restartovat gateway"
               description="Hermes"
-              onClick={() => fetch("http://127.0.0.1:4000/api/hermes/restart", { method: "POST" }).catch(() => {})}
+              onClick={() => fetch("http://127.0.0.1:4001/api/hermes/restart", { method: "POST" }).catch(() => {})}
             />
           </div>
         </CardContent>

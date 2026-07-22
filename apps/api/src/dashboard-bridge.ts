@@ -22,12 +22,27 @@ const app = Fastify({ logger: false });
 
 function getHermesSessions() {
   try {
-    const raw = execSync("hermes sessions list --json 2>/dev/null", {
+    const raw = execSync("hermes sessions list 2>/dev/null", {
       encoding: "utf-8",
       timeout: 5000,
       cwd: homedir(),
     });
-    return JSON.parse(raw || "[]");
+    // Parse text output: lines with session IDs like "20260721_112011_18c349"
+    const lines = raw.split("\n");
+    const sessions: any[] = [];
+    for (const line of lines) {
+      // Match session ID pattern: YYYYMMDD_HHMMSS_hex or bg_NNNNNN_hex
+      const match = line.match(/(\S+)\s{2,}(\S.*?)\s{2,}(\S+)\s+(\d{8}_\d{6}_[a-f0-9]+|bg_\d+_[a-f0-9]+)/);
+      if (match) {
+        sessions.push({
+          title: match[1] === "—" ? "" : match[1],
+          preview: match[2] === "—" ? "" : match[2],
+          last_active: match[3],
+          id: match[4],
+        });
+      }
+    }
+    return sessions;
   } catch {
     return [];
   }
@@ -65,21 +80,106 @@ function getGitProjects() {
 
 function getSystemMetrics() {
   try {
-    const mem = execSync("vm_stat 2>/dev/null", {
-      encoding: "utf-8",
-      timeout: 3000,
-    });
-    const cpu = execSync(
-      'top -l 1 -n 0 2>/dev/null | grep "CPU usage"',
-      { encoding: "utf-8", timeout: 3000 }
-    );
-    const uptime = execSync("uptime 2>/dev/null", {
-      encoding: "utf-8",
-      timeout: 3000,
-    });
-    return { mem: mem.trim().split("\n").slice(0, 3).join(" | "), cpu: cpu.trim(), uptime: uptime.trim() };
+    // CPU usage as percentage
+    let cpuPct = 0;
+    try {
+      const cpuRaw = execSync(
+        "top -l 1 -n 0 2>/dev/null | grep 'CPU usage'",
+        { encoding: "utf-8", timeout: 3000 }
+      );
+      // Parse "CPU usage: 12.5% user, 8.2% sys, 79.3% idle" → idle = free
+      const idleMatch = cpuRaw.match(/([\d.]+)%\s+idle/);
+      if (idleMatch) cpuPct = Math.round(100 - parseFloat(idleMatch[1]));
+    } catch { cpuPct = 0; }
+
+    // Memory usage as percentage (macOS vm_stat)
+    let memPct = 0;
+    try {
+      const memRaw = execSync("vm_stat 2>/dev/null", {
+        encoding: "utf-8", timeout: 3000,
+      });
+      const pageSizeMatch = memRaw.match(/page size of (\d+)/);
+      const pageSize = pageSizeMatch ? parseInt(pageSizeMatch[1]) : 16384;
+      const freePagesMatch = memRaw.match(/Pages free:\s+(\d+)/);
+      const activePagesMatch = memRaw.match(/Pages active:\s+(\d+)/);
+      const inactivePagesMatch = memRaw.match(/Pages inactive:\s+(\d+)/);
+      const wiredPagesMatch = memRaw.match(/Pages wired down:\s+(\d+)/);
+      const specPagesMatch = memRaw.match(/Pages speculative:\s+(\d+)/);
+      const free = freePagesMatch ? parseInt(freePagesMatch[1]) : 0;
+      const active = activePagesMatch ? parseInt(activePagesMatch[1]) : 0;
+      const inactive = inactivePagesMatch ? parseInt(inactivePagesMatch[1]) : 0;
+      const wired = wiredPagesMatch ? parseInt(wiredPagesMatch[1]) : 0;
+      const spec = specPagesMatch ? parseInt(specPagesMatch[1]) : 0;
+      const total = free + active + inactive + wired + spec;
+      const used = active + wired + spec;
+      if (total > 0) memPct = Math.round((used / total) * 100);
+    } catch { memPct = 0; }
+
+    // Disk usage as percentage
+    let diskPct = 0;
+    try {
+      const diskRaw = execSync("df -h / 2>/dev/null | tail -1", {
+        encoding: "utf-8", timeout: 3000,
+      });
+      const diskMatch = diskRaw.match(/(\d+)%/);
+      if (diskMatch) diskPct = parseInt(diskMatch[1]);
+    } catch { diskPct = 0; }
+
+    // Uptime
+    let uptime = "N/A";
+    try {
+      const uptimeRaw = execSync("uptime 2>/dev/null", {
+        encoding: "utf-8", timeout: 3000,
+      });
+      const upMatch = uptimeRaw.match(/up\s+(.+?),\s+\d+ users?/);
+      if (upMatch) uptime = upMatch[1].trim();
+    } catch {}
+
+    return { cpu: cpuPct, memory: memPct, disk: diskPct, uptime };
   } catch {
-    return { mem: "N/A", cpu: "N/A", uptime: "N/A" };
+    return { cpu: 0, memory: 0, disk: 0, uptime: "N/A" };
+  }
+}
+
+function getKanbanBoard() {
+  try {
+    const raw = execSync(`python3 - <<'PY'
+import json, sqlite3
+from pathlib import Path
+
+db = Path.home() / ".hermes" / "kanban.db"
+if not db.exists():
+    print(json.dumps({"tasks": [], "stats": {}}))
+    raise SystemExit
+
+conn = sqlite3.connect(db)
+conn.row_factory = sqlite3.Row
+stats = {row["status"]: row["count"] for row in conn.execute("select status, count(*) as count from tasks group by status")}
+tasks = []
+for row in conn.execute("""
+    select id, title, body, assignee, status, priority, created_at, started_at,
+           completed_at, result, last_failure_error, block_kind
+    from tasks
+    order by
+      case status
+        when 'running' then 0
+        when 'ready' then 1
+        when 'todo' then 2
+        when 'blocked' then 3
+        when 'scheduled' then 4
+        when 'triage' then 5
+        when 'done' then 6
+        else 7
+      end,
+      priority desc,
+      created_at desc
+"""):
+    tasks.append(dict(row))
+print(json.dumps({"tasks": tasks, "stats": stats}, ensure_ascii=False))
+PY`, { encoding: "utf-8", timeout: 5000, cwd: homedir() });
+    return JSON.parse(raw || '{"tasks":[],"stats":{}}');
+  } catch {
+    return { tasks: [], stats: {}, unavailable: true };
   }
 }
 
@@ -223,6 +323,27 @@ async function start() {
 
   // Health
   app.get("/health", async () => ({ status: "ok", timestamp: new Date().toISOString() }));
+
+  // ─── Dashboard HTML (přístupný odkudkoliv přes tunnel) ──
+  app.get("/dashboard", async (req, reply) => {
+    const fs = await import("fs");
+    const path = await import("path");
+    const { homedir: hd } = await import("os");
+    const htmlPath = path.join(hd(), ".hermes/profiles/operation_strategy_director/analyzy/milo-dashboard.html");
+    const html = fs.readFileSync(htmlPath, "utf-8");
+    reply.header("Content-Type", "text/html; charset=utf-8");
+    return reply.send(html);
+  });
+
+  // ─── Kanban / Workspace — reálná Hermes SQLite data ─────
+  app.get("/phone-tracker/workspace/kanban", async (_req, reply) => {
+    const board = getKanbanBoard();
+    return reply.send({
+      ...board,
+      counts: board.stats,
+      updatedAt: new Date().toISOString(),
+    });
+  });
 
   // ─── Control Center (používá dashboard na :3000) ─────────
 
@@ -394,8 +515,16 @@ async function start() {
     const metrics = getSystemMetrics();
     const status = getHermesStatus();
     return {
-      hermes: { status, sessions: sessions.length },
-      system: metrics,
+      hermes: {
+        status: status.includes("running") || status.includes("ok") ? "running" : "offline",
+        sessions: sessions.length,
+      },
+      system: {
+        cpu: metrics.cpu,
+        memory: metrics.memory,
+        disk: metrics.disk,
+        uptime: metrics.uptime,
+      },
       timestamp: new Date().toISOString(),
     };
   });
@@ -408,6 +537,18 @@ async function start() {
 
   app.get("/api/hermes/status", async () => {
     return { status: getHermesStatus() };
+  });
+
+  // Gateway restart
+  app.post("/api/hermes/restart", async (_req, reply) => {
+    try {
+      execSync("hermes gateway restart 2>/dev/null", {
+        encoding: "utf-8", timeout: 10000, cwd: homedir(),
+      });
+      return reply.send({ success: true, message: "Gateway restart initiated" });
+    } catch (e: any) {
+      return reply.status(500).send({ success: false, error: e.message });
+    }
   });
 
   // ─── Cron management ───────────────────────────────────

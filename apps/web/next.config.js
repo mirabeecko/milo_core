@@ -9,7 +9,7 @@ const nextConfig = {
     return [
       {
         source: "/api/:path*",
-        destination: "https://supreme-flickr-casinos-deserve.trycloudflare.com/:path*",
+        destination: "http://localhost:4000/:path*",
       },
     ];
   },

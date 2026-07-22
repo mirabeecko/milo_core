@@ -1,481 +1,122 @@
+"use client";
+
 import Link from "next/link";
-import {
-  Bot,
-  Loader2,
-  Pause,
-  Play,
-  RotateCcw,
-  Settings2,
-  Square,
-} from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Bot, Zap, Wrench, Clock } from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Progress } from "@/components/ui/progress";
 import type { Agent } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
 interface AgentCardProps {
   agent: Agent;
-  isSelected?: boolean;
-  actionLoading?: string | null;
-  onClick?: () => void;
-  onStart?: () => void;
-  onStop?: () => void;
-  onPause?: () => void;
-  onResume?: () => void;
-  onRestart?: () => void;
 }
 
-export function AgentCard({
-  agent,
-  isSelected,
-  actionLoading,
-  onClick,
-  onStart,
-  onStop,
-  onPause,
-  onResume,
-  onRestart,
-}: AgentCardProps): JSX.Element {
-  const state = agent.state;
-  const total = state.pendingTasks + state.runningTasks + state.completedTasks + state.failedTasks;
-  const successRate = agent.metrics.totalTasks > 0
-    ? Math.round((agent.metrics.successfulTasks / agent.metrics.totalTasks) * 100)
-    : 0;
-  const isRunning = state.status !== "offline" && state.status !== "error" && state.status !== "paused";
-  const borderColor = hudBorderColor(state.status);
+const STATUS_MAP: Record<string, { label: string; color: string; dot: string }> = {
+  working: { label: "Pracuje", color: "text-emerald-400 border-emerald-500/30 bg-emerald-500/10", dot: "bg-emerald-500" },
+  idle: { label: "Připraven", color: "text-blue-400 border-blue-500/30 bg-blue-500/10", dot: "bg-blue-500" },
+  thinking: { label: "Přemýšlí", color: "text-amber-400 border-amber-500/30 bg-amber-500/10", dot: "bg-amber-500" },
+  error: { label: "Chyba", color: "text-red-400 border-red-500/30 bg-red-500/10", dot: "bg-red-500" },
+  offline: { label: "Offline", color: "text-zinc-500 border-zinc-600/30 bg-zinc-700/20", dot: "bg-zinc-600" },
+  paused: { label: "Pozastaven", color: "text-slate-400 border-slate-500/30 bg-slate-500/10", dot: "bg-slate-500" },
+};
+
+export function AgentCard({ agent }: AgentCardProps): JSX.Element {
+  const status = agent.state?.status ?? agent.status ?? "offline";
+  const s = STATUS_MAP[status] ?? STATUS_MAP.offline;
+  const hasTools = (agent.config?.tools?.length ?? 0) > 0;
+  const tools = agent.config?.tools ?? [];
+  const specializations = agent.specialization?.split(",").map((s: string) => s.trim()) ?? [];
 
   return (
     <Card
       className={cn(
-        "cursor-pointer transition-all hover:border-primary/40 hud-card",
-        isSelected && "border-primary ring-1 ring-primary",
+        "group relative overflow-hidden transition-all hover:border-primary/30 hover:shadow-lg hover:shadow-primary/5",
+        status === "offline" && "opacity-50 grayscale"
       )}
-      style={{ borderLeftColor: borderColor }}
-      onClick={onClick}
     >
-      <CardHeader className="pb-2">
-        <div className="flex items-start justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <div className="relative flex h-10 w-10 items-center justify-center rounded-none bg-primary/10 text-primary">
-              <Bot className="h-5 w-5" />
-              <StatusDot status={state.status} />
+      {/* Status bar */}
+      <div
+        className={cn(
+          "absolute top-0 left-0 right-0 h-1",
+          status === "working" ? "bg-emerald-500 animate-pulse" :
+          status === "error" ? "bg-red-500" :
+          status === "offline" ? "bg-zinc-700" :
+          "bg-blue-500/50"
+        )}
+      />
+
+      <CardContent className="p-4 pt-5 space-y-3">
+        {/* Header */}
+        <div className="flex items-start justify-between gap-2">
+          <div className="flex items-center gap-2.5 min-w-0">
+            <div className={cn(
+              "flex h-8 w-8 shrink-0 items-center justify-center rounded-lg",
+              status === "working" ? "bg-emerald-500/20 text-emerald-400" :
+              "bg-primary/10 text-primary"
+            )}>
+              <Bot className="h-4 w-4" />
             </div>
-            <div>
-              <CardTitle className="text-base font-semibold">{agent.name}</CardTitle>
-              <p className="text-xs text-muted-foreground font-mono">{agent.role.toUpperCase()}</p>
+            <div className="min-w-0">
+              <Link href={`/agents/${agent.id}`} className="font-semibold text-sm hover:text-primary transition-colors block truncate">
+                {agent.name}
+              </Link>
+              <div className="flex items-center gap-1.5 mt-0.5">
+                <span className={cn("inline-block h-1.5 w-1.5 rounded-full", s.dot)} />
+                <span className={cn("text-[10px] font-medium", s.color.split(" ")[0])}>
+                  {s.label}
+                </span>
+              </div>
             </div>
           </div>
-          <div className="flex items-center gap-2">
-            <HealthIndicator health={agent.health.status} />
-            <Badge variant="outline" className={cn("text-xs rounded-none", statusColor(state.status))}>
-              {statusLabel(state.status)}
-            </Badge>
-          </div>
-        </div>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        <div className="space-y-1">
-          <div className="flex items-center justify-between text-xs text-muted-foreground">
-            <span>Co dělá</span>
-            <span className="font-mono">{state.explanation.estimatedCompletion}</span>
-          </div>
-          <p className="text-sm leading-relaxed">{state.explanation.currentActivity}</p>
+          <Badge variant="outline" className={cn("text-[10px] shrink-0", s.color)}>
+            {s.label}
+          </Badge>
         </div>
 
-        {isRunning && (
-          <div className="space-y-1">
-            <div className="flex items-center justify-between text-xs text-muted-foreground">
-              <span>Průběh úkolu</span>
-              <span className="font-mono">{state.taskProgress}%</span>
-            </div>
-            <Progress value={state.taskProgress} className="h-1.5 rounded-none" />
+        {/* Účel */}
+        {agent.specialization && (
+          <div className="flex flex-wrap gap-1">
+            {specializations.slice(0, 3).map((spec: string) => (
+              <span key={spec} className="text-[10px] text-muted-foreground bg-muted/50 px-1.5 py-0.5 rounded">
+                {spec}
+              </span>
+            ))}
           </div>
         )}
 
-        <div className="grid grid-cols-4 gap-2 text-center text-xs">
-          <div className="rounded-none border border-[var(--hud-border)] p-2 bg-card/50">
-            <div className="font-mono font-semibold">{state.pendingTasks}</div>
-            <div className="text-muted-foreground">čeká</div>
-          </div>
-          <div className="rounded-none border border-[var(--hud-border)] p-2 bg-card/50">
-            <div className="font-mono font-semibold">{state.runningTasks}</div>
-            <div className="text-muted-foreground">běží</div>
-          </div>
-          <div className="rounded-none border border-[var(--hud-border)] p-2 bg-card/50">
-            <div className="font-mono font-semibold">{state.completedTasks}</div>
-            <div className="text-muted-foreground">hotovo</div>
-          </div>
-          <div className="rounded-none border border-[var(--hud-border)] p-2 bg-card/50">
-            <div className="font-mono font-semibold">{state.failedTasks}</div>
-            <div className="text-muted-foreground">chyba</div>
-          </div>
-        </div>
-
-        {total > 0 && (
-          <div className="space-y-1">
-            <Progress value={(state.completedTasks / total) * 100} className="h-1.5 rounded-none" />
-            <div className="flex justify-between text-xs text-muted-foreground">
-              <span>Úspěšnost <span className="font-mono">{successRate}%</span></span>
-              <span className="font-mono">{agent.metrics.totalTasks} celkem</span>
-            </div>
+        {/* Nástroje */}
+        {hasTools && (
+          <div className="flex items-center gap-1.5 flex-wrap">
+            <Wrench className="h-3 w-3 text-muted-foreground shrink-0" />
+            {tools.slice(0, 4).map((t: string) => (
+              <span key={t} className="text-[10px] text-muted-foreground/70 bg-muted/30 px-1 rounded font-mono">
+                {t}
+              </span>
+            ))}
+            {tools.length > 4 && (
+              <span className="text-[10px] text-muted-foreground/50">+{tools.length - 4}</span>
+            )}
           </div>
         )}
 
-        <AgentActionButtons
-          status={state.status}
-          actionLoading={actionLoading}
-          onStart={(e) => { e.stopPropagation(); onStart?.(); }}
-          onStop={(e) => { e.stopPropagation(); onStop?.(); }}
-          onPause={(e) => { e.stopPropagation(); onPause?.(); }}
-          onResume={(e) => { e.stopPropagation(); onResume?.(); }}
-          onRestart={(e) => { e.stopPropagation(); onRestart?.(); }}
-          agentId={agent.id}
-        />
+        {/* Footer */}
+        <div className="flex items-center justify-between pt-1 border-t border-border/50">
+          <div className="flex items-center gap-3 text-[10px] text-muted-foreground">
+            <span className="flex items-center gap-1">
+              <Clock className="h-3 w-3" />
+              {agent.health?.lastHeartbeat
+                ? new Date(agent.health.lastHeartbeat).toLocaleTimeString("cs-CZ", { hour: "2-digit", minute: "2-digit" })
+                : "--:--"}
+            </span>
+          </div>
+          <Link
+            href={`/agents/${agent.id}`}
+            className="text-[10px] text-primary/70 hover:text-primary transition-colors"
+          >
+            Detail →
+          </Link>
+        </div>
       </CardContent>
     </Card>
   );
-}
-
-function hudBorderColor(status: Agent["state"]["status"]): string {
-  switch (status) {
-    case "working":
-    case "delegating":
-    case "reviewing":
-    case "reporting":
-    case "scheduling":
-    case "implementing":
-    case "testing":
-    case "building":
-    case "deploying":
-      return "var(--hud-green)";
-    case "idle":
-    case "thinking":
-    case "planning":
-    case "analyzing":
-    case "reading_code":
-    case "starting":
-    case "waiting":
-    case "loading_calendar":
-    case "loading_messages":
-    case "summarizing":
-    case "drafting_reply":
-      return "var(--hud-blue)";
-    case "paused":
-      return "var(--hud-amber)";
-    case "error":
-    case "stopping":
-    case "recovering":
-      return "var(--hud-red)";
-    case "offline":
-      return "#52525b";
-    default:
-      return "var(--hud-border)";
-  }
-}
-
-function StatusDot({ status }: { status: Agent["state"]["status"] }): JSX.Element {
-  const color = statusDotColor(status);
-  const shouldPulse = [
-    "working", "delegating", "reviewing", "reporting", "scheduling",
-    "implementing", "testing", "building", "deploying", "thinking",
-    "planning", "analyzing", "reading_code", "starting",
-  ].includes(status);
-  return (
-    <span
-      className={cn(
-        "absolute -right-0.5 -top-0.5 h-3 w-3 rounded-full border-2 border-background",
-        color,
-        shouldPulse && "animate-pulse",
-      )}
-    />
-  );
-}
-
-function statusDotColor(status: Agent["state"]["status"]): string {
-  switch (status) {
-    case "working":
-    case "delegating":
-    case "reviewing":
-    case "reporting":
-    case "scheduling":
-    case "implementing":
-    case "testing":
-    case "building":
-    case "deploying":
-      return "bg-emerald-500";
-    case "thinking":
-    case "planning":
-    case "analyzing":
-    case "reading_code":
-      return "bg-amber-500";
-    case "idle":
-      return "bg-blue-500";
-    case "starting":
-      return "bg-sky-500";
-    case "stopping":
-    case "recovering":
-      return "bg-orange-500";
-    case "waiting":
-      return "bg-cyan-500";
-    case "loading_calendar":
-    case "loading_messages":
-      return "bg-purple-500";
-    case "summarizing":
-      return "bg-cyan-500";
-    case "drafting_reply":
-      return "bg-indigo-500";
-    case "paused":
-      return "bg-slate-500";
-    case "offline":
-      return "bg-slate-700";
-    case "error":
-      return "bg-rose-500";
-    default:
-      return "bg-slate-500";
-  }
-}
-
-function statusColor(status: Agent["state"]["status"]): string {
-  switch (status) {
-    case "working":
-    case "delegating":
-    case "reviewing":
-    case "reporting":
-    case "scheduling":
-    case "implementing":
-    case "testing":
-    case "building":
-    case "deploying":
-      return "border-emerald-500/30 bg-emerald-500/10 text-emerald-500";
-    case "thinking":
-    case "planning":
-    case "analyzing":
-    case "reading_code":
-      return "border-amber-500/30 bg-amber-500/10 text-amber-500";
-    case "idle":
-      return "border-blue-500/30 bg-blue-500/10 text-blue-500";
-    case "starting":
-      return "border-sky-500/30 bg-sky-500/10 text-sky-500";
-    case "stopping":
-    case "recovering":
-      return "border-orange-500/30 bg-orange-500/10 text-orange-500";
-    case "waiting":
-      return "border-cyan-500/30 bg-cyan-500/10 text-cyan-500";
-    case "loading_calendar":
-    case "loading_messages":
-      return "border-purple-500/30 bg-purple-500/10 text-purple-500";
-    case "summarizing":
-      return "border-cyan-500/30 bg-cyan-500/10 text-cyan-500";
-    case "drafting_reply":
-      return "border-indigo-500/30 bg-indigo-500/10 text-indigo-500";
-    case "paused":
-      return "border-slate-500/30 bg-slate-500/10 text-slate-500";
-    case "offline":
-      return "border-slate-700/30 bg-slate-700/10 text-slate-400";
-    case "error":
-      return "border-rose-500/30 bg-rose-500/10 text-rose-500";
-    default:
-      return "border-border";
-  }
-}
-
-function HealthIndicator({ health }: { health: Agent["health"]["status"] }): JSX.Element {
-  const colors: Record<Agent["health"]["status"], string> = {
-    healthy: "bg-emerald-500",
-    degraded: "bg-amber-500",
-    unhealthy: "bg-rose-500",
-  };
-  const labels: Record<Agent["health"]["status"], string> = {
-    healthy: "Zdravý",
-    degraded: "Degradovaný",
-    unhealthy: "Nefunkční",
-  };
-  return (
-    <div className="flex items-center gap-1.5" title={`Health: ${labels[health]}`}>
-      <span className={cn("h-2 w-2 rounded-full", colors[health])} />
-      <span className="text-xs text-muted-foreground hidden sm:inline">{labels[health]}</span>
-    </div>
-  );
-}
-
-interface AgentActionButtonsProps {
-  status: Agent["state"]["status"];
-  actionLoading?: string | null;
-  onStart: (e: React.MouseEvent<HTMLButtonElement>) => void;
-  onStop: (e: React.MouseEvent<HTMLButtonElement>) => void;
-  onPause: (e: React.MouseEvent<HTMLButtonElement>) => void;
-  onResume: (e: React.MouseEvent<HTMLButtonElement>) => void;
-  onRestart: (e: React.MouseEvent<HTMLButtonElement>) => void;
-  agentId: string;
-}
-
-function AgentActionButtons({
-  status,
-  actionLoading,
-  onStart,
-  onStop,
-  onPause,
-  onResume,
-  onRestart,
-  agentId,
-}: AgentActionButtonsProps): JSX.Element {
-  const canStart = status === "offline" || status === "error";
-  const canStop = status !== "offline" && status !== "error" && status !== "stopping";
-  const canPause = status === "idle" || isOperationalStatus(status);
-  const canResume = status === "paused";
-
-  return (
-    <div className="flex flex-wrap gap-2">
-      <ActionButton
-        visible={canStart}
-        loading={actionLoading === "start"}
-        onClick={onStart}
-        icon={<Play className="h-3.5 w-3.5" />}
-        label="Start"
-      />
-      <ActionButton
-        visible={canStop}
-        loading={actionLoading === "stop"}
-        onClick={onStop}
-        icon={<Square className="h-3.5 w-3.5" />}
-        label="Stop"
-      />
-      <ActionButton
-        visible={canResume}
-        loading={actionLoading === "resume"}
-        onClick={onResume}
-        icon={<Play className="h-3.5 w-3.5" />}
-        label="Resume"
-      />
-      <ActionButton
-        visible={canPause}
-        loading={actionLoading === "pause"}
-        onClick={onPause}
-        icon={<Pause className="h-3.5 w-3.5" />}
-        label="Pause"
-      />
-      <ActionButton
-        visible
-        loading={actionLoading === "restart"}
-        onClick={onRestart}
-        icon={<RotateCcw className="h-3.5 w-3.5" />}
-        label="Restart"
-      />
-      <Button variant="outline" size="sm" className="h-8 gap-1" asChild>
-        <Link href={`/agents/${agentId}`} onClick={(e) => e.stopPropagation()}>
-          <Settings2 className="h-3.5 w-3.5" /> Detail
-        </Link>
-      </Button>
-    </div>
-  );
-}
-
-function ActionButton({
-  visible,
-  loading,
-  onClick,
-  icon,
-  label,
-}: {
-  visible: boolean;
-  loading: boolean;
-  onClick: (e: React.MouseEvent<HTMLButtonElement>) => void;
-  icon: React.ReactNode;
-  label: string;
-}): JSX.Element | null {
-  if (!visible) return null;
-  return (
-    <Button
-      variant="outline"
-      size="sm"
-      className="h-8 gap-1"
-      onClick={onClick}
-      disabled={loading}
-    >
-      {loading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : icon}
-      {label}
-    </Button>
-  );
-}
-
-function isOperationalStatus(status: Agent["state"]["status"]): boolean {
-  return [
-    "thinking",
-    "planning",
-    "delegating",
-    "working",
-    "waiting",
-    "reviewing",
-    "reporting",
-    "loading_calendar",
-    "loading_messages",
-    "analyzing",
-    "scheduling",
-    "summarizing",
-    "drafting_reply",
-    "reading_code",
-    "implementing",
-    "testing",
-    "building",
-    "deploying",
-  ].includes(status);
-}
-
-function statusLabel(status: Agent["state"]["status"]): string {
-  switch (status) {
-    case "thinking":
-      return "Přemýšlí";
-    case "planning":
-      return "Plánuje";
-    case "delegating":
-      return "Deleguje";
-    case "working":
-      return "Pracuje";
-    case "waiting":
-      return "Čeká na vstup";
-    case "reviewing":
-      return "Kontroluje";
-    case "reporting":
-      return "Reportuje";
-    case "loading_calendar":
-      return "Načítá kalendář";
-    case "loading_messages":
-      return "Načítá zprávy";
-    case "analyzing":
-      return "Analyzuje";
-    case "scheduling":
-      return "Plánuje";
-    case "summarizing":
-      return "Shrnuje";
-    case "drafting_reply":
-      return "Píše odpověď";
-    case "reading_code":
-      return "Čte kód";
-    case "implementing":
-      return "Implementuje";
-    case "testing":
-      return "Testuje";
-    case "building":
-      return "Buildí";
-    case "deploying":
-      return "Deployuje";
-    case "starting":
-      return "Spouští se";
-    case "stopping":
-      return "Zastavuje se";
-    case "recovering":
-      return "Obnovuje se";
-    case "idle":
-      return "Čeká";
-    case "paused":
-      return "Pozastaveno";
-    case "offline":
-      return "Offline";
-    case "error":
-      return "Chyba";
-    default:
-      return status;
-  }
 }

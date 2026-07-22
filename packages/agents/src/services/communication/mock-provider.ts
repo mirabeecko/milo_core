@@ -49,9 +49,9 @@ export class MockGmailProvider implements CommunicationProvider {
 }
 
 export class MockWhatsAppProvider implements CommunicationProvider {
-  readonly name = "Mock WhatsApp";
+  readonly name = "Mock WhatsApp (Demo)";
   readonly channel: MessageChannel = "whatsapp";
-  readonly isConfigured = true;
+  readonly isConfigured = false;
 
   async connect(): Promise<void> {}
   async disconnect(): Promise<void> {}

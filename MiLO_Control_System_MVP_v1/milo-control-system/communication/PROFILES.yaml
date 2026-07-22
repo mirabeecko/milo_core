@@ -1,0 +1,59 @@
+version: "1.0"
+effective_at: "2026-07-21T00:00:00+02:00"
+required_brief_fields:
+  - audience
+  - desired_outcome
+  - channel
+  - facts_allowed
+  - claims_or_uncertainties
+  - tone
+  - main_risk
+  - call_to_action
+  - approval_gate
+profiles:
+  INTERNAL_ANALYSIS:
+    audience: "Owner a interní agenti"
+    purpose: "porozumění, varianty a rozhodnutí"
+    tone: "přímý, podrobný, otevřený nejistotě"
+    evidence_rule: "oddělit fakta, tvrzení, inference a neznámé"
+    review: "Argus"
+    owner_approval_before_send: false
+  EXECUTIVE_BRIEF:
+    audience: "Owner"
+    purpose: "rychlé rozhodnutí a přehled"
+    tone: "stručný, prioritizovaný, bez vaty"
+    evidence_rule: "u každého materiálního závěru zdroj nebo označená inference"
+    review: "Argus pro P0/P1 a právní/finanční obsah"
+    owner_approval_before_send: false
+  LEGAL_FILING:
+    audience: "policie, soud, úřad, advokát nebo protistrana"
+    purpose: "procesně přesné a věrohodné právní sdělení"
+    tone: "věcný, zdrženlivý, chronologický"
+    evidence_rule: "fakta a doložená tvrzení s přesným důkazem; podezření výslovně jako podezření"
+    prohibited: "prohlašovat vinu nebo motiv za fakt bez odpovídajícího rozhodnutí/důkazu"
+    review: "Argus + odborná právní kontrola podle rizika"
+    owner_approval_before_send: true
+  PUBLIC_SOCIAL:
+    audience: "veřejnost / sociální sítě"
+    purpose: "srozumitelnost, důvěryhodnost a konkrétní reakce"
+    tone: "lidský, krátký, nekonfliktní tam, kde konflikt není cílem"
+    evidence_rule: "pouze publikovatelná fakta; citlivá tvrzení kvalifikovat a doložit"
+    prohibited: "neověřené obvinění, zbytečné osobní údaje, právně riskantní zkratka"
+    review: "Argus"
+    owner_approval_before_send: true
+  NEGOTIATION_EMAIL:
+    audience: "konkrétní protistrana nebo partner"
+    purpose: "dosáhnout definovaného výsledku bez nechtěného závazku"
+    tone: "pevný, korektní, strategický"
+    evidence_rule: "ověřit čísla, data, závazky a přílohy"
+    required: "BATNA, minimum, prostor ústupku, požadovaný další krok"
+    review: "Argus"
+    owner_approval_before_send: true
+  ADS_CHANGE:
+    audience: "reklamní platforma a interní marketing"
+    purpose: "měřitelná změna výkonu kampaně"
+    tone: "datový"
+    evidence_rule: "baseline, hypotéza, rozpočet, měření, stop podmínka"
+    review: "Argus"
+    owner_approval_before_send: true
+
