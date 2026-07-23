@@ -205,5 +205,74 @@
     "verdict": "fail",
     "verdict_reason": "1 kritických problémů",
     "created_at": "2026-07-19T01:46:22.373Z"
+  },
+  {
+    "id": "audit-1784757509556",
+    "agent_id": "agent-1783722930610-rypt",
+    "agent_name": "Chief Orchestrator",
+    "scope": "full",
+    "findings": [
+      {
+        "severity": "high",
+        "category": "specifikace",
+        "description": "Žádná verze specifikace neexistuje",
+        "recommendation": "Vytvoř první verzi specifikace agenta"
+      },
+      {
+        "severity": "medium",
+        "category": "use_cases",
+        "description": "3 use case(s) nejsou zahájené",
+        "recommendation": "Vytvoř úkoly pro nezahájené use cases"
+      }
+    ],
+    "verdict": "fail",
+    "verdict_reason": "1 kritických problémů",
+    "created_at": "2026-07-22T21:58:29.556Z"
+  },
+  {
+    "id": "audit-1784757511063",
+    "agent_id": "agent-1783722930610-rypt",
+    "agent_name": "Chief Orchestrator",
+    "scope": "full",
+    "findings": [
+      {
+        "severity": "high",
+        "category": "specifikace",
+        "description": "Žádná verze specifikace neexistuje",
+        "recommendation": "Vytvoř první verzi specifikace agenta"
+      },
+      {
+        "severity": "medium",
+        "category": "use_cases",
+        "description": "3 use case(s) nejsou zahájené",
+        "recommendation": "Vytvoř úkoly pro nezahájené use cases"
+      }
+    ],
+    "verdict": "fail",
+    "verdict_reason": "1 kritických problémů",
+    "created_at": "2026-07-22T21:58:31.063Z"
+  },
+  {
+    "id": "audit-1784809490632",
+    "agent_id": "agent-1783722930610-rypt",
+    "agent_name": "Chief Orchestrator",
+    "scope": "full",
+    "findings": [
+      {
+        "severity": "high",
+        "category": "specifikace",
+        "description": "Žádná verze specifikace neexistuje",
+        "recommendation": "Vytvoř první verzi specifikace agenta"
+      },
+      {
+        "severity": "medium",
+        "category": "use_cases",
+        "description": "3 use case(s) nejsou zahájené",
+        "recommendation": "Vytvoř úkoly pro nezahájené use cases"
+      }
+    ],
+    "verdict": "fail",
+    "verdict_reason": "1 kritických problémů",
+    "created_at": "2026-07-23T12:24:50.632Z"
   }
 ]

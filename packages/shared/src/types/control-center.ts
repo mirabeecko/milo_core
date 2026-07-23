@@ -33,6 +33,7 @@ export interface AgentSpec {
   updatedAt: string;
   archivedAt: string | null;
   tags: string[];
+  department?: string;
 }
 
 export interface AgentSpecVersion {

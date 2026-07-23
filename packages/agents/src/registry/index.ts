@@ -20,6 +20,7 @@ import { spyGDefinition } from "./spy-g.js";
 import { phoneTrackerDefinition } from "./phone-tracker.js";
 import { komarkaAgentDefinition } from "./komarka.js";
 import { krupkaAgentDefinition } from "./krupka.js";
+import { personalAssistantDefinition } from "./personal-assistant.js";
 import { registerExecutiveAgents } from "./executive.js";
 
 export * from "./chief-of-staff.js";
@@ -35,6 +36,7 @@ export * from "./spy-g.js";
 export * from "./phone-tracker.js";
 export * from "./komarka.js";
 export * from "./krupka.js";
+export * from "./personal-assistant.js";
 export * from "./executive.js";
 
 export const activeAgentDefinitions = [
@@ -51,6 +53,7 @@ export const activeAgentDefinitions = [
   phoneTrackerDefinition,
   komarkaAgentDefinition,
   krupkaAgentDefinition,
+  personalAssistantDefinition,
 ];
 
 export async function registerDefaultAgents(manager: AgentManager): Promise<void> {

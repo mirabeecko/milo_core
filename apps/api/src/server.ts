@@ -35,6 +35,7 @@ import { activityRoutes } from "./modules/activity/routes.js";
 import { controlCenterRoutes } from "./modules/control-center/routes.js";
 import { phoneTrackerRoutes } from "./modules/phone-tracker/routes.js";
 import { testerRoutes } from "./modules/tester/routes.js";
+import { orchestrateRoutes } from "./modules/orchestrate/routes.js";
 
 import { startCronScheduler, stopCronScheduler } from "./services/cron-scheduler.js";
 import { closeRedisClient, getRedisClient } from "./infrastructure/redis.js";
@@ -135,6 +136,7 @@ async function start(): Promise<void> {
   await app.register(controlCenterRoutes, { prefix: "/control-center" });
   await app.register(phoneTrackerRoutes, { prefix: "/phone-tracker" });
   await app.register(testerRoutes, { prefix: "/tester" });
+  await app.register(orchestrateRoutes, { prefix: "/orchestrate" });
 
   await app.register(jobsRoutes);
   await app.register(exportRoutes, { prefix: "/export" });
